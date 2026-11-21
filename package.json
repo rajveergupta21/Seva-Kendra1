@@ -5,7 +5,7 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "test": "node tests/test_engine.js && node tests/test_dialog.js && node tests/test_triage.js && node tests/quick_personas.mjs",
+    "test": "node tests/test_engine.js && node tests/test_dialog.js && node tests/test_triage.js && node tests/quick_personas.mjs && node tests/test_women_children_schemes.js",
     "start": "node server.js"
   },
   "keywords": [

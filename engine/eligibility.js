@@ -81,6 +81,22 @@ export function evaluateSchemeEligibility(scheme, profile = {}, language = "hi")
     };
   }
 
+  // Special check for Sukanya Samriddhi Yojana (Parent of daughter under 10 OR girl child under 10)
+  if (scheme.id === "central_ssy") {
+    const isGirlUnder10 = profile.gender === 'female' && typeof profile.age === 'number' && profile.age <= 10;
+    const hasYoungDaughter = Boolean(profile.has_daughter || profile.has_minor_daughter || profile.daughter_under_10);
+    if (!isGirlUnder10 && !hasYoungDaughter && profile.age && profile.age > 10) {
+      return { status: "ineligible", eligible: false, reason: "Targeted for girl child under 10" };
+    }
+  }
+
+  // Special check for PMMVY (Pregnant or Lactating mothers)
+  if (scheme.id === "central_pmmvy") {
+    if (profile.pregnant_or_lactating === false) {
+      return { status: "ineligible", eligible: false, reason: "Requires pregnancy or lactation" };
+    }
+  }
+
   // 1. State Filter (Hard check)
   if (rules.states && rules.states.length > 0) {
     if (!normState) {
@@ -93,10 +109,10 @@ export function evaluateSchemeEligibility(scheme, profile = {}, language = "hi")
 
   // 2. Gender check
   if (rules.gender && rules.gender.length > 0) {
-    if (!profile.gender) {
+    if (!profile.gender && scheme.id !== "central_ssy") {
       return { status: "needs_info", missingField: "gender", eligible: false };
     }
-    if (!rules.gender.includes(profile.gender.toLowerCase())) {
+    if (profile.gender && !rules.gender.includes(profile.gender.toLowerCase()) && scheme.id !== "central_ssy") {
       return { status: "ineligible", eligible: false, reason: "Gender condition not satisfied" };
     }
   }
@@ -106,7 +122,9 @@ export function evaluateSchemeEligibility(scheme, profile = {}, language = "hi")
     if (!profile.marital_status) {
       return { status: "needs_info", missingField: "marital_status", eligible: false };
     }
-    if (!rules.marital_status.includes(profile.marital_status.toLowerCase())) {
+    const userMarital = profile.marital_status.toLowerCase();
+    const matched = rules.marital_status.some(m => m.toLowerCase() === userMarital || (m === "single" && userMarital === "unmarried") || (m === "unmarried" && userMarital === "single"));
+    if (!matched) {
       return { status: "ineligible", eligible: false, reason: "Marital status condition not satisfied" };
     }
   }
@@ -164,6 +182,14 @@ export function evaluateSchemeEligibility(scheme, profile = {}, language = "hi")
     } else {
       whyMsg = `आप ${ageDisplay} वर्ष की विधवा हैं (40–79 वर्ष की आयु सीमा में) और बीपीएल परिवार से हैं।`;
     }
+  } else if (scheme.id === "wb_widow_pension") {
+    if (lang === "bn") {
+      whyMsg = `আপনি পশ্চিমবঙ্গের বাসিন্দা বিধবা এবং আর্থিক সহায়তার যোগ্য।`;
+    } else if (lang === "en") {
+      whyMsg = `You are a destitute widow residing in West Bengal.`;
+    } else {
+      whyMsg = `आप पश्चिम बंगाल की निवासी विधवा हैं।`;
+    }
   } else if (scheme.id === "central_ignoaps") {
     if (lang === "bn") {
       whyMsg = `আপনার বয়স ${ageDisplay} বছর (৬০ বছর বা তার বেশি) এবং আপনি বিপিএল পরিবারের সদস্য।`;
@@ -172,6 +198,56 @@ export function evaluateSchemeEligibility(scheme, profile = {}, language = "hi")
     } else {
       whyMsg = `आपकी उम्र ${ageDisplay} वर्ष (60 वर्ष या अधिक) है और आप बीपीएल परिवार से हैं।`;
     }
+  } else if (scheme.id === "wb_old_age_pension") {
+    if (lang === "bn") {
+      whyMsg = `আপনি পশ্চিমবঙ্গের প্রবীণ বাসিন্দা, আপনার বয়স ${ageDisplay} বছর (৬০ বছর বা তার বেশি)।`;
+    } else if (lang === "en") {
+      whyMsg = `You are an elderly resident of West Bengal aged ${ageDisplay} (60 years or above).`;
+    } else {
+      whyMsg = `आप पश्चिम बंगाल के वरिष्ठ निवासी हैं, उम्र ${ageDisplay} वर्ष (60 वर्ष या अधिक)।`;
+    }
+  } else if (scheme.id === "wb_kanyashree") {
+    if (lang === "bn") {
+      whyMsg = `আপনি পশ্চিমবঙ্গের ${ageDisplay} বছর বয়সী অবিবাহিত ছাত্রী (১৩–১৯ বছর)।`;
+    } else if (lang === "en") {
+      whyMsg = `You are an unmarried adolescent female student aged ${ageDisplay} in West Bengal.`;
+    } else {
+      whyMsg = `आप पश्चिम बंगाल की ${ageDisplay} वर्ष की अविवाहित छात्रा हैं (13–19 वर्ष)।`;
+    }
+  } else if (scheme.id === "wb_rupashree") {
+    if (lang === "bn") {
+      whyMsg = `আপনি পশ্চিমবঙ্গের প্রাপ্তবয়স্ক অবিবাহিত নারী (১৮+ বছর) এবং বিবাহের প্রস্তাব রয়েছে।`;
+    } else if (lang === "en") {
+      whyMsg = `You are an adult unmarried woman aged ${ageDisplay} (18+) residing in West Bengal proposing marriage.`;
+    } else {
+      whyMsg = `आप पश्चिम बंगाल की 18 वर्ष से अधिक उम्र की अविवाहित महिला हैं जो विवाह करने जा रही हैं।`;
+    }
+  } else if (scheme.id === "central_ssy") {
+    if (lang === "bn") {
+      whyMsg = `১০ বছরের কম বয়সী কন্যা সন্তানের ভবিষ্যতের সঞ্চয়ের জন্য প্রযোজ্য।`;
+    } else if (lang === "en") {
+      whyMsg = `Eligible for parents of a girl child under 10 years of age for secure high-interest savings.`;
+    } else {
+      whyMsg = `10 वर्ष से कम उम्र की बेटी के सुरक्षित भविष्य और बचत के लिए मान्य।`;
+    }
+  } else if (scheme.id === "central_pmmvy") {
+    if (lang === "bn") {
+      whyMsg = `১৯ বছর বা তদূর্ধ্ব বয়সী গর্ভবতী ও স্তন্যদানকারী মায়েদের জন্য আর্থিক সহায়তা।`;
+    } else if (lang === "en") {
+      whyMsg = `Maternity benefit for pregnant women and lactating mothers aged 19+.`;
+    } else {
+      whyMsg = `19 वर्ष या अधिक उम्र की गर्भवती एवं धात्री माताओं के लिए मातृत्व सहायता।`;
+    }
+  } else if (scheme.id === "central_ugc_single_girl") {
+    if (lang === "bn") {
+      whyMsg = `স্নাতকোত্তর স্তরে পাঠরত পরিবারের একমাত্র কন্যা সন্তানের জন্য বৃত্তি।`;
+    } else if (lang === "en") {
+      whyMsg = `Postgraduate scholarship for a single girl child in the family up to 30 years of age.`;
+    } else {
+      whyMsg = `परिवार की इकलौती बेटी के लिए पीजी स्तर की उच्च शिक्षा छात्रवृत्ति।`;
+    }
+  } else {
+    whyMsg = `You meet the general age and demographic eligibility criteria.`;
   }
 
   // Fill what_to_say template

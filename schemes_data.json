@@ -1,43 +1,220 @@
 [
   {
+    "id": "central_ssy",
+    "name": "Sukanya Samriddhi Yojana (SSY)",
+    "scope": "Central (All-India)",
+    "state": "ALL",
+    "status": "verified",
+    "last_verified": "2026-11-21",
+    "source_url": "https://www.myscheme.gov.in/schemes/ssy",
+    "target_group": "Girl child under 10 years of age",
+    "benefit": "Government-backed, tax-free long-term savings account with high interest (Min Rs 250/yr, Max Rs 1.5 lakh/yr; matures at 21 years or marriage after 18)",
+    "rules": {
+      "gender": ["female"],
+      "max_age": 10
+    },
+    "documents": [
+      "Girl child's Birth Certificate",
+      "Parent/Guardian's Aadhaar Card and PAN Card",
+      "Address Proof of Parent/Guardian",
+      "2–4 Passport-size photographs",
+      "Filled SSY Account Opening Form"
+    ],
+    "office_to_visit": "Nearest Post Office or authorized public/private sector bank",
+    "what_to_say_templates": {
+      "en": "I want to open a Sukanya Samriddhi Yojana (SSY) account for my daughter.",
+      "bn": "আমি আমার মেয়ের জন্য সুকন্যা সমৃদ্ধি যোজনা (SSY) অ্যাকাউন্ট খুলতে চাই।",
+      "hi": "मैं अपनी बेटी के लिए सुकन्या समृद्धि योजना (SSY) खाता खोलना चाहता/चाहती हूँ।"
+    }
+  },
+  {
+    "id": "icds_anganwadi",
+    "name": "Anganwadi Services (ICDS) — Nutrition, Immunisation & Pre-School",
+    "scope": "Central / State Implemented (All-India)",
+    "state": "ALL",
+    "status": "unverified",
+    "last_verified": "2026-11-21",
+    "source_url": "",
+    "target_group": "Children aged 0–6 years, pregnant women, and lactating mothers",
+    "benefit": "Ask at the office for local schedule and rations (Supplementary nutrition, hot cooked meals / take-home rations, growth monitoring, free immunisation, health check-ups, and pre-school education)",
+    "rules": {
+      "keywords": ["pregnant", "lactating", "child", "baby", "anganwadi", "nutrition", "mother", "infant"]
+    },
+    "documents": [
+      "Mother & Child Protection (MCP) Card (if available)",
+      "Child's Birth Certificate (if available)",
+      "Parent's Aadhaar Card / Ration Card / Local ID Proof"
+    ],
+    "office_to_visit": "Nearest Anganwadi Centre (AWC) or local ASHA worker",
+    "what_to_say_templates": {
+      "en": "I want to inquire about Anganwadi supplementary nutrition and maternal child healthcare services.",
+      "bn": "আমি অঙ্গনওয়াড়ি পুষ্টি ও মাতৃদুগ্ধ পানকারী/শিশু স্বাস্থ্যসেবা সম্পর্কে জানতে চাই।",
+      "hi": "मैं आंगनवाड़ी पूरक पोषण और मातृ-शिशु स्वास्थ्य सेवाओं के बारे में जानकारी लेने आया/आई हूँ।"
+    }
+  },
+  {
+    "id": "wb_kanyashree",
+    "name": "Kanyashree Prakalpa (K1 & K2)",
+    "scope": "West Bengal State",
+    "state": "West Bengal",
+    "status": "verified",
+    "last_verified": "2026-11-21",
+    "source_url": "https://www.wbkanyashree.gov.in",
+    "target_group": "Unmarried adolescent girls aged 13–19 years",
+    "benefit": "K1 (Age 13–18): Annual scholarship of Rs 750/year. K2 (Age 18–19): One-time grant of Rs 25,000",
+    "rules": {
+      "states": ["West Bengal"],
+      "gender": ["female"],
+      "marital_status": ["single", "unmarried"],
+      "min_age": 13,
+      "max_age": 19
+    },
+    "documents": [
+      "Birth Certificate (or Head Teacher's age certificate)",
+      "Unmarried declaration signed by parent/guardian",
+      "Family Income Statement (or disability / death certificate)",
+      "Bank Passbook in girl's own name (with IFSC & account number)",
+      "Passport-size photographs & School enrolment verification"
+    ],
+    "office_to_visit": "Head of School/College/Institution (online uploaded to WB Kanyashree portal)",
+    "what_to_say_templates": {
+      "en": "I am an unmarried female student aged {age} in West Bengal applying for Kanyashree Prakalpa.",
+      "bn": "আমি পশ্চিমবঙ্গের {age} বছর বয়সী অবিবাহিত ছাত্রী, কন্যাশ্রী প্রকল্পের জন্য আবেদন করতে চাই।",
+      "hi": "मैं पश्चिम बंगाल की {age} साल की अविवाहित छात्रा हूँ, कन्याश्री प्रकल्प के लिए आवेदन करना चाहती हूँ।"
+    }
+  },
+  {
+    "id": "wb_rupashree",
+    "name": "Rupashree Prakalpa",
+    "scope": "West Bengal State",
+    "state": "West Bengal",
+    "status": "verified",
+    "last_verified": "2026-11-21",
+    "source_url": "https://wbrupashree.gov.in",
+    "target_group": "Unmarried adult women aged 18+ proposing first marriage",
+    "benefit": "One-time financial grant of Rs 25,000 transferred to bride's bank account prior to marriage",
+    "rules": {
+      "states": ["West Bengal"],
+      "gender": ["female"],
+      "marital_status": ["single", "unmarried"],
+      "min_age": 18
+    },
+    "documents": [
+      "Age Proof (Birth Certificate, Voter ID, PAN, or Madhyamik Admit Card)",
+      "Proof of Residence (Self-declaration / local authority verification)",
+      "Proof of proposed marriage (wedding invitation card / registration notice)",
+      "Groom's age proof and passport-size photograph",
+      "Applicant's Voter ID, Aadhaar Card, and Income Declaration",
+      "Applicant's active Bank Passbook (sole account)",
+      "Passport-size photographs"
+    ],
+    "office_to_visit": "Block Development Office (BDO), SDO, or Municipal Corporation / Municipality office (30–60 days before marriage)",
+    "what_to_say_templates": {
+      "en": "I am a resident of West Bengal aged {age} proposing my marriage and applying for Rupashree Prakalpa grant.",
+      "bn": "আমি পশ্চিমবঙ্গের বাসিন্দা, আমার বয়স {age} বছর। আমার বিয়ের জন্য রূপশ্রী প্রকল্পের অনুদানের আবেদন করতে চাই।",
+      "hi": "मैं पश्चिम बंगाल की निवासी हूँ, मेरी उम्र {age} साल है। मैं अपने विवाह हेतु रूपश्री प्रकल्प अनुदान के लिए आवेदन करना चाहती हूँ।"
+    }
+  },
+  {
+    "id": "central_ugc_single_girl",
+    "name": "PG Indira Gandhi Scholarship for Single Girl Child",
+    "scope": "Central (UGC — All-India)",
+    "state": "ALL",
+    "status": "verified",
+    "last_verified": "2026-11-21",
+    "source_url": "https://scholarships.gov.in",
+    "target_group": "Single girl child pursuing Postgraduate (PG) higher education",
+    "benefit": "Fellowship of Rs 36,200 per annum for 2 years (full duration of PG course)",
+    "rules": {
+      "gender": ["female"],
+      "max_age": 30
+    },
+    "documents": [
+      "Proof of admission to 1st year PG course",
+      "Single Girl Child Affidavit (on stamp paper attested by SDM / First Class Magistrate)",
+      "Copy of Aadhaar Card / ID Proof",
+      "Bank Passbook (linked with Aadhaar)",
+      "Previous academic marksheets"
+    ],
+    "office_to_visit": "Online via National Scholarship Portal (NSP)",
+    "what_to_say_templates": {
+      "en": "I am a single girl child enrolled in a PG course applying for the PG Indira Gandhi Scholarship.",
+      "bn": "আমি পরিবারের একমাত্র কন্যা সন্তান এবং স্নাতকোত্তর কোর্সে পাঠরত, পিজি ইন্দিরা গান্ধী বৃত্তির জন্য আবেদন করতে চাই।",
+      "hi": "मैं परिवार की इकलौती बेटी हूँ और पीजी कोर्स में पढ़ रही हूँ, पीजी इंदिरा गांधी स्कॉलरशिप के लिए आवेदन करना चाहती हूँ।"
+    }
+  },
+  {
+    "id": "central_pmmvy",
+    "name": "Pradhan Mantri Matru Vandana Yojana (PMMVY 2.0)",
+    "scope": "Central (All-India)",
+    "state": "ALL",
+    "status": "verified",
+    "last_verified": "2026-11-21",
+    "source_url": "https://pmmvy.wcd.gov.in",
+    "target_group": "Pregnant women and lactating mothers aged 19+",
+    "benefit": "1st living child: Rs 5,000 paid in 2 instalments via DBT; 2nd living child (if a girl): Rs 6,000 paid in a single instalment",
+    "rules": {
+      "gender": ["female"],
+      "min_age": 19
+    },
+    "documents": [
+      "Aadhaar Card of the beneficiary",
+      "Aadhaar-seeded Bank or Post Office Passbook",
+      "Active Mobile Number",
+      "Mother and Child Protection (MCP) / RCHI Card (showing LMP & ANC dates)",
+      "Proof of eligible category (BPL/SC/ST/e-Shram/Income under 8L)",
+      "Child's Birth Certificate & 14-week immunisation record"
+    ],
+    "office_to_visit": "Nearest Anganwadi Centre (AWC), ASHA/ANM worker, or online PMMVY Citizen Portal",
+    "what_to_say_templates": {
+      "en": "I am a pregnant/lactating mother aged {age} and want to apply for maternity support under PMMVY.",
+      "bn": "আমি {age} বছর বয়সী গর্ভবতী/প্রসূতি মা, পিএমএমভিওয়াই (PMMVY) মাতৃত্ব সুবিধার জন্য আবেদন করতে চাই।",
+      "hi": "मैं {age} साल की गर्भवती/धात्री महिला हूँ, मातृ वंदना योजना (PMMVY) के तहत सहायता राशि के लिए आवेदन करना चाहती हूँ।"
+    }
+  },
+  {
     "id": "wb_annapurna_yojana",
     "name": "Annapurna Yojana (West Bengal)",
-    "replaces": "Lakshmir Bhandar (migrated from 1 June 2026)",
+    "scope": "West Bengal State (Replaces Lakshmir Bhandar from 1 June 2026)",
     "state": "West Bengal",
     "status": "verified",
     "last_verified": "2026-11-21",
     "source_url": "https://www.myscheme.gov.in/schemes/aywb",
-    "benefit": "Rs 3,000 per month via Direct Benefit Transfer (DBT) to an Aadhaar-linked bank account",
+    "target_group": "Adult women aged 25–60 years residing in West Bengal",
+    "benefit": "Rs 3,000 per month transferred via Direct Benefit Transfer (DBT) directly to an Aadhaar-linked bank account",
     "rules": {
+      "states": ["West Bengal"],
       "gender": ["female"],
       "min_age": 25,
       "max_age": 60,
-      "states": ["West Bengal"],
       "exclude_govt_employee_or_pensioner": true,
       "exclude_income_tax_payer": true
     },
     "documents": [
-      "Aadhaar Card (carry copy; do not share full number here)",
+      "Aadhaar Card (carry copy; do not share full number in chat)",
       "EPIC / Voter ID Card",
-      "Aadhaar-linked Bank Passbook",
+      "Aadhaar-linked Bank Passbook (sole account in applicant's name)",
       "Ration Card (if available)",
-      "Swasthya Sathi Card (if available)"
+      "Swasthya Sathi Card (if available)",
+      "Passport-size photographs"
     ],
     "office_to_visit": "Block Development Office (BDO), Duare Sarkar camp, or local Municipal / Gram Panchayat office",
     "what_to_say_templates": {
       "en": "I am a resident of West Bengal aged {age} and would like to check my eligibility and apply for Annapurna Yojana.",
-      "bn": "আমি পশ্চিমবঙ্গের বাসিন্দা, আমার বয়স {age} বছর। আমি অন্নপূর্ণা যোজনার জন্য আবেদন করতে ও योग्यता যাচাই করতে চাই।",
+      "bn": "আমি পশ্চিমবঙ্গের বাসিন্দা, আমার বয়স {age} বছর। আমি অন্নপূর্ণা যোজনার জন্য আবেদন করতে ও যোগ্যতা যাচাই করতে চাই।",
       "hi": "मैं पश्चिम बंगाल की निवासी हूँ, मेरी उम्र {age} साल है। मैं अन्नपूर्णा योजना के लिए आवेदन और पात्रता की जांच कराना चाहती हूँ।"
     }
   },
   {
     "id": "central_ignwps",
     "name": "Indira Gandhi National Widow Pension Scheme (IGNWPS)",
+    "scope": "Central (All-India — NSAP)",
     "state": "ALL",
     "status": "verified",
     "last_verified": "2026-11-21",
     "source_url": "https://www.myscheme.gov.in/schemes/ignwps",
-    "benefit": "Central share Rs 300 per month (age 40–79) or Rs 500 per month (age 80+), plus applicable state top-up",
+    "target_group": "BPL widows aged 40–79 years",
+    "benefit": "Central share of Rs 300 per month (age 40–79) and Rs 500 per month (age 80+), plus applicable state top-up",
     "rules": {
       "gender": ["female"],
       "marital_status": ["widow"],
@@ -46,12 +223,12 @@
       "requires_bpl": true
     },
     "documents": [
-      "Husband's Death Certificate (with wife's name)",
+      "Husband's Death Certificate (carrying wife's name)",
       "BPL Card / Ration Card",
       "Age Proof (Birth Certificate, School Certificate, Ration Card, or Voter ID)",
-      "Bank Passbook & Passport-size Photos"
+      "Bank Passbook (Aadhaar-seeded) and Passport-size photographs"
     ],
-    "office_to_visit": "Block Development Office (BDO), Gram Panchayat, or Municipality Social Welfare counter (also on UMANG portal)",
+    "office_to_visit": "Block Development Office (BDO), Gram Panchayat, Municipality Social Welfare counter, or via UMANG portal",
     "what_to_say_templates": {
       "en": "I am a widow aged {age} from a BPL household and want to apply for the Indira Gandhi National Widow Pension Scheme (IGNWPS).",
       "bn": "আমি {age} বছর বয়সী বিধবা এবং বিপিএল পরিবারের সদস্য। আমি বিধবা পেনশন (IGNWPS) এর জন্য আবেদন করতে চাই।",
@@ -59,24 +236,56 @@
     }
   },
   {
+    "id": "wb_widow_pension",
+    "name": "West Bengal Widow Pension Scheme",
+    "scope": "West Bengal State",
+    "state": "West Bengal",
+    "status": "verified",
+    "last_verified": "2026-11-21",
+    "source_url": "https://www.myscheme.gov.in/schemes/wb-widow-pension",
+    "target_group": "Destitute widows residing in West Bengal",
+    "benefit": "Rs 1,000 per month pension via DBT",
+    "rules": {
+      "states": ["West Bengal"],
+      "gender": ["female"],
+      "marital_status": ["widow"]
+    },
+    "documents": [
+      "Husband's Death Certificate",
+      "Residential / Domicile Certificate",
+      "Voter ID Card and Aadhaar Card",
+      "Ration Card / BPL Card",
+      "Income Certificate",
+      "Bank Passbook details and Passport-size photograph"
+    ],
+    "office_to_visit": "BDO office, Duare Sarkar camp, or Municipal office",
+    "what_to_say_templates": {
+      "en": "I am a destitute widow residing in West Bengal and want to apply for the State Widow Pension Scheme.",
+      "bn": "আমি পশ্চিমবঙ্গের বিধবা বাসিন্দা, আমি রাজ্য বিধবা পেনশনের জন্য আবেদন করতে চাই।",
+      "hi": "मैं पश्चिम बंगाल की निवासी विधवा हूँ, मैं राज्य विधवा पेंशन योजना के लिए आवेदन करना चाहती हूँ।"
+    }
+  },
+  {
     "id": "central_ignoaps",
     "name": "Indira Gandhi National Old Age Pension Scheme (IGNOAPS)",
+    "scope": "Central (All-India — NSAP)",
     "state": "ALL",
     "status": "verified",
     "last_verified": "2026-11-21",
     "source_url": "https://www.myscheme.gov.in/schemes/nsap-ignoaps",
-    "benefit": "Central pension for senior citizens from BPL households (plus applicable state top-up)",
+    "target_group": "Senior citizens aged 60+ from BPL households",
+    "benefit": "Central monthly pension for BPL senior citizens (Rs 200/month for 60–79 yrs; Rs 500/month for 80+ yrs) plus applicable state top-up",
     "rules": {
       "min_age": 60,
       "requires_bpl": true
     },
     "documents": [
-      "Age Proof (Voter ID, Birth Certificate, or Medical Board certificate)",
+      "Age Proof (Voter ID, Birth Certificate, or Medical Board age certificate)",
       "BPL Card / Ration Card",
       "Domicile / Residence Proof",
-      "Bank Passbook & Passport-size Photos"
+      "Bank Passbook (Aadhaar-seeded) and Passport-size photographs"
     ],
-    "office_to_visit": "Block Development Office (BDO), Gram Panchayat, or Municipality Social Welfare counter (also on UMANG portal)",
+    "office_to_visit": "Block Development Office (BDO), Gram Panchayat, Municipality Social Welfare counter, or via UMANG portal",
     "what_to_say_templates": {
       "en": "I am {age} years old from a BPL household and want to apply for the Old Age Pension Scheme (IGNOAPS).",
       "bn": "আমার বয়স {age} বছর এবং আমি বিপিএল পরিবারের সদস্য। আমি বার্ধক্য পেনশন (IGNOAPS) এর জন্য আবেদন করতে চাই।",
@@ -84,17 +293,31 @@
     }
   },
   {
-    "id": "unverified_maternity_nutrition",
-    "name": "Anganwadi Nutrition, Immunisation & Maternity Support",
-    "state": "ALL",
-    "status": "unverified",
+    "id": "wb_old_age_pension",
+    "name": "West Bengal Old Age Pension Scheme",
+    "scope": "West Bengal State",
+    "state": "West Bengal",
+    "status": "verified",
     "last_verified": "2026-11-21",
-    "source_url": "",
-    "benefit": "Ask at the office for current local benefits and eligibility",
+    "source_url": "https://www.myscheme.gov.in/schemes/wb-old-age-pension",
+    "target_group": "Elderly residents of West Bengal aged 60+",
+    "benefit": "Rs 1,000 per month via DBT (combined central share + state top-up where applicable)",
     "rules": {
-      "keywords": ["pregnant", "maternity", "child", "baby", "anganwadi", "nutrition", "school", "scholarship"]
+      "states": ["West Bengal"],
+      "min_age": 60
     },
-    "documents": ["Mother & Child Protection Card (if available)", "Ration Card / ID Proof"],
-    "office_to_visit": "Nearest Anganwadi Centre or ASHA worker"
+    "documents": [
+      "Age Proof (Birth Certificate / Voter ID / Aadhaar Card)",
+      "Domicile / Residential Certificate",
+      "Ration Card / BPL Card",
+      "Income Certificate",
+      "Bank Passbook and Passport-size photograph"
+    ],
+    "office_to_visit": "BDO office, Duare Sarkar camp, or Municipal office",
+    "what_to_say_templates": {
+      "en": "I am a senior citizen aged {age} residing in West Bengal applying for the West Bengal Old Age Pension.",
+      "bn": "আমি পশ্চিমবঙ্গের {age} বছর বয়সী প্রবীণ নাগরিক, রাজ্য বার্ধক্য পেনশনের জন্য আবেদন করতে চাই।",
+      "hi": "मैं पश्चिम बंगाल का/की {age} साल का वरिष्ठ नागरिक हूँ, राज्य वृद्धावस्था पेंशन के लिए आवेदन करना चाहता/चाहती हूँ।"
+    }
   }
 ]

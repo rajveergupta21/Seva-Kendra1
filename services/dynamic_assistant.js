@@ -218,6 +218,19 @@ function fallbackRuleExtraction(text, currentProfile, preferredLang) {
     extracted.gender = "female";
   } else if (lower.includes("married") || lower.includes("विवाहित") || lower.includes("शादीशुदा") || lower.includes("বিবাহিত")) {
     extracted.marital_status = "married";
+  } else if (lower.includes("unmarried") || lower.includes("अविवाहित") || lower.includes("অবিবাহিত") || lower.includes("single") || lower.includes("कुंवारी") || lower.includes("शादी नहीं")) {
+    extracted.marital_status = "single";
+  }
+
+  // Pregnant or lactating mother
+  if (lower.includes("pregnant") || lower.includes("गर्भवती") || lower.includes("গর্ভাবস্থা") || lower.includes("lactating") || lower.includes("स्तनपान") || lower.includes("দুধ খাওয়া") || lower.includes("baby") || lower.includes("बच्चा होने")) {
+    extracted.pregnant_or_lactating = true;
+    extracted.gender = "female";
+  }
+
+  // Daughter / girl child
+  if (lower.includes("daughter") || lower.includes("बेटी") || lower.includes("लड़की") || lower.includes("মেয়ে") || lower.includes("কন্যা")) {
+    extracted.has_daughter = true;
   }
 
   // Gender detection (if not already set)
