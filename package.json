@@ -1,0 +1,20 @@
+{
+  "name": "jankalyan-voice-gateway",
+  "version": "1.0.0",
+  "description": "Zero-literacy voice eligibility engine for rural Indian welfare schemes",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/test_engine.js && node tests/test_dialog.js && node tests/test_triage.js",
+    "start": "node server.js"
+  },
+  "keywords": [
+    "sarvam-ai",
+    "voice-ai",
+    "indic-ai",
+    "digital-public-infrastructure",
+    "build-for-india"
+  ],
+  "author": "Build for India 3 Team",
+  "license": "MIT"
+}

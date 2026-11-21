@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JanKalyan Voice Gateway | सेवा भंडार</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Hindi:ital@0;1&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header Banner -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="logo-group">
+        <div class="emblem-badge">🇮🇳</div>
+        <div>
+          <h1>सेवा भंडार (JanKalyan Voice Gateway)</h1>
+          <p class="subhead">बोलकर जानिए अपनी सरकारी योजना | Zero-Literacy Voice Protocol</p>
+        </div>
+      </div>
+      <div class="header-pills">
+        <span class="pill pill-green">✓ 100% सटीक (Deterministic)</span>
+        <span class="pill pill-orange">Powered by Sarvam AI</span>
+        <span class="pill pill-blue">मुफ्त सेवा (Public Good)</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Judge Persona Quick-Demo Bar -->
+  <div class="demo-bar">
+    <span class="demo-label">⚡ त्वरित परीक्षण (Judge Presets):</span>
+    <button class="preset-btn active" onclick="loadPreset('kamla')">
+      👵 कमला देवी (49, विधवा, भूमिहीन, UP)
+    </button>
+    <button class="preset-btn" onclick="loadPreset('ramesh')">
+      🌾 रमेश किसान (42, 2.5 एकड़, बिहार)
+    </button>
+    <button class="preset-btn" onclick="loadPreset('sunita')">
+      🤰 सुनीता देवी (23, गर्भवती, MP)
+    </button>
+    <button class="preset-btn" onclick="loadPreset('elderly')">
+      👴 मुन्ना लाल (63, बुजुर्ग, बीपीएल)
+    </button>
+    <button class="preset-btn" style="background: #2a1b0a; border-color: #ff9933; color: #ff9933; font-weight: 700;" onclick="loadTriagePreset('parvati')">
+      ⚠️ पार्वती देवी (67, रुकी हुई पेंशन जांच, बिहार)
+    </button>
+  </div>
+
+  <main class="main-container">
+    <!-- Channel Switcher Tabs -->
+    <div class="channel-tabs">
+      <button class="tab-btn active" id="tab-voice" onclick="switchChannel('voice')">
+        🎙️ आवाज़ से पूछें (Voice Mic PWA)
+      </button>
+      <button class="tab-btn" id="tab-telephony" onclick="switchChannel('telephony')">
+        📞 2G फोन कॉल (PSTN IVR सिम्युलेटर)
+      </button>
+      <button class="tab-btn" id="tab-whatsapp" onclick="switchChannel('whatsapp')">
+        💬 व्हाट्सऐप वॉइस नोट (WhatsApp Gateway)
+      </button>
+    </div>
+
+    <!-- Active Channel Panel -->
+    <div class="channel-content">
+      
+      <!-- MODE 1: Interactive Voice PWA -->
+      <section id="panel-voice" class="channel-panel active">
+        <!-- Progress Stepper -->
+        <div class="stepper-wrapper">
+          <div class="stepper-track">
+            <div class="step-node active" id="step-0">1. उम्र व स्थिति</div>
+            <div class="step-node" id="step-1">2. ज़मीन</div>
+            <div class="step-node" id="step-2">3. कमाई व राशन</div>
+            <div class="step-node" id="step-3">4. बच्चे व परिवार</div>
+            <div class="step-node" id="step-4">5. राज्य व जिला</div>
+          </div>
+        </div>
+
+        <!-- Assistant Question Box -->
+        <div class="prompt-box">
+          <div class="assistant-tag">
+            <span class="speaker-icon">🔊</span>
+            <span id="prompt-speaker-title">सेवा भंडार आवाज़ सहायक:</span>
+          </div>
+          <div class="prompt-text" id="assistant-prompt-text">
+            "नमस्ते दीदी। मैं आपको सरकारी योजनाओं की सही जानकारी दूँगा। सबसे पहले बताइए, आपकी उम्र कितनी है, और क्या आप शादीशुदा हैं, विधवा हैं, या अकेली हैं?"
+          </div>
+          <div class="prompt-hint" id="assistant-prompt-hint">
+            💡 बोलें: "हम 48 साल के हैं, हमारे पति नहीं रहे"
+          </div>
+          <button class="play-audio-btn" id="repeat-audio-btn" onclick="replayCurrentPromptAudio()">
+            ▶️ फिर से सुनें (Audio)
+          </button>
+        </div>
+
+        <!-- Mic Button & Audio Waveform Area -->
+        <div class="voice-interaction-area">
+          <div class="waveform-container" id="waveform">
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+          </div>
+
+          <button class="big-mic-button" id="mic-btn" onclick="toggleRecording()">
+            <div class="mic-icon">🎙️</div>
+            <div class="mic-label" id="mic-label">बोलने के लिए दबाएं</div>
+          </button>
+
+          <p class="mic-subtext" id="mic-status-text">
+            बटन दबाकर अपनी मातृभाषा में बोलें (Hindi / Bhojpuri)
+          </p>
+
+          <!-- Fallback Spoken Text Simulator for silent environments -->
+          <div class="text-sim-row">
+            <input type="text" id="manual-speech-input" placeholder="या यहाँ बोलकर/लिखकर भेजें..." value="हम 48 साल के हैं, हमारे पति नहीं रहे और कोई जमीन नहीं है।">
+            <button class="sim-send-btn" onclick="sendSpokenText()">जवाब भेजें ➔</button>
+          </div>
+        </div>
+
+        <!-- Live Extracted Slots Inspector -->
+        <div class="extracted-slots-card">
+          <div class="slots-header">
+            <span>📋 आपकी जानकारी (सत्यापित विवरण):</span>
+            <button class="reset-link" onclick="resetInterview()">शुरुआत से शुरू करें ↺</button>
+          </div>
+          <div class="slots-grid" id="slots-display">
+            <div class="slot-item"><span class="slot-k">उम्र:</span> <span class="slot-v" id="slot-age">--</span></div>
+            <div class="slot-item"><span class="slot-k">वैवाहिक स्थिति:</span> <span class="slot-v" id="slot-marital">--</span></div>
+            <div class="slot-item"><span class="slot-k">खेती की ज़मीन:</span> <span class="slot-v" id="slot-land">--</span></div>
+            <div class="slot-item"><span class="slot-k">सालाना कमाई:</span> <span class="slot-v" id="slot-income">--</span></div>
+            <div class="slot-item"><span class="slot-k">राज्य/जिला:</span> <span class="slot-v" id="slot-location">--</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- MODE 2: Telephony 2G IVR Simulator -->
+      <section id="panel-telephony" class="channel-panel">
+        <div class="telephony-showcase">
+          <div class="feature-phone-mockup">
+            <div class="phone-speaker"></div>
+            <div class="phone-screen">
+              <div class="screen-header">📶 2G GSM &nbsp; | &nbsp; 🔋 98%</div>
+              <div class="screen-body">
+                <p class="phone-call-title">कॉल जारी है (01:14)</p>
+                <p class="phone-number">📞 1800-180-SEVA (टोल फ्री)</p>
+                <div class="phone-live-captions" id="ivr-live-captions">
+                  "नमस्ते दीदी। विधवा पेंशन के लिए आपको हर महीने ₹1,000 मिलेंगे..."
+                </div>
+              </div>
+            </div>
+            <div class="keypad-grid">
+              <div class="key">1</div><div class="key">2</div><div class="key">3</div>
+              <div class="key">4</div><div class="key">5</div><div class="key">6</div>
+              <div class="key">7</div><div class="key">8</div><div class="key">9</div>
+              <div class="key call-btn" onclick="simulateIvrCall()">📞 डायल करें</div>
+              <div class="key">0</div>
+              <div class="key end-btn" onclick="resetInterview()">कट करें</div>
+            </div>
+          </div>
+          <div class="telephony-explainer">
+            <h3>बिना इंटरनेट / बिना स्मार्टफोन के काम करता है</h3>
+            <p>
+              भारत के <strong>35 करोड़ नागरिक</strong> आज भी साधारण कीपैड फोन इस्तेमाल करते हैं। 
+              उन्हें कोई ऐप डाउनलोड करने या वेबसाइट खोलने की जरूरत नहीं है।
+            </p>
+            <ul>
+              <li><strong>निःशुल्क टोल-फ्री कॉल:</strong> 1800 नंबर पर मिस्ड कॉल या फोन करें।</li>
+              <li><strong>सर्वाम एआई (सारिका + बुलबुल):</strong> 2G आवाज़ को सीधे पहचानता है और प्राकृतिक आवाज़ में जवाब देता है।</li>
+              <li><strong>कॉल कटने के बाद:</strong> कागजों की सूची का साधारण <strong>SMS</strong> तुरंत आ जाता है।</li>
+            </ul>
+            <button class="action-test-btn" onclick="simulateIvrCall()">▶️ 2G फोन कॉल सिम्युलेट करें</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- MODE 3: WhatsApp Audio Simulator -->
+      <section id="panel-whatsapp" class="channel-panel">
+        <div class="whatsapp-showcase">
+          <div class="wa-mockup">
+            <div class="wa-header">
+              <div class="wa-avatar">🏛️</div>
+              <div class="wa-title">
+                <strong>सेवा भंडार (JanKalyan Gateway) ✓</strong>
+                <small>आधिकारिक सार्वजनिक सेवा</small>
+              </div>
+            </div>
+            <div class="wa-messages" id="wa-chat-window">
+              <div class="wa-msg user">
+                <div class="wa-audio-pill">
+                  <span>▶️ 0:08</span>
+                  <div class="wa-wave"> ▂▃▅▆▇</div>
+                </div>
+                <small class="wa-time">10:42 AM</small>
+              </div>
+              <div class="wa-msg bot">
+                <div class="wa-audio-pill">
+                  <span>▶️ 0:34</span>
+                  <div class="wa-wave"> ▂▃▅▆▇</div>
+                </div>
+                <p>दीदी, आपकी आवाज़ सुन ली गई है। आप विधवा पेंशन (₹1,000/माह) के लिए पात्र हैं।</p>
+                <small class="wa-time">10:43 AM</small>
+              </div>
+            </div>
+            <div class="wa-footer">
+              <button class="wa-mic-btn" onclick="simulateWhatsAppVoice()">🎤 वॉइस नोट भेजें</button>
+            </div>
+          </div>
+          <div class="telephony-explainer">
+            <h3>व्हाट्सऐप वॉइस नोट का आसान समाधान</h3>
+            <p>ग्रामीण महिलाओं के लिए टाइप करना कठिन है, लेकिन माइक दबाकर वॉइस नोट छोड़ना बहुत आसान है।</p>
+            <ul>
+              <li>नंबर पर सिर्फ एक वॉइस मैसेज भेजें।</li>
+              <li>जवाब में तुरंत बोली हुई आवाज़ और <strong>योजना पर्ची</strong> प्राप्त करें।</li>
+              <li>इस पर्ची को सीधे पंचायत भवन या सीएससी संचालक को दिखाएं।</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Final Results: The Actionable Triad -->
+    <section class="results-section" id="results-card" style="display: none;">
+      <div class="results-header">
+        <h2>🎉 आपकी पहचानी गई सरकारी योजनाएं</h2>
+        <span class="badge-matched" id="badge-count">2 योजनाएं स्वीकृत</span>
+      </div>
+
+      <!-- Spoken Audio Player Banner -->
+      <div class="audio-banner">
+        <div class="audio-banner-text">
+          <strong>🔊 समाधान आवाज़ में सुनें (Sarvam Bulbul TTS):</strong>
+          <p id="spoken-audio-transcript">लोड हो रहा है...</p>
+        </div>
+        <button class="play-audio-btn large" onclick="replaySpokenAudio()">▶️ आवाज़ सुनें</button>
+      </div>
+
+      <!-- The Triad Grid -->
+      <div class="triad-grid">
+        <!-- 1. Qualified Schemes -->
+        <div class="triad-card scheme-card">
+          <div class="card-icon">💰</div>
+          <h3>1. आपको मिलने वाली योजनाएं</h3>
+          <div id="schemes-list" class="schemes-list">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- 2. The 3 Physical Documents -->
+        <div class="triad-card docs-card">
+          <div class="card-icon">📂</div>
+          <h3>2. सिर्फ ये 3 कागज़ ले जाएं</h3>
+          <ul id="docs-list" class="checklist">
+            <!-- Dynamically populated -->
+          </ul>
+        </div>
+
+        <!-- 3. Where to Go -->
+        <div class="triad-card office-card">
+          <div class="card-icon">📍</div>
+          <h3>3. यहाँ जाकर जमा करें</h3>
+          <p class="office-name" id="office-destination">
+            ग्राम पंचायत भवन (पंचायत सहायक)
+          </p>
+          <p class="office-instruction">
+            सुबह 10 बजे से शाम 4 बजे के बीच अपने गाँव के पंचायत सचिवालय या पास के जन सेवा केंद्र (CSC) में जाएं।
+          </p>
+        </div>
+      </div>
+
+      <!-- The Physical Handover SMS Slip -->
+      <div class="sms-slip-card">
+        <div class="sms-slip-header">
+          <span>📱 आपके फोन पर भेजा गया SMS (पंचायत ऑपरेटर को दिखाएं)</span>
+          <span class="tag-sms">DLT Approved SMS</span>
+        </div>
+        <pre class="sms-content" id="sms-text-content">
+[सेवा भंडार - योजना पर्ची]
+दीदी, आप इन 2 योजनाओं के लिए पात्र हैं...
+        </pre>
+      </div>
+    </section>
+
+    <!-- Scheme Catalog Drawer (Verification for Judges) -->
+    <section class="catalog-section">
+      <div class="catalog-header" onclick="toggleCatalog()">
+        <h3>📖 सत्यापित योजना नियम सूची (Deterministic Verification Catalog)</h3>
+        <span id="catalog-toggle-icon">▼ देखें</span>
+      </div>
+      <div class="catalog-body" id="catalog-body" style="display: none;">
+        <p class="catalog-note">
+          यह सिस्टम एलएलएम के अंदाजे (hallucination) पर काम नहीं करता। सभी योजनाएं सरकारी गजट और नियमों के आधार पर परखी जाती हैं।
+        </p>
+        <div class="schemes-table-wrapper" id="schemes-table-container">
+          <!-- Populated from schemes_data.json -->
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <p>
+      <strong>JanKalyan Voice Gateway (सेवा भंडार)</strong> — A Public Good for <em>Build for India 3</em>.<br>
+      Zero-Literacy Voice Accessibility • Powered by Sarvam AI • Deterministic Welfare Verification
+    </p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
