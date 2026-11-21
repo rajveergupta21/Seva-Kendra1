@@ -37,11 +37,10 @@ if (fs.existsSync(envPath)) {
   }
 }
 
-// 2. SECURITY: Fail-fast if SARVAM_API_KEY is missing. Never print key.
+// 2. SECURITY: Check if SARVAM_API_KEY is present
 if (!process.env.SARVAM_API_KEY) {
-  console.error("FATAL: SARVAM_API_KEY environment variable is missing.");
-  console.error("Please configure SARVAM_API_KEY in your .env or system environment.");
-  process.exit(1);
+  console.warn("WARNING: SARVAM_API_KEY environment variable is missing.");
+  console.warn("Please configure SARVAM_API_KEY in your .env or Vercel Environment Variables.");
 }
 
 const PORT = process.env.PORT || 3000;
@@ -654,18 +653,22 @@ function wrapPcmInWav(pcmBuffer, sampleRate = 16000) {
 // ---------------------------------------------------------------------------
 // Server Startup & Cache Pre-warming
 // ---------------------------------------------------------------------------
-server.listen(PORT, async () => {
-  console.log(`=======================================================`);
-  console.log(` Seva Kendra Voice Gateway (High-Performance Audio) Active `);
-  console.log(` URL: http://localhost:${PORT}`);
-  console.log(` WebSocket Streaming: ws://localhost:${PORT}/ws/speech`);
-  console.log(` Rate Limiting: ${RATE_LIMIT_MAX_REQUESTS} req/min | 2MB Audio Cap`);
-  console.log(`=======================================================`);
+if (process.env.VERCEL !== '1' && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
+  server.listen(PORT, async () => {
+    console.log(`=======================================================`);
+    console.log(` Seva Kendra Voice Gateway (High-Performance Audio) Active `);
+    console.log(` URL: http://localhost:${PORT}`);
+    console.log(` WebSocket Streaming: ws://localhost:${PORT}/ws/speech`);
+    console.log(` Rate Limiting: ${RATE_LIMIT_MAX_REQUESTS} req/min | 2MB Audio Cap`);
+    console.log(`=======================================================`);
 
-  // Pre-warm fixed audio cache in background
-  try {
-    await prewarmTtsCache();
-  } catch (err) {
-    console.warn(`[TTS Cache Startup Note] Cache prewarm will continue on demand: ${err.message}`);
-  }
-});
+    // Pre-warm fixed audio cache in background
+    try {
+      await prewarmTtsCache();
+    } catch (err) {
+      console.warn(`[TTS Cache Startup Note] Cache prewarm will continue on demand: ${err.message}`);
+    }
+  });
+}
+
+export default server;

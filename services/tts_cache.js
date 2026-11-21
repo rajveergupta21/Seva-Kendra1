@@ -19,14 +19,21 @@ import { ERROR_CODES, ERROR_MESSAGES } from './error_messages.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const CACHE_DIR = path.join(__dirname, '..', 'cache', 'tts');
+const isVercel = process.env.VERCEL === '1' || Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME);
+export const CACHE_DIR = isVercel
+  ? path.join('/tmp', 'cache', 'tts')
+  : path.join(__dirname, '..', 'cache', 'tts');
 
 // In-memory audio buffer cache for ultra-low latency serving
 export const MEMORY_AUDIO_CACHE = new Map();
 
-// Ensure cache directory exists
-if (!fs.existsSync(CACHE_DIR)) {
-  fs.mkdirSync(CACHE_DIR, { recursive: true });
+// Ensure cache directory exists safely (read-only filesystem safe)
+try {
+  if (!fs.existsSync(CACHE_DIR)) {
+    fs.mkdirSync(CACHE_DIR, { recursive: true });
+  }
+} catch (e) {
+  console.warn("Could not create disk cache directory, using in-memory only:", e.message);
 }
 
 export const GREETINGS = {
@@ -207,5 +214,3 @@ export async function prewarmTtsCache() {
 
   console.log(`✓ [TTS Cache] Pre-warming complete. (${MEMORY_AUDIO_CACHE.size} audio clips ready in memory)`);
 }
-
-export { CACHE_DIR };
