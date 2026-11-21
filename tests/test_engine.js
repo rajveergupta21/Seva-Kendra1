@@ -2,63 +2,56 @@
  * Unit Test for Deterministic Eligibility Engine
  */
 
-import { matchSchemes } from '../engine/eligibility.js';
+import { evaluateAllSchemes, evaluateSchemeEligibility } from '../engine/eligibility.js';
 
 console.log("=== Testing Deterministic Eligibility Engine ===");
 
-// Persona 1: Kamla Devi (Widow, 49, landless, rural laborer, UP, income 45000)
+// Test 1: Kamla Devi (UP widow, 49, BPL) -> IGNWPS
 const kamlaDevi = {
   age: 49,
   gender: 'female',
   marital_status: 'widow',
-  landholding_acres: 0.0,
-  annual_income_inr: 45000,
-  is_tax_payer: false,
-  has_minor_daughter: false,
-  kutcha_house_or_homeless: true,
-  state: 'Uttar Pradesh',
-  district: 'Chandauli'
+  bpl_or_ration_card: true,
+  state: 'Uttar Pradesh'
 };
 
-const resultKamla = matchSchemes(kamlaDevi);
+const resultKamla = evaluateAllSchemes(kamlaDevi);
 console.log("\n[Test 1: Kamla Devi Profile]");
-console.log("Matched Schemes Count:", resultKamla.matchedCount);
-resultKamla.topSchemes.forEach(s => console.log(` - ${s.title_hi} (${s.id}): ₹${s.monthly_benefit_inr}/mo, annual ₹${s.annual_benefit_inr}`));
-console.log("Primary Documents:", resultKamla.primaryDocuments);
-console.log("Primary Office:", resultKamla.primaryOffice);
-
-// Verify Kamla Devi matched Widow Pension and PM Awas
-const matchedIds = resultKamla.topSchemes.map(s => s.id);
-if (matchedIds.includes('IGNWPS_WIDOW')) {
-  console.log(" PASS: Kamla Devi correctly qualified for Widow Pension (IGNWPS_WIDOW)");
+console.log("Matched Schemes Count:", resultKamla.matchedVerified.length);
+const matchedIds = resultKamla.matchedVerified.map(s => s.id);
+if (matchedIds.includes('central_ignwps')) {
+  console.log(" PASS: Kamla Devi correctly qualified for Widow Pension (central_ignwps)");
 } else {
-  console.error(" FAIL: Expected Widow Pension for Kamla Devi");
+  console.error(" FAIL: Expected Widow Pension for Kamla Devi, got:", matchedIds);
   process.exit(1);
 }
 
-// Persona 2: Ramesh (Small Farmer, 42, married, 2.5 acres land, income 75000)
-const rameshFarmer = {
-  age: 42,
-  gender: 'male',
+// Test 2: Ananya (WB woman, 35, married) -> WB Annapurna
+const ananya = {
+  age: 35,
+  gender: 'female',
   marital_status: 'married',
-  landholding_acres: 2.5,
-  annual_income_inr: 75000,
-  is_tax_payer: false,
-  state: 'Bihar',
-  district: 'Samastipur'
+  state: 'West Bengal'
 };
 
-const resultRamesh = matchSchemes(rameshFarmer);
-console.log("\n[Test 2: Ramesh Small Farmer Profile]");
-console.log("Matched Schemes Count:", resultRamesh.matchedCount);
-resultRamesh.topSchemes.forEach(s => console.log(` - ${s.title_hi} (${s.id})`));
-
-const rameshIds = resultRamesh.topSchemes.map(s => s.id);
-if (rameshIds.includes('PM_KISAN')) {
-  console.log(" PASS: Ramesh correctly qualified for PM-Kisan (PM_KISAN)");
+const resultAnanya = evaluateAllSchemes(ananya);
+console.log("\n[Test 2: Ananya Profile]");
+const ananyaIds = resultAnanya.matchedVerified.map(s => s.id);
+if (ananyaIds.includes('wb_annapurna_yojana')) {
+  console.log(" PASS: Ananya correctly qualified for Annapurna Yojana (wb_annapurna_yojana)");
 } else {
-  console.error(" FAIL: Expected PM-Kisan for Ramesh");
+  console.error(" FAIL: Expected Annapurna Yojana for Ananya, got:", ananyaIds);
   process.exit(1);
 }
 
-console.log("\n ALL TESTS PASSED SUCCESSFULLY!");
+// Test 3: Unverified scheme
+const unverifiedScheme = { id: "unverified_maternity_nutrition", status: "unverified" };
+const evalUnv = evaluateSchemeEligibility(unverifiedScheme, kamlaDevi);
+if (evalUnv.status === "unverified") {
+  console.log(" PASS: unverified_maternity_nutrition correctly marked unverified");
+} else {
+  console.error(" FAIL: Expected unverified status");
+  process.exit(1);
+}
+
+console.log("\n ALL ELIGIBILITY TESTS PASSED SUCCESSFULLY!");

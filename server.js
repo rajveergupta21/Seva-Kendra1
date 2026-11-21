@@ -9,14 +9,13 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { WebSocketServer } from 'ws';
 
-import { getOrCreateSession, processDialogTurn, resetSession, QUESTIONS } from './services/dialog.js';
 import { speechToText, textToSpeech, convertSpeechStream, createSttStreamingSession, getSttLanguageCode, getTtsLanguageCode, splitIntoSentences } from './services/sarvam.js';
 import { matchSchemes } from './engine/eligibility.js';
-import { diagnoseStoppage, BENEFICIARIES, listGrievances } from './engine/triage.js';
+import { diagnoseStoppage, listGrievances } from './engine/triage.js';
 import { processDynamicTurn } from './services/dynamic_assistant.js';
 import { ERROR_CODES, getErrorMessage } from './services/error_messages.js';
 import { recordTurnMetrics, updatePlaybackStart, getMetricsSummary } from './services/metrics.js';
-import { GREETINGS, CACHE_DIR, getOrSynthesizeCachedAudio, prewarmTtsCache, generateEarconWav } from './services/tts_cache.js';
+import { GREETINGS, CACHE_DIR, MEMORY_AUDIO_CACHE, getOrSynthesizeCachedAudio, prewarmTtsCache, generateEarconWav } from './services/tts_cache.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -185,13 +184,10 @@ const server = http.createServer(async (req, res) => {
   const pathname = parsedUrl.pathname;
 
   try {
-    // 0. API: Health & Edge PoP Telemetry
+    // 0. API: Health Check (Real status only, no fake Edge PoP / QUIC)
     if (pathname === '/api/health' && req.method === 'GET') {
       return sendJson(res, 200, {
         status: "healthy",
-        service: "JanSeva Voice / JanKalyan Edge Gateway (Seva Kendra)",
-        edge_pop: "CCU-01 (Kolkata Regional Edge PoP)",
-        protocol: "HTTP/1.1 + WebSocket Streaming",
         sarvam_configured: Boolean(process.env.SARVAM_API_KEY)
       });
     }
@@ -209,11 +205,24 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, { status: "recorded" });
     }
 
-    // 0c. API: Serve Cached TTS Audio
+    // 0c. API: Serve Cached TTS Audio (In-memory or disk)
     if (pathname.startsWith('/api/tts/cached/') && (req.method === 'GET' || req.method === 'HEAD')) {
       const filename = path.basename(pathname);
-      const filePath = path.join(CACHE_DIR, filename);
+      const key = filename.replace(/\.(wav|mp3)$/, '');
 
+      if (MEMORY_AUDIO_CACHE.has(key)) {
+        const memBuf = MEMORY_AUDIO_CACHE.get(key);
+        res.writeHead(200, {
+          'Content-Type': filename.endsWith('.mp3') ? 'audio/mpeg' : 'audio/wav',
+          'Content-Length': memBuf.length,
+          'Cache-Control': 'public, max-age=31536000, immutable',
+          'Access-Control-Allow-Origin': '*'
+        });
+        if (req.method === 'HEAD') return res.end();
+        return res.end(memBuf);
+      }
+
+      const filePath = path.join(CACHE_DIR, filename);
       if (fs.existsSync(filePath)) {
         const stat = fs.statSync(filePath);
         res.writeHead(200, {
@@ -357,10 +366,10 @@ const server = http.createServer(async (req, res) => {
       const transcript = (stt.transcript || "").trim();
       if (!transcript) {
         // Audio had volume, but no recognizable words
-        const errObj = getErrorMessage(ERROR_CODES.TRULY_EMPTY_SPEECH, language);
+        const errObj = getErrorMessage(ERROR_CODES.EMPTY_SPEECH, language);
         return sendJson(res, 200, {
           type: "ERROR",
-          errorCode: ERROR_CODES.TRULY_EMPTY_SPEECH,
+          errorCode: "EMPTY_SPEECH",
           replyText: errObj.screenMessage,
           spokenScript: errObj.spokenText
         });

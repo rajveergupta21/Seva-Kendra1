@@ -1,141 +1,100 @@
 [
   {
-    "id": "IGNWPS_WIDOW",
-    "title_hi": "निराश्रित (विधवा) महिला पेंशन योजना",
-    "title_en": "Indira Gandhi National Widow Pension Scheme",
-    "monthly_benefit_inr": 1000,
-    "annual_benefit_inr": 12000,
-    "category": "Social Security",
-    "conditions": {
+    "id": "wb_annapurna_yojana",
+    "name": "Annapurna Yojana (West Bengal)",
+    "replaces": "Lakshmir Bhandar (migrated from 1 June 2026)",
+    "state": "West Bengal",
+    "status": "verified",
+    "last_verified": "2026-11-21",
+    "source_url": "https://www.myscheme.gov.in/schemes/aywb",
+    "benefit": "Rs 3,000 per month via Direct Benefit Transfer (DBT) to an Aadhaar-linked bank account",
+    "rules": {
+      "gender": ["female"],
+      "min_age": 25,
+      "max_age": 60,
+      "states": ["West Bengal"],
+      "exclude_govt_employee_or_pensioner": true,
+      "exclude_income_tax_payer": true
+    },
+    "documents": [
+      "Aadhaar Card (carry copy; do not share full number here)",
+      "EPIC / Voter ID Card",
+      "Aadhaar-linked Bank Passbook",
+      "Ration Card (if available)",
+      "Swasthya Sathi Card (if available)"
+    ],
+    "office_to_visit": "Block Development Office (BDO), Duare Sarkar camp, or local Municipal / Gram Panchayat office",
+    "what_to_say_templates": {
+      "en": "I am a resident of West Bengal aged {age} and would like to check my eligibility and apply for Annapurna Yojana.",
+      "bn": "আমি পশ্চিমবঙ্গের বাসিন্দা, আমার বয়স {age} বছর। আমি অন্নপূর্ণা যোজনার জন্য আবেদন করতে ও योग्यता যাচাই করতে চাই।",
+      "hi": "मैं पश्चिम बंगाल की निवासी हूँ, मेरी उम्र {age} साल है। मैं अन्नपूर्णा योजना के लिए आवेदन और पात्रता की जांच कराना चाहती हूँ।"
+    }
+  },
+  {
+    "id": "central_ignwps",
+    "name": "Indira Gandhi National Widow Pension Scheme (IGNWPS)",
+    "state": "ALL",
+    "status": "verified",
+    "last_verified": "2026-11-21",
+    "source_url": "https://www.myscheme.gov.in/schemes/ignwps",
+    "benefit": "Central share Rs 300 per month (age 40–79) or Rs 500 per month (age 80+), plus applicable state top-up",
+    "rules": {
       "gender": ["female"],
       "marital_status": ["widow"],
-      "min_age": 18,
-      "max_age": 120,
-      "max_annual_income_inr": 200000
+      "min_age": 40,
+      "max_age": 79,
+      "requires_bpl": true
     },
-    "documents_hi": [
-      "आधार कार्ड (Aadhaar Card)",
-      "पति का मृत्यु प्रमाण पत्र (Husband's Death Certificate)",
-      "बैंक पासबुक की फोटोकॉपी (Bank Passbook Copy)"
+    "documents": [
+      "Husband's Death Certificate (with wife's name)",
+      "BPL Card / Ration Card",
+      "Age Proof (Birth Certificate, School Certificate, Ration Card, or Voter ID)",
+      "Bank Passbook & Passport-size Photos"
     ],
-    "where_to_submit_hi": "ग्राम पंचायत भवन (पंचायत सहायक) या नजदीकी जन सेवा केंद्र (CSC Center)",
-    "spoken_summary_hi": "दीदी, आपको विधवा पेंशन योजना के तहत हर महीने ₹1,000 सीधे आपके बैंक खाते में मिलेंगे।"
+    "office_to_visit": "Block Development Office (BDO), Gram Panchayat, or Municipality Social Welfare counter (also on UMANG portal)",
+    "what_to_say_templates": {
+      "en": "I am a widow aged {age} from a BPL household and want to apply for the Indira Gandhi National Widow Pension Scheme (IGNWPS).",
+      "bn": "আমি {age} বছর বয়সী বিধবা এবং বিপিএল পরিবারের সদস্য। আমি বিধবা পেনশন (IGNWPS) এর জন্য আবেদন করতে চাই।",
+      "hi": "मैं {age} साल की विधवा हूँ और बीपीएल परिवार से हूँ। मैं विधवा पेंशन (IGNWPS) के लिए आवेदन करना चाहती हूँ।"
+    }
   },
   {
-    "id": "PM_KISAN",
-    "title_hi": "प्रधानमंत्री किसान सम्मान निधि योजना",
-    "title_en": "PM Kisan Samman Nidhi",
-    "monthly_benefit_inr": 500,
-    "annual_benefit_inr": 6000,
-    "category": "Agriculture",
-    "conditions": {
-      "min_landholding_acres": 0.01,
-      "max_landholding_acres": 5.0,
-      "is_tax_payer": false
-    },
-    "documents_hi": [
-      "आधार कार्ड (Aadhaar Card)",
-      "खतौनी / जमीन के कागजात (Land Records / Khatauni)",
-      "आधार से लिंक बैंक पासबुक (Aadhaar Linked Bank Account)"
-    ],
-    "where_to_submit_hi": "गाँव के लेखपाल या जन सेवा केंद्र (CSC)",
-    "spoken_summary_hi": "दीदी, आपके परिवार को पीएम किसान सम्मान निधि के तहत साल में ₹6,000 की नकद सहायता मिलेगी।"
-  },
-  {
-    "id": "PMMVY",
-    "title_hi": "प्रधानमंत्री मातृ वंदना योजना",
-    "title_en": "Pradhan Mantri Matru Vandana Yojana",
-    "monthly_benefit_inr": 0,
-    "annual_benefit_inr": 6000,
-    "category": "Maternal Health",
-    "conditions": {
-      "gender": ["female"],
-      "min_age": 19,
-      "pregnant_or_lactating": true
-    },
-    "documents_hi": [
-      "माता और पिता का आधार कार्ड (Mother & Father Aadhaar)",
-      "मातृ एवं शिशु सुरक्षा (MCP) कार्ड (MCP Card)",
-      "महिला का बैंक खाता पासबुक (Mother's Bank Passbook)"
-    ],
-    "where_to_submit_hi": "गाँव की आंगनवाड़ी कार्यकत्री या आशा दीदी से संपर्क करें",
-    "spoken_summary_hi": "मातृ वंदना योजना के तहत पोषण और स्वास्थ्य के लिए ₹6,000 की सरकारी सहायता मिलेगी।"
-  },
-  {
-    "id": "KANYA_SUMANGALA",
-    "title_hi": "मुख्यमंत्री कन्या सुमंगला योजना",
-    "title_en": "Mukhyamantri Kanya Sumangala Yojana",
-    "monthly_benefit_inr": 0,
-    "annual_benefit_inr": 25000,
-    "category": "Girl Child Welfare",
-    "conditions": {
-      "has_minor_daughter": true,
-      "max_annual_income_inr": 300000
-    },
-    "documents_hi": [
-      "बेटी का जन्म प्रमाण पत्र (Daughter's Birth Certificate)",
-      "माता या पिता का आधार कार्ड (Parent Aadhaar)",
-      "राशन कार्ड या बैंक पासबुक (Ration Card or Bank Passbook)"
-    ],
-    "where_to_submit_hi": "ब्लॉक कार्यालय (BDO) या नजदीकी जन सेवा केंद्र (CSC)",
-    "spoken_summary_hi": "आपकी बेटी की पढ़ाई और स्वास्थ्य के लिए कुल ₹25,000 तक की सरकारी सहायता विभिन्न चरणों में मिलेगी।"
-  },
-  {
-    "id": "IGNOAPS_OLD_AGE",
-    "title_hi": "वृद्धावस्था पेंशन योजना (ओल्ड एज पेंशन)",
-    "title_en": "National Old Age Pension Scheme",
-    "monthly_benefit_inr": 1000,
-    "annual_benefit_inr": 12000,
-    "category": "Elderly Welfare",
-    "conditions": {
+    "id": "central_ignoaps",
+    "name": "Indira Gandhi National Old Age Pension Scheme (IGNOAPS)",
+    "state": "ALL",
+    "status": "verified",
+    "last_verified": "2026-11-21",
+    "source_url": "https://www.myscheme.gov.in/schemes/nsap-ignoaps",
+    "benefit": "Central pension for senior citizens from BPL households (plus applicable state top-up)",
+    "rules": {
       "min_age": 60,
-      "max_annual_income_inr": 200000
+      "requires_bpl": true
     },
-    "documents_hi": [
-      "आधार कार्ड / उम्र प्रमाण (Aadhaar / Age Proof)",
-      "राशन कार्ड (बीपीएल / अंत्योदय)",
-      "बैंक पासबुक की कॉपी (Bank Passbook Copy)"
+    "documents": [
+      "Age Proof (Voter ID, Birth Certificate, or Medical Board certificate)",
+      "BPL Card / Ration Card",
+      "Domicile / Residence Proof",
+      "Bank Passbook & Passport-size Photos"
     ],
-    "where_to_submit_hi": "ग्राम पंचायत भवन (पंचायत सहायक) या ब्लॉक विकास अधिकारी (BDO)",
-    "spoken_summary_hi": "बुजुर्गों के सम्मान के लिए वृद्धावस्था पेंशन योजना में ₹1,000 प्रति माह बैंक खाते में मिलेंगे।"
+    "office_to_visit": "Block Development Office (BDO), Gram Panchayat, or Municipality Social Welfare counter (also on UMANG portal)",
+    "what_to_say_templates": {
+      "en": "I am {age} years old from a BPL household and want to apply for the Old Age Pension Scheme (IGNOAPS).",
+      "bn": "আমার বয়স {age} বছর এবং আমি বিপিএল পরিবারের সদস্য। আমি বার্ধক্য পেনশন (IGNOAPS) এর জন্য আবেদন করতে চাই।",
+      "hi": "मेरी उम्र {age} साल है और मैं बीपीएल परिवार से हूँ। मैं वृद्धावस्था पेंशन (IGNOAPS) के लिए आवेदन करना चाहती हूँ।"
+    }
   },
   {
-    "id": "PMAY_GRAMIN",
-    "title_hi": "प्रधानमंत्री आवास योजना (ग्रामीण)",
-    "title_en": "PM Awas Yojana - Gramin",
-    "monthly_benefit_inr": 0,
-    "annual_benefit_inr": 120000,
-    "category": "Housing",
-    "conditions": {
-      "max_landholding_acres": 1.0,
-      "max_annual_income_inr": 150000,
-      "kutcha_house_or_homeless": true
+    "id": "unverified_maternity_nutrition",
+    "name": "Anganwadi Nutrition, Immunisation & Maternity Support",
+    "state": "ALL",
+    "status": "unverified",
+    "last_verified": "2026-11-21",
+    "source_url": "",
+    "benefit": "Ask at the office for current local benefits and eligibility",
+    "rules": {
+      "keywords": ["pregnant", "maternity", "child", "baby", "anganwadi", "nutrition", "school", "scholarship"]
     },
-    "documents_hi": [
-      "आधार कार्ड (Aadhaar Card)",
-      "जॉब कार्ड / मनरेगा कार्ड या राशन कार्ड",
-      "बैंक खाता पासबुक (Bank Account Passbook)"
-    ],
-    "where_to_submit_hi": "ग्राम विकास अधिकारी (VDO / सचिव) या ग्राम प्रधान",
-    "spoken_summary_hi": "पक्का मकान बनाने के लिए सरकार द्वारा ₹1,20,000 की सीधी आर्थिक मदद मिलेगी।"
-  },
-  {
-    "id": "PM_SVANIDHI",
-    "title_hi": "पीएम स्वनिधि रेहड़ी-पटरी योजना",
-    "title_en": "PM SVANidhi Scheme",
-    "monthly_benefit_inr": 0,
-    "annual_benefit_inr": 10000,
-    "category": "Livelihood & Micro-Credit",
-    "conditions": {
-      "min_age": 18,
-      "is_informal_worker_or_vendor": true
-    },
-    "documents_hi": [
-      "आधार कार्ड (Aadhaar Card)",
-      "वेंडिंग पहचान पत्र या ग्राम पंचायत सिफारिश पत्र",
-      "बैंक खाता (Bank Account Passbook)"
-    ],
-    "where_to_submit_hi": "नजदीकी जन सेवा केंद्र (CSC) या स्थानीय बैंक शाखा",
-    "spoken_summary_hi": "काम शुरू करने या बढ़ाने के लिए ₹10,000 का ब्याज-मुक्त सरकारी लोन सीधे बैंक से मिलेगा।"
+    "documents": ["Mother & Child Protection Card (if available)", "Ration Card / ID Proof"],
+    "office_to_visit": "Nearest Anganwadi Centre or ASHA worker"
   }
 ]

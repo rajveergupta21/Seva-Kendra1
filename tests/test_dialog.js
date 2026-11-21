@@ -1,83 +1,42 @@
 /**
- * End-to-End Dialog and Pipeline Test
- * Tests the 5-question conversational state machine and slot extraction without network
+ * Dynamic Assistant & Conversational Engine Tests
  */
 
-import { getOrCreateSession, processDialogTurn, resetSession, QUESTIONS } from '../services/dialog.js';
-import { extractSlotsFromSpokenHindi } from '../services/sarvam.js';
+import { extractIntentAndProfile, processDynamicTurn } from '../services/dynamic_assistant.js';
 
-console.log("=== Testing Conversational State Machine & Slot Extraction ===");
+console.log("=== Testing Dynamic Conversational Engine ===");
 
-// 1. Test Slot Extraction on rural spoken utterances
-console.log("\n[1. Testing Slot Extraction on Spoken Colloquial Hindi]");
-
-const u1 = "हम 48 साल के हैं, हमारे पति नहीं रहे और कोई जमीन नहीं है।";
-const s1 = extractSlotsFromSpokenHindi(u1);
-console.log("Utterance 1:", u1);
-console.log("Extracted:", s1);
-if (s1.age === 48 && s1.marital_status === "widow" && s1.landholding_acres === 0.0) {
-  console.log(" PASS: Extracted Age 48, Widow, 0 acres land");
+// 1. Spoken Slot Extraction
+const s1 = await extractIntentAndProfile("हम 48 साल के हैं, हमारे पति नहीं रहे और कोई जमीन नहीं है।", {}, [], "hi");
+console.log("Extracted 1:", s1.extracted_fields);
+if (s1.extracted_fields.age === 48 && s1.extracted_fields.marital_status === "widow") {
+  console.log(" PASS: Extracted Age 48, Widow");
 } else {
-  console.error(" FAIL on Utterance 1");
+  console.error(" FAIL on Utterance 1", s1);
   process.exit(1);
 }
 
-const u2 = "हमारे पास ढाई एकड़ जमीन है और साल में 75 हजार कमाई है।";
-const s2 = extractSlotsFromSpokenHindi(u2);
-console.log("\nUtterance 2:", u2);
-console.log("Extracted:", s2);
-if (s2.landholding_acres === 2.5 && s2.annual_income_inr === 75000) {
-  console.log(" PASS: Extracted 2.5 acres, 75k income");
+// 2. Whole word state matching (prevent 'support' -> UP)
+const s2 = await extractIntentAndProfile("I live in support group in Delhi", {}, [], "en");
+console.log("Extracted 2 State:", s2.extracted_fields.state);
+if (s2.extracted_fields.state === "Delhi") {
+  console.log(" PASS: Correctly matched Delhi and avoided matching UP inside 'support'");
 } else {
-  console.error(" FAIL on Utterance 2");
+  console.error(" FAIL: Expected Delhi, got", s2.extracted_fields.state);
   process.exit(1);
 }
 
-// 2. Test 5-Step Conversational State Machine
-console.log("\n[2. Testing Full 5-Turn Dialog Flow for Kamla Devi]");
-const testSessionId = "test_user_kamla";
-resetSession(testSessionId);
-
-const turns = [
-  "हम 49 साल के हैं और विधवा हैं।",
-  "हमारे पास कोई जमीन नहीं है, हम दूसरों के खेत में मजदूरी करते हैं।",
-  "महीने में तीन चार हजार बनता है, हमारे पास पीला राशन कार्ड है।",
-  "दो बेटियां हैं, बड़ी बेटी स्कूल जाती है।",
-  "हम उत्तर प्रदेश, चंदौली जिले से हैं।"
-];
-
-async function runDialogTest() {
-  for (let i = 0; i < turns.length; i++) {
-    console.log(`\n--- Turn ${i + 1} / 5 ---`);
-    console.log(`Bot Prompt: ${QUESTIONS[i].spoken_hi}`);
-    console.log(`User Input: "${turns[i]}"`);
-
-    const result = await processDialogTurn(testSessionId, turns[i]);
-
-    if (result.isCompleted) {
-      console.log("\n🎉 CONVERSATION COMPLETED!");
-      console.log("Total Matched Schemes:", result.evaluationResult.matchedCount);
-      console.log("Top Qualified Schemes:");
-      result.evaluationResult.topSchemes.forEach((s, idx) => {
-        console.log(`   ${idx + 1}. ${s.title_hi} (Benefit: ₹${s.monthly_benefit_inr}/mo, annual: ₹${s.annual_benefit_inr})`);
-      });
-      console.log("\nPrimary Physical Documents to Carry:");
-      result.evaluationResult.primaryDocuments.forEach((doc, idx) => {
-        console.log(`   [ ] ${idx + 1}. ${doc}`);
-      });
-      console.log("\nPrimary Office:", result.evaluationResult.primaryOffice);
-      console.log("\nGenerated Spoken Hindi Audio Script:\n", result.evaluationResult.spokenScript);
-      console.log("\nGenerated SMS Action Checklist Slip:\n", result.evaluationResult.smsChecklist);
-    } else {
-      console.log(`Next Question [${result.nextQuestionIndex}]: ${result.nextPromptText}`);
-    }
+// 3. Dynamic Turn execution
+async function runTest() {
+  const turn = await processDynamicTurn("test_session_dialog", "हम उत्तर प्रदेश से हैं, उम्र 42 साल है, विधवा हैं और बीपीएल कार्ड है", "hi", false);
+  console.log("Turn Flow:", turn.flow);
+  if (turn.flow === "results" && turn.screen_data.schemes.some(s => s.id === "central_ignwps")) {
+    console.log(" PASS: Dynamic turn resolved to results matching IGNWPS");
+  } else {
+    console.error(" FAIL on Dynamic Turn", turn);
+    process.exit(1);
   }
-
-  console.log("\n ALL PIPELINE & DIALOG TESTS PASSED PERFECTLY!");
-  process.exit(0);
 }
 
-runDialogTest().catch(err => {
-  console.error("Test failed:", err);
-  process.exit(1);
-});
+await runTest();
+console.log("\n ALL DIALOG & ASSISTANT TESTS PASSED!\n");

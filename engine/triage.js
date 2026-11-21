@@ -1,169 +1,108 @@
 /**
- * JanSeva Voice - Entitlement Stoppage & Pension Recovery Engine
- * Diagnoses DBT / PFMS failures (Account dormancy, NPCI decoupling, Life certificate expiry)
+ * JanSeva Voice - Entitlement Stoppage & Payment Triage Engine
+ * Zero fake demo records (Parvati/Ramu/Sakina removed).
+ * Provides general, realistic DBT / PFMS diagnostic checks and citizen-friendly steps.
  */
 
-export const BENEFICIARIES = {
-  "BEN_PARVATI_DEVI_01": {
-    name: "Parvati Devi (पार्वती देवी)",
-    age: 67,
-    village: "Chandanpur, Block Maner, Patna",
-    scheme: "Indira Gandhi National Widow Pension (NSAP)",
-    monthly_amount: 1000,
-    phone_number: "9876500001",
-    aadhaar_last4: "7193",
-    ration_card_last4: "4812",
-    current_status: "DISBURSAL_BOUNCED",
-    error_code: "ERR_504_BANK_DORMANT",
-    months_pending: 3,
-    bank_name: "State Bank of India (Maner Branch)",
-    account_last4: "6021",
-    root_cause_tech: "Account inactive under RBI KYC dormancy rule: 0 transactions in 14 months.",
-    dialect_explanation: {
-      bhojpuri: "पार्वती दादी, घबराईं मत। रउआ पेंशन रद्दी नइखे भइल। सरकार हर महीना ₹1000 भेजले रहे, बाकी रउआ स्टेट बैंक वाला खाता 1 साल से बंद पड़ल रहे, एहसे बैंक पईसा लौटा दिहलस। रउआ ब्लॉक ऑफिस जाए के कवनो जरूरत नइखे। काल्ह सबेरे गाँव के पोस्ट ऑफिस या बैंक जाके सिरिफ ₹10 जमा कऽ दीं। खाता फेर चालू हो जाई आ पिछलका ₹3000 अगिला हफ्ता आ जाई। हम मुखिया जी के सोचना भेज देले बानी।",
-      hindi: "पार्वती दादी, घबराइए मत। आपका पेंशन रद्द नहीं हुआ है। सरकार ने हर महीने ₹1,000 भेजा था, लेकिन आपका स्टेट बैंक खाता 1 साल से बंद पड़ा था, इसलिए बैंक ने पैसा लौटा दिया। आपको ब्लॉक ऑफिस जाने की कोई ज़रूरत नहीं है। कल सुबह गाँव के डाकघर या बैंक जाकर सिर्फ ₹10 जमा कर दीजिए। खाता दोबारा चालू हो जाएगा और पिछला रुका हुआ ₹3,000 अगले हफ्ते खाते में आ जाएगा।",
-      bengali: "পার্বতী দিদিমা, ভয় পাবেন না। আপনার বিধবা ভাতা বাতিল হয়নি। সরকার প্রতি মাসে টাকা পাঠাচ্ছিল, কিন্তু স্টেট ব্যাংকের অ্যাকাউন্ট এক বছর বন্ধ থাকার কারণে টাকা ফেরত গেছে। ব্লক অফিসে যাওয়ার দরকার নেই। কাল সকালে পোস্ট অফিসে গিয়ে মাত্র ১০ টাকা জমা দিন। অ্যাকাউন্ট চালু হয়ে যাবে এবং বকেয়া ৩,০০০ টাকা আগামী সপ্তাহে জমা পড়বে।"
-    },
-    action_required: "गाँव के डाकघर (IPPB) या बैंक शाखा में ₹10 जमा करके खाता दोबारा चालू कराएं।",
-    panchayat_escalation: "मनेर पंचायत वार्ड 4 के ग्राम रोजगार सेवक को अलर्ट भेजा गया।"
-  },
-  "BEN_RAMU_MANJHI_02": {
-    name: "Ramu Manjhi (रामू मांझी)",
-    age: 42,
-    village: "Pipra, Block Danapur, Patna",
-    scheme: "MGNREGA Rural Wage Guarantee",
-    monthly_amount: 3200,
-    phone_number: "9876500002",
-    aadhaar_last4: "3841",
-    ration_card_last4: "9921",
-    current_status: "CREDIT_HELD",
-    error_code: "ERR_302_NPCI_MAPPER_DECOUPLED",
-    months_pending: 1,
-    bank_name: "Dakshin Bihar Gramin Bank",
-    account_last4: "1198",
-    root_cause_tech: "Aadhaar Payment Bridge System (APBS) mapped to inactive mobile wallet.",
-    dialect_explanation: {
-      hindi: "रामू भाई, आपकी 14 दिन की मनरेगा मजदूरी ₹3,200 कटी नहीं है। सरकारी सिस्टम में आपका आधार ग्रामीण बैंक के बदले पुराने मोबाइल खाते से लिंक हो गया था। कल पंचायत भवन में जाकर आधार डीबीटी मैपिंग ग्रामीण बैंक पर सेट करवा लें। 4 दिन में पैसा आ जाएगा।",
-      bhojpuri: "रामू भाई, रउआ मनरेगा के ₹3,200 कटल नइखे। आधार लिंक ग्रामीण बैंक के बदला पुराना मोबाइल खाता पर सेट हो गइल रहे। काल्ह पंचायत भवन जाके आधार मैपिंग सुधार करवा लीं। पईसा 4 दिन में आ जाई।"
-    },
-    action_required: "पंचायत केंद्र पर आधार ऑपरेटर से मिलकर डीबीटी मैपिंग प्राथमिक बैंक खाते पर सेट करवाएं।",
-    panchayat_escalation: "दानापुर ब्लॉक कार्यक्रम अधिकारी को अलर्ट भेजा गया।"
-  },
-  "BEN_SAKINA_BIBI_03": {
-    name: "Sakina Bibi (সাকিনা বিবি)",
-    age: 64,
-    village: "Ghatakpukur, South 24 Parganas, West Bengal",
-    scheme: "National Social Assistance Programme (NSAP Widow Pension)",
-    monthly_amount: 1000,
-    phone_number: "9876500003",
-    aadhaar_last4: "6205",
-    ration_card_last4: "1049",
-    current_status: "DISBURSAL_PAUSED",
-    error_code: "ERR_401_LIFE_CERTIFICATE_EXPIRED",
-    months_pending: 2,
-    bank_name: "Bangiya Gramin Vikash Bank",
-    account_last4: "4490",
-    root_cause_tech: "Annual Digital Life Certificate (Jeevan Pramaan) not renewed.",
-    dialect_explanation: {
-      bengali: "সাকিনা বিবি, আপনার বিধবা ভাতা বন্ধ হয়নি। প্রতি বছর যে জীবন প্রমাণপত্র জমা দিতে হয়, সেটি জমা পড়েনি। ব্লক অফিসে দৌড়ানোর দরকার নেই। আপনার গ্রামের ডাকপিয়ন বা পঞ্চায়েত কেন্দ্রে আঙুলের ছাপ দিয়ে আধারে জীবন প্রমাণ জমা দিন। আগামী সপ্তাহেই টাকা ব্যাংকে চলে আসবে।",
-      hindi: "सकीना बीबी, आपकी पेंशन बंद नहीं हुई है। वार्षिक जीवन प्रमाण पत्र जमा नहीं हुआ था। गाँव के डाकिया या पंचायत केंद्र में फिंगरप्रिंट लगाकर ई-केवाईसी करवा लें। पैसा अगले हफ्ते सीधे खाते में आ जाएगा।"
-    },
-    action_required: "गाँव के डाकिया या सीएससी केंद्र पर जाकर बायोमेट्रिक जीवन प्रमाण पत्र (e-KYC) पूरा करें।",
-    panchayat_escalation: "घटकपुकुर ग्राम पंचायत प्रधान को अलर्ट भेजा गया।"
-  }
-};
+export function diagnoseStoppage(queryText = "", userProfile = {}, language = "hi") {
+  const lang = (language === "bn" || language === "bengali") ? "bn" :
+               (language === "en" || language === "english") ? "en" : "hi";
 
-export function diagnoseStoppage(queryText = "", identifier = "", preferredLanguage = "bhojpuri") {
-  let matchedId = "BEN_PARVATI_DEVI_01";
-
-  if (identifier) {
-    const clean = identifier.trim();
-    for (const [id, ben] of Object.entries(BENEFICIARIES)) {
-      if (ben.phone_number.includes(clean) || ben.aadhaar_last4.includes(clean) || ben.ration_card_last4.includes(clean)) {
-        matchedId = id;
-        break;
-      }
+  const checklist = [
+    {
+      step: 1,
+      title: {
+        en: "Check Aadhaar-Bank Seeding (NPCI Mapper)",
+        bn: "আধার-ব্যাংক সিডিং (NPCI ম্যাপিং) পরীক্ষা করুন",
+        hi: "आधार-बैंक डीबीटी सीडिंग (NPCI मैपर) जांचें"
+      }[lang],
+      description: {
+        en: "Ensure your primary bank account is actively seeded with Aadhaar for DBT transfers, not decoupled or mapped to an old wallet.",
+        bn: "নিশ্চিত করুন যে আপনার প্রধান ব্যাংক অ্যাকাউন্টটি ডিবিটি পাওয়ার জন্য আধারের সাথে সক্রিয়ভাবে যুক্ত রয়েছে।",
+        hi: "सुनिश्चित करें कि आपका बैंक खाता डीबीटी के लिए आधार से सक्रिय रूप से लिंक है, किसी पुराने या निष्क्रिय खाते पर नहीं।"
+      }[lang]
+    },
+    {
+      step: 2,
+      title: {
+        en: "Verify Bank Account Activity (Dormancy Rule)",
+        bn: "ব্যাংক অ্যাকাউন্ট সক্রিয় আছে কিনা যাচাই করুন",
+        hi: "बैंक खाता सक्रिय है या निष्क्रिय (Dormancy) जांचें"
+      }[lang],
+      description: {
+        en: "If no transactions occurred in the last 12–24 months, the bank temporarily freezes credits under RBI KYC rules. Deposit a nominal amount (e.g., Rs 10) to reactivate it.",
+        bn: "গত ১২-২৪ মাসে কোনো লেনদেন না হলে অ্যাকাউন্ট নিষ্ক্রিয় হতে পারে। ব্যাংকে গিয়ে সামান্য টাকা জমা দিয়ে অ্যাকাউন্ট পুনরায় চালু করুন।",
+        hi: "यदि पिछले 12-24 महीनों में कोई लेन-देन नहीं हुआ है, तो बैंक खाता निष्क्रिय हो सकता है। बैंक या डाकघर में ₹10 जमा करके उसे पुनः चालू कराएं।"
+      }[lang]
+    },
+    {
+      step: 3,
+      title: {
+        en: "Submit Annual Life Certificate (Jeevan Pramaan)",
+        bn: "বার্ষিক জীবন প্রমাণপত্র (Jeevan Pramaan) জমা দিন",
+        hi: "वार्षिक डिजिटल जीवन प्रमाण पत्र (Jeevan Pramaan) जमा करें"
+      }[lang],
+      description: {
+        en: "Pensions require an annual biometric or facial life certificate submission. Visit your local Post Office, CSC, or Gram Panchayat to renew it.",
+        bn: "পেনশন অব্যাহত রাখতে প্রতি বছর ডিজিটাল জীবন প্রমাণপত্র জমা দেওয়া আবশ্যক। ডাকঘর বা পঞ্চায়েতে আঙুলের ছাপ দিয়ে এটি জমা দিন।",
+        hi: "पेंशन जारी रखने के लिए प्रतिवर्ष जीवन प्रमाण पत्र देना आवश्यक होता है। डाकघर, सीएससी या पंचायत में बायोमेट्रिक ई-केवाईसी करवाएं।"
+      }[lang]
+    },
+    {
+      step: 4,
+      title: {
+        en: "Check Name & Demographics Match",
+        bn: "আধার ও ব্যাংক রেকর্ডে নামের মিল পরীক্ষা করুন",
+        hi: "आधार और बैंक रिकॉर्ड में नाम की जांच करें"
+      }[lang],
+      description: {
+        en: "Spelling discrepancies between your Aadhaar card and bank passbook can bounce PFMS transactions.",
+        bn: "আধার কার্ড এবং ব্যাংক পাসবইয়ের নামের বানানে অমিল থাকলে সরকারি টাকা আটকে যেতে পারে।",
+        hi: "आधार कार्ड और बैंक पासबुक में नाम की स्पेलिंग में अंतर होने पर पीएफएमएस ट्रांसफर रुक सकता है।"
+      }[lang]
+    },
+    {
+      step: 5,
+      title: {
+        en: "Visit Local Office / CSC for DBT Status Printout",
+        bn: "স্থানীয় বিডিও অফিস বা সিএসসি-তে স্ট্যাটাস যাচাই করুন",
+        hi: "नजदीकी जन सेवा केंद्र या ब्लॉक कार्यालय में स्थिति जांचें"
+      }[lang],
+      description: {
+        en: "Ask the operator or Panchayat assistant to check the Public Financial Management System (PFMS) rejection reason for your pension or wage ID.",
+        bn: "পঞ্চায়েত বা সিএসসি অপারেটরকে দিয়ে পিএফএমএস পোর্টালে আপনার টাকা আটকে যাওয়ার সঠিক কারণ যাচাই করিয়ে নিন।",
+        hi: "पंचायत सहायक या सीएससी ऑपरेटर से पीएफएमएस पोर्टल पर अपनी पेंशन या मजदूरी भुगतान की रिजेक्शन वजह पता करें।"
+      }[lang]
     }
-  } else {
-    const lower = queryText.toLowerCase();
-    if (lower.includes("मनरेगा") || lower.includes("mgnrega") || lower.includes("मजदूरी") || lower.includes("ramu")) {
-      matchedId = "BEN_RAMU_MANJHI_02";
-    } else if (lower.includes("বিধবা") || lower.includes("সাকিনা") || lower.includes("sakina") || lower.includes("বাংলা")) {
-      matchedId = "BEN_SAKINA_BIBI_03";
-    }
-  }
+  ];
 
-  const record = BENEFICIARIES[matchedId];
-  const explanations = record.dialect_explanation;
-  const script = explanations[preferredLanguage] || explanations.hindi || Object.values(explanations)[0];
-  const ticketToken = `JP-${record.aadhaar_last4}-${(record.months_pending * 17) + 21}`;
+  const spokenMessages = {
+    hi: "आपकी पेंशन या भुगतान रुकने के मुख्य कारण बैंक खाते का निष्क्रिय होना, आधार डीबीटी लिंक न होना, या वार्षिक जीवन प्रमाण पत्र लंबित होना हो सकते हैं। अपने बैंक या नजदीकी पंचायत केंद्र में जाकर आधार सीडिंग और ई-केवाईसी जांच लें।",
+    bn: "আপনার পেনশন বা টাকা আটকে যাওয়ার প্রধান কারণ হতে পারে ব্যাংক অ্যাকাউন্ট নিষ্ক্রিয় থাকা, আধার ডিবিটি লিঙ্ক বিচ্ছিন্ন হওয়া বা জীবন প্রমাণপত্র জমা না দেওয়া। ব্যাংকে বা পঞ্চায়েত কেন্দ্রে গিয়ে আধার লিঙ্কিং ও ই-কেওয়াইসি পরীক্ষা করান।",
+    en: "If your pension or wage payment has stopped, the most common reasons are an inactive bank account, decoupled Aadhaar DBT mapping, or a pending annual Life Certificate. Please check your Aadhaar seeding and biometric e-KYC at your bank or Panchayat office."
+  };
 
   return {
-    status: "DIAGNOSIS_COMPLETE",
-    ticket_token: ticketToken,
-    beneficiary: {
-      name: record.name,
-      age: record.age,
-      village: record.village,
-      scheme: record.scheme,
-      monthly_entitlement: `₹${record.monthly_amount}`,
-      pending_recovery_amount: `₹${record.monthly_amount * record.months_pending}`,
-      bank_account: `${record.bank_name} (A/C **${record.account_last4})`
-    },
-    diagnosis: {
-      error_code: record.error_code,
-      disbursal_status: record.current_status,
-      technical_root_cause: record.root_cause_tech,
-      action_required: record.action_required,
-      citizen_friendly_script: script,
-      panchayat_escalation: record.panchayat_escalation
-    },
-    network_telemetry: {
-      payload_size_kb: 4.8,
-      protocol: "HTTP/3 over QUIC",
-      codec: "Opus Narrowband @ 8 kbps",
-      first_audio_render_ms: 380
-    }
+    flow: "payment_triage",
+    language: lang,
+    spoken_reply: spokenMessages[lang] || spokenMessages.hi,
+    checklist
   };
 }
 
 export function listGrievances() {
   return [
     {
-      id: "TKT-89421",
-      citizen: "पार्वती देवी (पति स्व. रामेश्वर महतो)",
-      village: "चंदनपुर, वार्ड 4, मनेर, पटना",
-      phone: "9876500001",
-      scheme: "इंदिरा गांधी राष्ट्रीय विधवा पेंशन",
-      amount_blocked: "₹3,000 (3 माह लंबित)",
-      issue: "बैंक खाता निष्क्रिय (RBI KYC Dormancy - Error 504)",
-      remediation: "डाकघर IPPB / SBI में ₹10 जमा कर खाता सक्रिय करें",
-      status: "अलर्ट प्रेषित (डाकपाल व रोजगार सेवक सूचित)",
-      date: "21 Nov 2026, 10:14 AM"
+      id: "TKT-GEN-01",
+      scheme: "सामाजिक सुरक्षा पेंशन (Social Security Pension)",
+      issue: "बैंक खाता निष्क्रिय / जीवन प्रमाण पत्र लंबित",
+      remediation: "बैंक या डाकघर में खाता सक्रिय करें अथवा बायोमेट्रिक जीवन प्रमाण पत्र जमा करें"
     },
     {
-      id: "TKT-38412",
-      citizen: "रामू मांझी (पिता स्व. बुधन मांझी)",
-      village: "पिपरा, वार्ड 2, दानापुर, पटना",
-      phone: "9876500002",
-      scheme: "मनरेगा ग्रामीण मजदूरी",
-      amount_blocked: "₹3,200 (14 दिन मजदूरी)",
-      issue: "आधार डीबीटी मैपिंग निष्क्रिय वॉलेट पर डीकपल (Error 302)",
-      remediation: "पंचायत भवन CSC पर आधार मैपिंग ग्रामीण बैंक पर सेट करें",
-      status: "अलर्ट प्रेषित (ब्लॉक अधिकारी सूचित)",
-      date: "21 Nov 2026, 09:30 AM"
-    },
-    {
-      id: "TKT-62059",
-      citizen: "सकीना बीबी (पति स्व. अनवर अली)",
-      village: "घटकपुकुर, दक्षिण 24 परगना, प. बंगाल",
-      phone: "9876500003",
-      scheme: "राष्ट्रीय सामाजिक सहायता पेंशन",
-      amount_blocked: "₹2,000 (2 माह लंबित)",
-      issue: "वार्षिक डिजिटल जीवन प्रमाण पत्र ई-केवाईसी अनुपस्थित (Error 401)",
-      remediation: "डाकिया या सीएससी पर बायोमेट्रिक अंगूठा लगाएं",
-      status: "अलर्ट प्रेषित (ग्राम प्रधान सूचित)",
-      date: "20 Nov 2026, 04:15 PM"
+      id: "TKT-GEN-02",
+      scheme: "मनरेगा ग्रामीण मजदूरी (MGNREGA Wages)",
+      issue: "आधार डीबीटी मैपिंग (NPCI Decoupled)",
+      remediation: "बैंक शाखा में आधार डीबीटी मैपिंग अपडेट करवाएं"
     }
   ];
 }

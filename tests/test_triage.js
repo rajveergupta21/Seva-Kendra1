@@ -1,44 +1,33 @@
 import { diagnoseStoppage } from '../engine/triage.js';
 
-console.log("=== Testing Entitlement Stoppage & Pension Recovery Engine ===");
+console.log("=== Testing Entitlement Stoppage Diagnostic Engine ===");
 
-// Test 1: Parvati Devi (Bhojpuri Widow Pension Stoppage - Dormant Account)
-const t1 = diagnoseStoppage("हमार पेंशन तीन महीना से ना आवता", "7193", "bhojpuri");
-console.log("\n[Test 1: Parvati Devi - Bank Dormancy Error 504]");
-console.log("Token:", t1.ticket_token);
-console.log("Beneficiary:", t1.beneficiary.name);
-console.log("Error Code:", t1.diagnosis.error_code);
-console.log("Action Required:", t1.diagnosis.action_required);
-if (t1.diagnosis.error_code === "ERR_504_BANK_DORMANT" && t1.ticket_token.includes("7193")) {
-  console.log(" PASS: Parvati Devi correctly diagnosed with ERR_504_BANK_DORMANT");
+// Test 1: General Pension Stoppage Diagnostic
+const t1 = diagnoseStoppage("हमार पेंशन तीन महीना से ना आवता", {}, "hi");
+console.log("\n[Test 1: General Pension Stoppage Diagnostic]");
+if (t1.checklist.length === 5 && t1.flow === "payment_triage") {
+  console.log(" PASS: Payment triage returned 5 diagnostic steps without fake demo personas");
 } else {
-  console.error("❌ FAIL on Test 1");
+  console.error("❌ FAIL on Test 1", t1);
   process.exit(1);
 }
 
-// Test 2: Ramu Manjhi (MGNREGA Wage Held - Aadhaar Decoupled)
-const t2 = diagnoseStoppage("मनरेगा की मजदूरी बीस दिन से नहीं आई है", "3841", "hindi");
-console.log("\n[Test 2: Ramu Manjhi - NPCI Decoupled Error 302]");
-console.log("Token:", t2.ticket_token);
-console.log("Beneficiary:", t2.beneficiary.name);
-console.log("Error Code:", t2.diagnosis.error_code);
-if (t2.diagnosis.error_code === "ERR_302_NPCI_MAPPER_DECOUPLED") {
-  console.log(" PASS: Ramu Manjhi correctly diagnosed with ERR_302_NPCI_MAPPER_DECOUPLED");
+// Test 2: Check for essential DBT and Life Certificate steps
+const titles = t1.checklist.map(c => c.title).join(' ');
+if (titles.includes("आधार") && titles.includes("जीवन प्रमाण")) {
+  console.log(" PASS: Checklist includes Aadhaar DBT seeding and Life Certificate renewal");
 } else {
-  console.error("❌ FAIL on Test 2");
+  console.error("❌ FAIL on Test 2: Missing expected checks");
   process.exit(1);
 }
 
-// Test 3: Sakina Bibi (Bengali NSAP Pension Paused - Life Certificate Expired)
-const t3 = diagnoseStoppage("আমার বিধবা ভাতা তিন মাস ধরে বন্ধ আছে", "6205", "bengali");
-console.log("\n[Test 3: Sakina Bibi - Life Certificate Expired Error 401]");
-console.log("Token:", t3.ticket_token);
-console.log("Beneficiary:", t3.beneficiary.name);
-console.log("Error Code:", t3.diagnosis.error_code);
-if (t3.diagnosis.error_code === "ERR_401_LIFE_CERTIFICATE_EXPIRED") {
-  console.log(" PASS: Sakina Bibi correctly diagnosed with ERR_401_LIFE_CERTIFICATE_EXPIRED");
+// Test 3: Bengali language support
+const t3 = diagnoseStoppage("আমার বিধবা ভাতা তিন মাস ধরে বন্ধ আছে", {}, "bn");
+console.log("\n[Test 3: Bengali Pension Stoppage]");
+if (t3.spoken_reply.includes("পেনশন") || t3.checklist[0].title.includes("আধার")) {
+  console.log(" PASS: Bengali diagnostic checklist generated correctly");
 } else {
-  console.error("❌ FAIL on Test 3");
+  console.error("❌ FAIL on Test 3", t3);
   process.exit(1);
 }
 

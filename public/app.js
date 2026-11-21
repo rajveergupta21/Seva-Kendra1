@@ -85,12 +85,12 @@ const I18N_TRANSLATIONS = {
     slotLandLabel: "खेती की ज़मीन:",
     slotIncomeLabel: "सालाना कमाई:",
     slotStateLabel: "राज्य/जिला:",
-    resultsTitle: "🎉 आपके लिए स्वीकृत सरकारी योजनाएं",
+    resultsTitle: "📋 आप इन योजनाओं के लिए पात्र हो सकती हैं",
     voiceExpTitle: "🔊 वाणी समाधान (Spoken Solution):",
     triadSchemesTitle: "💰 1. मिलने वाली योजनाएं",
     triadDocsTitle: "📂 2. सिर्फ ये 3 कागज़ ले जाएं",
     triadOfficeTitle: "📍 3. यहाँ जाकर जमा करें",
-    smsSlipTitle: "📱 आपके मोबाइल पर भेजा गया SMS (पंचायत ऑपरेटर को दिखाएं)",
+    smsSlipTitle: "📱 योजना पर्ची (पंचायत ऑपरेटर को दिखाएं - अंतिम मंज़ूरी दफ़्तर में होगी)",
     drawerHeading: "अतिरिक्त सेवाएं व टूल्स",
     langModalTitle: "अपनी भाषा चुनें / Select Language",
     langModalSub: "आप सेवा केंद्र से किस भाषा में बात करना चाहते हैं?"
@@ -120,12 +120,12 @@ const I18N_TRANSLATIONS = {
     slotLandLabel: "खेती के ज़मीन:",
     slotIncomeLabel: "सालाना कमाई:",
     slotStateLabel: "राज्य/जिला:",
-    resultsTitle: "🎉 राउर मंजूर भइल सरकारी योजना",
+    resultsTitle: "📋 रउआ इन योजना खातिर पात्र हो सकत बानी",
     voiceExpTitle: "🔊 वाणी समाधान (Spoken Solution):",
     triadSchemesTitle: "💰 1. मिले वाला योजना",
     triadDocsTitle: "📂 2. बस ई 3 गो कागजात ले जाईं",
     triadOfficeTitle: "📍 3. इहाँ जाके जमा करीं",
-    smsSlipTitle: "📱 राउर मोबाइल पर भेजल SMS (पंचायत में देखाईं)",
+    smsSlipTitle: "📱 योजना पर्ची (पंचायत में देखाईं - अंतिम मंज़ूरी दफ़्तर में होई)",
     drawerHeading: "अउरी सेवा आ टूल्स",
     langModalTitle: "भाषा चुनीं / Select Language",
     langModalSub: "रउआ सेवा केंद्र से कवन भाषा में बात करल चाहत बानी?"
@@ -155,12 +155,12 @@ const I18N_TRANSLATIONS = {
     slotLandLabel: "চাষের জমি:",
     slotIncomeLabel: "বার্ষিক আয়:",
     slotStateLabel: "রাজ্য/জেলা:",
-    resultsTitle: "🎉 আপনার জন্য অনুমোদিত সরকারি প্রকল্পসমূহ",
+    resultsTitle: "📋 আপনি এই প্রকল্পগুলির জন্য যোগ্য হতে পারেন",
     voiceExpTitle: "🔊 সমাধান (Spoken Solution):",
     triadSchemesTitle: "💰 ১. প্রাপ্যতা প্রকল্পসমূহ",
     triadDocsTitle: "📂 ২. শুধুমাত্র এই ৩টি নথি সাথে নিন",
     triadOfficeTitle: "📍 ৩. এখানে গিয়ে জমা দিন",
-    smsSlipTitle: "📱 আপনার মোবাইলে পাঠানো SMS (পঞ্চায়েতে দেখান)",
+    smsSlipTitle: "📱 প্রকল্প তথ্যের স্লিপ (পঞ্চায়েতে দেখান - চূড়ান্ত অনুমোদন অফিসে হবে)",
     drawerHeading: "অতিরিক্ত পরিষেবা ও টুলস",
     langModalTitle: "ভাষা নির্বাচন করুন / Select Language",
     langModalSub: "আপনি সেবা কেন্দ্রের সাথে কোন ভাষায় কথা বলতে চান?"
@@ -190,12 +190,12 @@ const I18N_TRANSLATIONS = {
     slotLandLabel: "खेतीक ज़मीन:",
     slotIncomeLabel: "सालाना कमाई:",
     slotStateLabel: "राज्य/जिला:",
-    resultsTitle: "🎉 अहाँक लेल स्वीकृत सरकारी योजना",
+    resultsTitle: "📋 अहाँ एह योजना सभ लेल पात्र भऽ सकैत छी",
     voiceExpTitle: "🔊 वाणी समाधान (Spoken Solution):",
     triadSchemesTitle: "💰 1. भेटय बला योजना",
     triadDocsTitle: "📂 2. मात्र ई 3 टा कागजात ल जाउ",
     triadOfficeTitle: "📍 3. एतय जा क जमा करू",
-    smsSlipTitle: "📱 अहाँक मोबाइल पर पठाओल गेल SMS",
+    smsSlipTitle: "📱 योजना पर्ची (पंचायत में देखाउ - अंतिम मंजूरी दफ्तर में होएत)",
     drawerHeading: "अन्य सेवा आ टूल्स",
     langModalTitle: "भाषा चुनू / Select Language",
     langModalSub: "अहाँ सेवा केंद्र सँ कोन भाषा में बात करब?"
@@ -225,12 +225,12 @@ const I18N_TRANSLATIONS = {
     slotLandLabel: "Agricultural Land:",
     slotIncomeLabel: "Annual Income:",
     slotStateLabel: "State/District:",
-    resultsTitle: "🎉 Qualified Government Schemes",
+    resultsTitle: "📋 You may be eligible for these government schemes",
     voiceExpTitle: "🔊 Spoken Solution:",
-    triadSchemesTitle: "💰 1. Qualified Schemes",
+    triadSchemesTitle: "💰 1. Potential Schemes",
     triadDocsTitle: "📂 2. Bring Only These 3 Documents",
     triadOfficeTitle: "📍 3. Submit At This Local Office",
-    smsSlipTitle: "📱 SMS Action Checklist (Show to Panchayat Operator)",
+    smsSlipTitle: "📱 Scheme Summary Slip (Show to operator - Final approval at office)",
     drawerHeading: "Additional Services & Tools",
     langModalTitle: "Select Language / अपनी भाषा चुनें",
     langModalSub: "In which language would you like to speak with Seva Kendra?"
@@ -822,7 +822,7 @@ function handleTurnResponse(result) {
   }
 
   // 1. Update Verified Profile Slots
-  const profile = result.profile || (result.session ? result.session.profile : {});
+  const profile = result.extracted_profile || result.profile || (result.session ? result.session.profile : {});
   if (profile.age) {
     const el = document.getElementById('slot-age');
     if (el) el.textContent = `${profile.age} वर्ष`;
@@ -831,17 +831,16 @@ function handleTurnResponse(result) {
     const el = document.getElementById('slot-marital');
     if (el) el.textContent = profile.marital_status === 'widow' ? 'विधवा' : (profile.marital_status === 'married' ? 'विवाहित' : profile.marital_status);
   }
-  if (profile.landholding_acres !== undefined && profile.landholding_acres !== null) {
-    const el = document.getElementById('slot-land');
-    if (el) el.textContent = profile.landholding_acres === 0 ? "भूमिहीन" : `${profile.landholding_acres} एकड़`;
-  }
-  if (profile.annual_income_inr) {
+  if (profile.bpl_or_ration_card !== undefined && profile.bpl_or_ration_card !== null) {
+    const el = document.getElementById('slot-income');
+    if (el) el.textContent = profile.bpl_or_ration_card ? "BPL / राशन कार्ड" : "सामान्य";
+  } else if (profile.annual_income_inr) {
     const el = document.getElementById('slot-income');
     if (el) el.textContent = `₹${profile.annual_income_inr.toLocaleString('en-IN')}`;
   }
   if (profile.state) {
     const el = document.getElementById('slot-location');
-    if (el) el.textContent = `${profile.state} ${profile.district || ''}`;
+    if (el) el.textContent = `${profile.state} ${profile.district ? `(${profile.district})` : ''}`;
   }
 
   // 2. Show Recognized Words
@@ -852,37 +851,185 @@ function handleTurnResponse(result) {
     if (manualInput) manualInput.value = result.userTranscript;
   }
 
+  const audioUrl = result.audioUrl || (result.audio_base64_or_url?.startsWith('/api') ? result.audio_base64_or_url : null);
+  const audioBase64 = result.audioBase64 || (result.audio_base64_or_url?.startsWith('data:') ? result.audio_base64_or_url.split(',')[1] : null);
+  const spokenText = result.spoken_reply || result.replyText || '';
+
   // 3. Dynamic Result Branching & Audio Playback
-  if (result.type === 'TRIAGE_RESOLVED') {
-    openSlidingDrawer();
-    switchDrawerModule('drawer-triage');
-    renderTriageView(result.triageData);
-    playAudio(result.audioUrl, result.audioBase64, result.diagnosis?.citizen_friendly_script);
-  } else if (result.type === 'SCHEMES_MATCHED' || result.isCompleted) {
-    renderEvaluationResults(result.evaluationResult, result.audioUrl, result.audioBase64 || result.firstSentenceAudioBase64);
-  } else {
-    setPrompt(result.replyText || result.nextPromptText, result.promptHint, result.audioUrl, result.audioBase64 || result.firstSentenceAudioBase64);
+  if (result.flow === 'safety' || result.type === 'SAFETY_ALERT') {
+    const safetyCard = document.getElementById('safety-card');
+    if (safetyCard) {
+      safetyCard.style.display = 'block';
+      const msgEl = document.getElementById('safety-speech-text');
+      if (msgEl) msgEl.textContent = spokenText;
+    }
+    const resultsCard = document.getElementById('results-card');
+    if (resultsCard) resultsCard.style.display = 'none';
+    const triageCard = document.getElementById('triage-main-card');
+    if (triageCard) triageCard.style.display = 'none';
+
+    setPrompt(spokenText, "तत्काल सहायता के लिए स्क्रीन पर दिए गए नंबरों पर कॉल करें", audioUrl, audioBase64);
+    playAudio(audioUrl, audioBase64, spokenText);
+    return;
   }
+
+  if (result.flow === 'payment_triage' || result.type === 'TRIAGE_RESOLVED') {
+    const safetyCard = document.getElementById('safety-card');
+    if (safetyCard) safetyCard.style.display = 'none';
+    const resultsCard = document.getElementById('results-card');
+    if (resultsCard) resultsCard.style.display = 'none';
+
+    const triageCard = document.getElementById('triage-main-card');
+    if (triageCard) {
+      triageCard.style.display = 'block';
+      const speechText = document.getElementById('triage-speech-text');
+      if (speechText) speechText.textContent = spokenText;
+
+      const checklistContainer = document.getElementById('triageChecklistItems');
+      const items = result.screen_data?.triage_checklist || [];
+      if (checklistContainer) {
+        checklistContainer.innerHTML = items.map(item => `
+          <div style="background: white; border: 1px solid #b7eb8f; border-radius: 8px; padding: 12px;">
+            <strong style="color: #237804; font-size: 1rem;">${item.step}. ${item.title}</strong>
+            <p style="margin: 4px 0 0; color: #555; font-size: 0.9rem;">${item.description}</p>
+          </div>
+        `).join('');
+      }
+      triageCard.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    setPrompt(spokenText, "जांच के चरण स्क्रीन पर देखें", audioUrl, audioBase64);
+    playAudio(audioUrl, audioBase64, spokenText);
+    return;
+  }
+
+  if (result.flow === 'results' || result.type === 'SCHEMES_MATCHED' || result.isCompleted) {
+    const safetyCard = document.getElementById('safety-card');
+    if (safetyCard) safetyCard.style.display = 'none';
+    const triageCard = document.getElementById('triage-main-card');
+    if (triageCard) triageCard.style.display = 'none';
+
+    renderEvaluationResults(result.screen_data || result.evaluationResult, audioUrl, audioBase64, spokenText);
+    setPrompt(spokenText, "योजनाओं की सूची स्क्रीन पर देखें", audioUrl, audioBase64);
+    playAudio(audioUrl, audioBase64, spokenText);
+    return;
+  }
+
+  // Default: Follow-up question
+  const safetyCard = document.getElementById('safety-card');
+  if (safetyCard) safetyCard.style.display = 'none';
+  const triageCard = document.getElementById('triage-main-card');
+  if (triageCard) triageCard.style.display = 'none';
+  const resultsCard = document.getElementById('results-card');
+  if (resultsCard) resultsCard.style.display = 'none';
+
+  setPrompt(spokenText || result.replyText, result.promptHint || "अपनी जानकारी बोलें", audioUrl, audioBase64);
+  playAudio(audioUrl, audioBase64, spokenText);
 }
+
+function triggerSafeExit() {
+  stopAllAudio();
+  document.body.innerHTML = '<div style="background:#fff;width:100vw;height:100vh;"></div>';
+  window.location.replace("https://www.google.com");
+}
+window.triggerSafeExit = triggerSafeExit;
 
 // --------------------------------------------------------------------------
 // 8. Results Rendering (Actionable Triad)
 // --------------------------------------------------------------------------
-function renderEvaluationResults(evaluation, audioUrl, audioBase64) {
+function renderEvaluationResults(screenData, audioUrl, audioBase64, spokenReply) {
   const card = document.getElementById('results-card');
+  if (!card) return;
   card.style.display = 'block';
 
-  document.getElementById('badge-count').textContent = `${evaluation.matchedCount} योजनाएं स्वीकृत`;
-  document.getElementById('spoken-audio-transcript').textContent = evaluation.spokenScript;
+  const schemes = screenData?.schemes || screenData?.eligible || screenData?.matchedSchemes || [];
+  const verifiedCount = schemes.filter(s => s.status === 'verified').length;
 
-  // Render Schemes
+  const badgeEl = document.getElementById('badge-count');
+  if (badgeEl) {
+    badgeEl.textContent = `${verifiedCount} योजनाओं के लिए पात्र हो सकती हैं`;
+  }
+  const transcriptEl = document.getElementById('spoken-audio-transcript');
+  if (transcriptEl) {
+    transcriptEl.textContent = spokenReply || screenData?.spokenScript || "आप इन योजनाओं के लिए पात्र हो सकती हैं। अंतिम मंज़ूरी दफ़्तर में होगी।";
+  }
+
+  // Render Rich Scheme Cards
   const schemesList = document.getElementById('schemes-list');
-  schemesList.innerHTML = evaluation.matchedSchemes.map(s => `
-    <div class="scheme-card-box">
-      <div class="scheme-title-text">✓ ${s.title_hi}</div>
-      <div class="scheme-benefit-text">लाभ: ${s.monthly_benefit_inr > 0 ? `₹${s.monthly_benefit_inr.toLocaleString('en-IN')}/माह` : `₹${s.annual_benefit_inr.toLocaleString('en-IN')} वार्षिक अनुदान`}</div>
-    </div>
-  `).join('');
+  if (schemesList) {
+    schemesList.innerHTML = schemes.map(s => {
+      const isVerified = s.status === 'verified';
+      const badgeStyle = isVerified ? 'background: #e6f4ea; color: #137333; font-weight: bold; padding: 4px 10px; border-radius: 4px; font-size: 0.85rem;' : 'background: #fef7e0; color: #b06000; font-weight: bold; padding: 4px 10px; border-radius: 4px; font-size: 0.85rem;';
+      const badgeText = isVerified ? '✓ Verified (सत्यापित)' : '⚠️ Ask at the office (दफ़्तर में पता करें)';
+      const docsHtml = (s.documents || []).map(doc => `<li style="margin-bottom: 2px;">• ${doc}</li>`).join('');
+
+      return `
+        <div class="scheme-rich-card" style="background: #ffffff; border: 1px solid #d9d9d9; border-radius: 10px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.04);">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+            <h4 style="font-size: 1.15rem; margin: 0; color: #1a1a1a;">${s.name}</h4>
+            <span style="${badgeStyle}">${badgeText}</span>
+          </div>
+
+          <div style="margin-bottom: 8px; font-size: 0.95rem; color: #1b5e20; font-weight: 600;">
+            💰 <strong>Benefit:</strong> ${s.benefit}
+          </div>
+
+          ${s.why_you_may_qualify ? `
+          <div style="margin-bottom: 8px; font-size: 0.9rem; color: #374151;">
+            🔍 <strong>Why you may qualify:</strong> ${s.why_you_may_qualify}
+          </div>` : ''}
+
+          ${(s.documents && s.documents.length > 0) ? `
+          <div style="margin-bottom: 8px;">
+            <strong style="font-size: 0.88rem; color: #1f2937;">📂 Documents Checklist:</strong>
+            <ul style="margin: 4px 0 0 16px; padding: 0; font-size: 0.85rem; color: #4b5563;">
+              ${docsHtml}
+            </ul>
+          </div>` : ''}
+
+          ${s.office_to_visit ? `
+          <div style="margin-bottom: 8px; font-size: 0.88rem; color: #1f2937;">
+            📍 <strong>Office to visit:</strong> ${s.office_to_visit}
+          </div>` : ''}
+
+          ${s.what_to_say ? `
+          <div class="what-to-say-box" style="background: #f0fdf4; border-left: 4px solid #16a34a; padding: 8px 12px; border-radius: 4px; margin-bottom: 8px;">
+            <span style="font-size: 0.78rem; font-weight: bold; text-transform: uppercase; color: #15803d; display: block; margin-bottom: 2px;">💬 What to say at the counter:</span>
+            <span style="font-size: 0.9rem; color: #166534; font-style: italic;">"${s.what_to_say}"</span>
+          </div>` : ''}
+
+          <div style="font-size: 0.78rem; color: #6b7280; border-top: 1px solid #f3f4f6; padding-top: 6px; margin-top: 6px;">
+            ${s.source_url ? `<a href="${s.source_url}" target="_blank" rel="noopener" style="color: #2563eb; text-decoration: underline;">Official Portal Source</a> | ` : ''}
+            Last Verified: ${s.last_verified || '2026-11-21'}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Adjust triad columns to give full width to rich cards
+  const triadCols = document.querySelector('.triad-columns');
+  if (triadCols) {
+    triadCols.style.display = 'block';
+  }
+  const col2 = document.querySelector('.triad-col:nth-child(2)');
+  const col3 = document.querySelector('.triad-col:nth-child(3)');
+  if (col2) col2.style.display = 'none';
+  if (col3) col3.style.display = 'none';
+
+  // Render SMS action slip
+  const smsEl = document.getElementById('sms-text-content');
+  if (smsEl) {
+    let slip = `[सेवा केंद्र - योजना पर्ची]\n`;
+    schemes.forEach((s, idx) => {
+      slip += `${idx + 1}. ${s.name} (${s.status === 'verified' ? 'पात्र हो सकती हैं' : 'दफ़्तर में पता करें'})\n   लाभ: ${s.benefit}\n`;
+    });
+    slip += `\nनोट: अंतिम मंज़ूरी दफ़्तर में होगी।`;
+    smsEl.textContent = slip;
+  }
+
+  card.scrollIntoView({ behavior: 'smooth' });
+}
 
   // Render 3 Physical Documents
   const docsList = document.getElementById('docs-list');

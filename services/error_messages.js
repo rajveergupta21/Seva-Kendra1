@@ -10,7 +10,8 @@ export const ERROR_CODES = {
   MIC_SILENT: "MIC_SILENT",
   STT_API_ERROR: "STT_API_ERROR",
   NETWORK_OFFLINE: "NETWORK_OFFLINE",
-  TRULY_EMPTY_SPEECH: "TRULY_EMPTY_SPEECH"
+  TRULY_EMPTY_SPEECH: "TRULY_EMPTY_SPEECH",
+  EMPTY_SPEECH: "EMPTY_SPEECH"
 };
 
 export const ERROR_MESSAGES = {
@@ -85,24 +86,24 @@ export const ERROR_MESSAGES = {
 
   [ERROR_CODES.STT_API_ERROR]: {
     hi: {
-      screen: "सर्वर से संपर्क करने में तकनीकी समस्या आई है। कृपया एक क्षण बाद पुनः प्रयास करें।",
-      spoken: "तकनीकी समस्या के कारण संपर्क नहीं हो पाया। कृपया एक क्षण बाद दोबारा बोलें।"
+      screen: "तकनीकी दिक्कत है, फिर से बोलिए",
+      spoken: "तकनीकी दिक्कत है, फिर से बोलिए"
     },
     bhojpuri: {
-      screen: "सर्वर से जुड़े में तकनीकी अड़चन आइल बा। तनी देर बाद फिर से बोलीं।",
-      spoken: "तकनीकी दिक्कत आ गइल बा। कृपा कके तनी देर बाद फिर से बोलीं।"
+      screen: "तकनीकी दिक्कत आ गइल बा, फिर से बोलीं",
+      spoken: "तकनीकी दिक्कत आ गइल बा, फिर से बोलीं"
     },
     bn: {
-      screen: "সার্ভারের সাথে সংযোগে সাময়িক প্রযুক্তিগত সমস্যা হয়েছে। কিছুক্ষণ পর আবার চেষ্টা করুন।",
-      spoken: "কারিগরি সমস্যার কারণে কথা বোঝা যায়নি। দয়া করে একটু পর আবার বলুন।"
+      screen: "কারিগরি সমস্যা হয়েছে, আবার বলুন",
+      spoken: "কারিগরি সমস্যা হয়েছে, আবার বলুন"
     },
     maithili: {
-      screen: "सर्वर सं जुड़े मे तकनीकी समस्या भेल। कृपया किछु काल बाद पुनः प्रयास करू।",
-      spoken: "तकनीकी समस्या भेल। कृपया किछु काल बाद पुनः बाहू।"
+      screen: "तकनीकी समस्या भेल, पुनः बाहू",
+      spoken: "तकनीकी समस्या भेल, पुनः बाहू"
     },
     en: {
-      screen: "Technical issue communicating with the voice server. Please try again in a moment.",
-      spoken: "Technical issue on our end. Please try again in a moment."
+      screen: "Technical issue, please speak again",
+      spoken: "Technical issue on our end, please speak again"
     }
   },
 
@@ -152,6 +153,8 @@ export const ERROR_MESSAGES = {
     }
   }
 };
+
+ERROR_MESSAGES[ERROR_CODES.EMPTY_SPEECH] = ERROR_MESSAGES[ERROR_CODES.TRULY_EMPTY_SPEECH];
 
 /**
  * Resolves user-facing error response by code and language
