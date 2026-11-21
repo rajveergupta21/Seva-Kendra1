@@ -182,9 +182,21 @@ export async function convertSpeechStream(text, language = "hi", speaker = "aart
   });
 }
 
+const STT_KEYTERMS = [
+  "Annapurna Yojana",
+  "Lakshmir Bhandar",
+  "Kanyashree",
+  "Rupashree",
+  "IGNWPS",
+  "IGNOAPS",
+  "BPL",
+  "Bardhaman",
+  "Anganwadi"
+];
+
 /**
- * REST Speech-to-Text using Sarvam AI Saaras v3
- * NOTE: The SDK field is `language_code` (NOT `languageCode`).
+ * REST Speech-to-Text using Sarvam AI Saaras v4
+ * Hits POST https://api.sarvam.ai/speech-to-text (multipart/form-data)
  */
 export async function speechToText(audioBuffer, mimeType = "audio/wav", apiKey = process.env.SARVAM_API_KEY, language_code = "hi-IN") {
   try {
@@ -192,16 +204,33 @@ export async function speechToText(audioBuffer, mimeType = "audio/wav", apiKey =
     const targetLangCode = getSttLanguageCode(language_code);
     const blob = new Blob([audioBuffer], { type: mimeType });
 
-    // EXACT SDK FIELD: language_code
-    const res = await client.speechToText.transcribe({
-      file: blob,
-      model: "saaras:v3",
-      language_code: targetLangCode
-    });
+    // Saaras:v4 with transcribe mode and domain keyterms
+    let res;
+    try {
+      res = await client.speechToText.transcribe({
+        file: blob,
+        model: "saaras:v4",
+        mode: "transcribe",
+        language_code: targetLangCode,
+        keyterms: STT_KEYTERMS
+      });
+    } catch (v4Err) {
+      console.warn(`[Sarvam STT] saaras:v4 fallback to v3: ${v4Err.message}`);
+      res = await client.speechToText.transcribe({
+        file: blob,
+        model: "saaras:v3",
+        mode: "transcribe",
+        language_code: targetLangCode
+      });
+    }
+
+    const transcript = res.transcript ? res.transcript.trim() : "";
+    const detectedLang = res.language_code || targetLangCode;
+    console.log(`[Sarvam STT] Transcript: "${transcript}" | detected language_code: ${detectedLang}`);
 
     return {
-      transcript: res.transcript ? res.transcript.trim() : "",
-      language_code: res.language_code || targetLangCode,
+      transcript,
+      language_code: detectedLang,
       is_fallback: false,
       raw: res
     };

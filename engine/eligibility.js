@@ -85,14 +85,14 @@ export function evaluateSchemeEligibility(scheme, profile = {}, language = "hi")
   if (scheme.id === "central_ssy") {
     const isGirlUnder10 = profile.gender === 'female' && typeof profile.age === 'number' && profile.age <= 10;
     const hasYoungDaughter = Boolean(profile.has_daughter || profile.has_minor_daughter || profile.daughter_under_10);
-    if (!isGirlUnder10 && !hasYoungDaughter && profile.age && profile.age > 10) {
+    if (!isGirlUnder10 && !hasYoungDaughter) {
       return { status: "ineligible", eligible: false, reason: "Targeted for girl child under 10" };
     }
   }
 
   // Special check for PMMVY (Pregnant or Lactating mothers)
   if (scheme.id === "central_pmmvy") {
-    if (profile.pregnant_or_lactating === false) {
+    if (!profile.pregnant_or_lactating) {
       return { status: "ineligible", eligible: false, reason: "Requires pregnancy or lactation" };
     }
   }

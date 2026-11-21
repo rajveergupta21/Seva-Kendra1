@@ -61,7 +61,7 @@ async function callGemini({ apiKey, model, systemPrompt, messages, jsonMode, tem
   const payload = {
     contents,
     generationConfig: {
-      temperature: typeof temperature === 'number' ? temperature : 0.2,
+      temperature: typeof temperature === 'number' ? temperature : (jsonMode ? 0.1 : 0.3),
       responseMimeType: jsonMode ? 'application/json' : 'text/plain'
     }
   };
@@ -86,6 +86,7 @@ async function callGemini({ apiKey, model, systemPrompt, messages, jsonMode, tem
 
     if (!res.ok) {
       const errText = await res.text();
+      console.error(`[Gemini API Error] HTTP ${res.status} on model ${modelName}:`, errText);
       const err = new Error(`Gemini API Error ${res.status}: ${errText}`);
       err.status = res.status;
       err.errText = errText;

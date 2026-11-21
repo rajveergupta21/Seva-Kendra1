@@ -302,7 +302,12 @@ STRICT RULES:
   const contextData = {
     flow: stageBResult.flow,
     needsInfo: stageBResult.needsInfo,
-    matchedSchemes: stageBResult.screen_data?.schemes?.map(s => s.name) || [],
+    matchedSchemes: stageBResult.screen_data?.schemes?.map(s => ({
+      id: s.id,
+      name: s.name,
+      benefit: s.benefit,
+      why_you_may_qualify: s.why_you_may_qualify
+    })) || [],
     userProfile
   };
 
@@ -313,7 +318,7 @@ STRICT RULES:
         { role: 'user', content: `Citizen context:\n${JSON.stringify(contextData)}\nCitizen asked: "${userQuestion}"` }
       ],
       jsonMode: false,
-      temperature: 0.2
+      temperature: 0.3
     });
 
     let cleanReply = (rawReply || "").replace(/[*#_`\-\[\]]/g, '').replace(/https?:\/\/\S+/g, '').trim();
@@ -445,6 +450,12 @@ export async function processDynamicTurn(sessionId, userSpeechText, language = "
     languageReply,
     userQuestion: userSpeechText
   });
+
+  const matchedIds = stageBResult.screen_data?.schemes?.map(s => s.id) || [];
+  console.log("[TURN] sessionId:", sessionId, "| userText:", userSpeechText);
+  console.log("[STAGE A - EXTRACTED]:", JSON.stringify(extraction.extracted_fields || {}));
+  console.log("[STAGE B - ELIGIBILITY]:", JSON.stringify({ flow: stageBResult.flow, matchedIds, needsInfo: stageBResult.needsInfo }));
+  console.log("[STAGE C - SPOKEN REPLY]:", spokenReply);
 
   // Synthesize audio via Sarvam TTS or Cache
   let audioUrl = null;

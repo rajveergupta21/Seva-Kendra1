@@ -811,6 +811,9 @@ function setQuickInput(text) {
 // 7. Turn Response Handler (Unified Dynamic Router & Telemetry)
 // --------------------------------------------------------------------------
 function handleTurnResponse(result) {
+  if (result && result.sessionId) {
+    currentSessionId = result.sessionId;
+  }
   const micStatus = document.getElementById('mic-status-text');
   const t = I18N_TRANSLATIONS[currentLanguage] || I18N_TRANSLATIONS.hi;
   if (micStatus) micStatus.textContent = t.micStatusIdle;
@@ -1076,6 +1079,9 @@ async function initSession() {
       body: JSON.stringify({ sessionId: currentSessionId, language: currentLanguage })
     });
     const data = await res.json();
+    if (data && data.sessionId) {
+      currentSessionId = data.sessionId;
+    }
     setPrompt(data.promptText || t.welcomePrompt, data.promptHint || t.welcomeHint, data.audioUrl, data.audioBase64);
   } catch (err) {
     console.warn("Init fallback:", err);
