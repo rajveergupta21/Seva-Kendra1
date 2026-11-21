@@ -11,6 +11,7 @@ import { getOrCreateSession, processDialogTurn, resetSession, QUESTIONS } from '
 import { speechToText, textToSpeech } from './services/sarvam.js';
 import { matchSchemes } from './engine/eligibility.js';
 import { diagnoseStoppage, BENEFICIARIES, listGrievances } from './engine/triage.js';
+import { processDynamicTurn } from './services/dynamic_assistant.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -158,30 +159,54 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, JSON.parse(schemesRaw));
     }
 
-    // 2. API: Get Initial Question (Greeting)
+const GREETINGS = {
+  hi: {
+    text: "नमस्ते, जनसेवा केंद्र में आपका स्वागत है। बताइए, आपकी उम्र कितनी है, और क्या आप शादीशुदा हैं, विधवा हैं, या अकेली हैं?",
+    hint: '💡 बोलें: "हम 48 साल के हैं, हमारे पति नहीं रहे और कोई जमीन नहीं है"'
+  },
+  bhojpuri: {
+    text: "प्रणाम, जनसेवा केंद्र में राउर स्वागत बा। बताईं, राउर उमिर केतना बा, आ रउआ शादीशुदा बानी, विधवा बानी, या अकेले बानी?",
+    hint: '💡 बोलीं: "हम 48 साल के बानी, हमार पति नइखन, जमीन नइखे"'
+  },
+  bn: {
+    text: "নমস্কার, জনসেবা কেন্দ্রে আপনাকে স্বাগত। বলুন, আপনার বয়স কত এবং আপনি কি বিবাহিত, বিধবা না একা থাকেন?",
+    hint: '💡 বলুন: "আমার বয়স ৪৮ বছর, স্বামী নেই, কোনো জমি নেই"'
+  },
+  maithili: {
+    text: "प्रणाम, जनसेवा केंद्र में अहाँक स्वागत अछि। कहू, अहाँक उमर कते अछि, आ अहाँ विवाहित छी, विधवा छी, या अकेली छी?",
+    hint: '💡 कहू: "हमर उमर 48 साल अछि, पति नहि छथि"'
+  },
+  en: {
+    text: "Welcome to JanSeva Kendra. Please tell me your age, and whether you are married, widowed, or single?",
+    hint: '💡 Say: "I am 48 years old, widow, landless"'
+  }
+};
+
+    // 2. API: Get Initial Question (Language Greeting)
     if (pathname === '/api/chat/init' && req.method === 'POST') {
       const body = await parseJsonBody(req);
       const sessionId = body.sessionId || `session_${Date.now()}`;
-      const session = resetSession(sessionId);
-      const q0 = QUESTIONS[0];
-      const tts = await textToSpeech(q0.spoken_hi);
+      const lang = body.language || 'hi';
+      const greeting = GREETINGS[lang] || GREETINGS.hi;
+      const tts = await textToSpeech(greeting.text);
 
       return sendJson(res, 200, {
         sessionId,
-        currentStep: 0,
-        promptText: q0.spoken_hi,
-        promptHint: q0.hint,
+        language: lang,
+        promptText: greeting.text,
+        promptHint: greeting.hint,
         audioBase64: tts.audio_base64
       });
     }
 
-    // 3. API: Process Spoken or Transcribed Dialog Turn
+    // 3. API: Process Spoken or Transcribed Dialog Turn (Dynamic Engine)
     if (pathname === '/api/chat/turn' && req.method === 'POST') {
       const body = await parseJsonBody(req);
       const sessionId = body.sessionId || 'default_session';
       const userText = body.text || '';
+      const language = body.language || 'hi';
 
-      const turnResult = await processDialogTurn(sessionId, userText);
+      const turnResult = await processDynamicTurn(sessionId, userText, language);
       return sendJson(res, 200, turnResult);
     }
 
@@ -189,16 +214,42 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/api/chat/audio' && req.method === 'POST') {
       const sessionId = req.headers['x-session-id'] || 'voice_session';
       const audioBuffer = await parseRawBody(req);
-      const mimeType = req.headers['content-type'] || 'audio/webm';
+      const mimeType = req.headers['content-type'] || 'audio/wav';
+      const language = req.headers['x-language'] || 'hi-IN';
+      const fallbackTranscript = req.headers['x-fallback-transcript']
+        ? decodeURIComponent(req.headers['x-fallback-transcript'])
+        : '';
 
-      // 1. Transcribe with Sarvam STT
-      const stt = await speechToText(audioBuffer, mimeType);
-      const transcript = stt.transcript || "हम 48 साल के हैं, हमारे पति नहीं रहे और कोई ज़मीन नहीं है।";
+      let transcript = '';
 
-      // 2. Process Turn
-      const turnResult = await processDialogTurn(sessionId, transcript);
+      // 1. Transcribe with Sarvam STT (saaras:v3)
+      if (audioBuffer && audioBuffer.length > 200) {
+        const stt = await speechToText(audioBuffer, mimeType, process.env.SARVAM_API_KEY, language);
+        if (stt && stt.transcript) {
+          transcript = stt.transcript.trim();
+        }
+      }
+
+      // 2. Use browser SpeechRecognition transcript if Sarvam was empty or delayed
+      if (!transcript && fallbackTranscript) {
+        console.log(`[Audio STT Fallback] Using client speech transcript: "${fallbackTranscript}"`);
+        transcript = fallbackTranscript.trim();
+      }
+
+      if (!transcript) {
+        return sendJson(res, 200, {
+          type: "NO_SPEECH_DETECTED",
+          isCompleted: false,
+          userTranscript: "",
+          replyText: "आपकी आवाज़ साफ सुनाई नहीं दी। कृपया माइक बटन दबाकर दोबारा बोलें, या नीचे दिए गए विकल्पों में से चुनें।",
+          audioBase64: null
+        });
+      }
+
+      // 3. Process dynamically with zero hardcoded interrogation
+      const langShort = language.startsWith('bn') ? 'bn' : (language.includes('bhojpuri') ? 'bhojpuri' : (language.startsWith('en') ? 'en' : 'hi'));
+      const turnResult = await processDynamicTurn(sessionId, transcript, langShort);
       turnResult.userTranscript = transcript;
-      turnResult.stt = stt;
 
       return sendJson(res, 200, turnResult);
     }

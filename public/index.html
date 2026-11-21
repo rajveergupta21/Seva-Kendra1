@@ -175,7 +175,7 @@
       <h1>एक ही मंच पर भारत सरकार की सभी कल्याणकारी योजनाएं<br>— अब सिर्फ अपनी मातृभाषा में बोलकर</h1>
       <p>
         बिना किसी फॉर्म, बिना अंग्रेजी, बिना बैंक खाते की तकनीकी जानकारी और बिना किसी दलाल के। 
-        सिर्फ 4 सवालों के बोलकर जवाब दें और पाएं अपने हक की योजनाओं की पक्की जानकारी।
+        अपनी मातृभाषा में सीधे बोलकर बताएं — जनसेवा AI आपकी बात समझकर तुरंत आपके हक की योजनाएं और कागज़ बता देगा।
       </p>
 
       <!-- Central Voice Search Bar (UMANG Style) -->
@@ -275,14 +275,18 @@
         <!-- Left Column: Interactive Assistant Voice Interface -->
         <div class="interactive-voice-col">
           
-          <!-- Stepper -->
+          <!-- Dynamic Conversational Stepper -->
           <div class="stepper-container">
             <div class="stepper-track">
-              <div class="step-node active" id="step-0">1. उम्र व स्थिति</div>
-              <div class="step-node" id="step-1">2. ज़मीन</div>
-              <div class="step-node" id="step-2">3. कमाई व राशन</div>
-              <div class="step-node" id="step-3">4. बच्चे व परिवार</div>
-              <div class="step-node" id="step-4">5. राज्य व जिला</div>
+              <div class="step-node active" id="step-stage-1">
+                <span>🎙️</span> 1. अपनी बात बोलें
+              </div>
+              <div class="step-node" id="step-stage-2">
+                <span>📋</span> 2. जानकारी सत्यापन
+              </div>
+              <div class="step-node" id="step-stage-3">
+                <span>🎉</span> 3. स्वीकृत योजनाएं व कागज़
+              </div>
             </div>
           </div>
 

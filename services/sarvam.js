@@ -66,8 +66,16 @@ export async function textToSpeech(text, speaker = "kavya", apiKey = process.env
   }
 
   try {
+    // Sarvam Bulbul v3 enforces a max of 500 chars per input
+    let cleanText = (text || "").trim();
+    if (cleanText.length > 480) {
+      const cut = cleanText.slice(0, 480);
+      const lastPunct = Math.max(cut.lastIndexOf('।'), cut.lastIndexOf('.'), cut.lastIndexOf('!'), cut.lastIndexOf('?'));
+      cleanText = lastPunct > 150 ? cut.slice(0, lastPunct + 1) : cut.slice(0, 475) + "...";
+    }
+
     const payload = {
-      inputs: [text],
+      inputs: [cleanText],
       target_language_code: "hi-IN",
       speaker: speaker,
       pace: 0.95,

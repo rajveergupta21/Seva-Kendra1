@@ -134,17 +134,14 @@ export function matchSchemes(profile) {
   const primaryDocuments = Array.from(docSet).slice(0, 3);
   const primaryOffice = Array.from(officesSet)[0] || "अपने गाँव के पंचायत भवन (पंचायत सहायक) या नजदीकी जन सेवा केंद्र (CSC)";
 
-  // Compose Spoken Hindi Script for Sarvam Bulbul TTS
+  // Compose Spoken Hindi Script for Sarvam Bulbul TTS (Optimized for rural clarity and <450 chars)
   let spokenScript = "";
   if (topSchemes.length === 0) {
-    spokenScript = "दीदी, आपकी दी गई जानकारी के अनुसार फिलहाल कोई सीधी नकद योजना नहीं मिली है, लेकिन आप पंचायत भवन जाकर जन कल्याण योजनाओं की नई लिस्ट जरूर जांचें।";
+    spokenScript = "दीदी, आपकी जानकारी के अनुसार फिलहाल कोई सीधी नकद योजना नहीं मिली है, लेकिन आप पंचायत भवन जाकर नई सूची देख सकती हैं।";
   } else {
-    spokenScript = `दीदी, आपके लिए ${topSchemes.length} बड़ी सरकारी योजनाएं मिली हैं। `;
-    topSchemes.forEach((s, idx) => {
-      spokenScript += `योजना ${idx + 1}: ${s.title_hi}। इसमें ${s.spoken_summary_hi} `;
-    });
-    spokenScript += `इसके लिए आपको मुख्य रूप से ${primaryDocuments.length} कागज़ ले जाने होंगे: ${primaryDocuments.join(', ')}। `;
-    spokenScript += `कल सुबह आप ${primaryOffice} पर जाकर यह आवेदन करवा सकती हैं। हमने आपके मोबाइल पर पूरी जानकारी का मैसेज भी भेज दिया है।`;
+    const schemeTitles = topSchemes.map(s => s.title_hi).join(' और ');
+    const docs = primaryDocuments.slice(0, 3).join(', ');
+    spokenScript = `दीदी, आपके लिए ${topSchemes.length} योजनाएं स्वीकृत हैं: ${schemeTitles}। इसके लिए मुख्य रूप से सिर्फ 3 कागज़ ले जाने होंगे: ${docs}। आप ${primaryOffice} पर जाकर जमा करें। हमने पूरी पर्ची का SMS भी भेज दिया है।`;
   }
 
   // Compose SMS Action Slip

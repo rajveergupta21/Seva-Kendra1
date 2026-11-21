@@ -226,25 +226,105 @@ function toggleHighContrast() {
 }
 
 // --------------------------------------------------------------------------
-// Speech Recognition Engine (Real-Time Live Hearing & Transcription)
+// Web Audio PCM Capture & 16kHz WAV Encoding (Zero-Hallucination Audio Engine)
+// --------------------------------------------------------------------------
+let audioCtx = null;
+let mediaStreamSource = null;
+let scriptProcessorNode = null;
+let rawMicStream = null;
+let pcmBuffers = [];
+let isAudioCapturing = false;
+
+function writeWavString(view, offset, string) {
+  for (let i = 0; i < string.length; i++) {
+    view.setUint8(offset + i, string.charCodeAt(i));
+  }
+}
+
+function encodeWav(samples, sampleRate = 16000) {
+  const buffer = new ArrayBuffer(44 + samples.length * 2);
+  const view = new DataView(buffer);
+
+  // RIFF chunk descriptor
+  writeWavString(view, 0, 'RIFF');
+  view.setUint32(4, 36 + samples.length * 2, true);
+  writeWavString(view, 8, 'WAVE');
+
+  // fmt sub-chunk
+  writeWavString(view, 12, 'fmt ');
+  view.setUint32(16, 16, true); // Subchunk1Size (16 for PCM)
+  view.setUint16(20, 1, true);  // AudioFormat (1 = PCM)
+  view.setUint16(22, 1, true);  // NumChannels (1 = Mono)
+  view.setUint32(24, sampleRate, true); // SampleRate (16000)
+  view.setUint32(28, sampleRate * 2, true); // ByteRate
+  view.setUint16(32, 2, true);  // BlockAlign
+  view.setUint16(34, 16, true); // BitsPerSample (16)
+
+  // data sub-chunk
+  writeWavString(view, 36, 'data');
+  view.setUint32(40, samples.length * 2, true);
+
+  // Write 16-bit PCM samples
+  let offset = 44;
+  for (let i = 0; i < samples.length; i++, offset += 2) {
+    const s = Math.max(-1, Math.min(1, samples[i]));
+    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+  }
+
+  return new Blob([view], { type: 'audio/wav' });
+}
+
+function downsampleBuffer(buffers, inputSampleRate, targetSampleRate = 16000) {
+  let totalLength = buffers.reduce((acc, b) => acc + b.length, 0);
+  let merged = new Float32Array(totalLength);
+  let offset = 0;
+  for (const b of buffers) {
+    merged.set(b, offset);
+    offset += b.length;
+  }
+
+  if (inputSampleRate === targetSampleRate) return merged;
+
+  const ratio = inputSampleRate / targetSampleRate;
+  const newLength = Math.round(totalLength / ratio);
+  const result = new Float32Array(newLength);
+  let offsetResult = 0;
+  let offsetMerged = 0;
+
+  while (offsetResult < newLength) {
+    const nextOffsetMerged = Math.round((offsetResult + 1) * ratio);
+    let sum = 0;
+    let count = 0;
+    for (let i = offsetMerged; i < nextOffsetMerged && i < totalLength; i++) {
+      sum += merged[i];
+      count++;
+    }
+    result[offsetResult] = count > 0 ? sum / count : 0;
+    offsetResult++;
+    offsetMerged = nextOffsetMerged;
+  }
+  return result;
+}
+
+// --------------------------------------------------------------------------
+// Speech Recognition & Live Visualizer
 // --------------------------------------------------------------------------
 function initSpeechRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
-    console.warn("Web Speech API not supported in this browser; using AudioContext / Sarvam fallback.");
+    console.warn("Web Speech API not supported; using direct AudioContext / Sarvam STT.");
     return;
   }
 
   speechRecognitionInstance = new SpeechRecognition();
-  speechRecognitionInstance.continuous = false;
+  speechRecognitionInstance.continuous = true;
   speechRecognitionInstance.interimResults = true;
   speechRecognitionInstance.maxAlternatives = 1;
 
   speechRecognitionInstance.onstart = () => {
     isSpeechRecognizing = true;
     showLiveSpeechBox(true);
-    setMicButtonState(true);
-    updateLiveSpeechStatus("माइक सक्रिय है... बोलते रहें (Listening...)");
+    updateLiveSpeechStatus("🎙️ आवाज़ सुनी जा रही है... बोलते रहें (Listening...)");
   };
 
   speechRecognitionInstance.onresult = (event) => {
@@ -259,38 +339,23 @@ function initSpeechRecognition() {
       }
     }
 
-    const currentText = final || interim;
-    latestInterimTranscript = currentText;
-
-    const transcriptEl = document.getElementById('liveSpeechTranscript');
-    if (transcriptEl) transcriptEl.textContent = `"${currentText}"`;
-
-    const manualInput = document.getElementById('manual-speech-input');
-    if (manualInput && currentText) manualInput.value = currentText;
+    const currentText = (final || interim).trim();
+    if (currentText) {
+      latestInterimTranscript = currentText;
+      const transcriptEl = document.getElementById('liveSpeechTranscript');
+      if (transcriptEl) transcriptEl.textContent = `"${currentText}"`;
+      const manualInput = document.getElementById('manual-speech-input');
+      if (manualInput) manualInput.value = currentText;
+    }
   };
 
   speechRecognitionInstance.onerror = (event) => {
-    console.warn("Speech recognition error:", event.error);
-    isSpeechRecognizing = false;
-    if (event.error === 'not-allowed') {
-      updateLiveSpeechStatus("⚠️ माइक की अनुमति नहीं मिली। कृपया अनुमति दें या नीचे बॉक्स में लिखकर भेजें।");
-    } else {
-      updateLiveSpeechStatus("आवाज़ नहीं सुनी जा सकी। कृपया दोबारा बोलें या नीचे दिए गए विकल्प चुनें।");
-    }
-    setMicButtonState(false);
+    console.warn("Web Speech notice:", event.error);
+    // Don't kill audio capture; AudioContext captures genuine 16kHz WAV concurrently
   };
 
   speechRecognitionInstance.onend = () => {
     isSpeechRecognizing = false;
-    setMicButtonState(false);
-
-    if (latestInterimTranscript && latestInterimTranscript.trim().length > 1) {
-      updateLiveSpeechStatus(`✓ पहचाना गया: "${latestInterimTranscript.trim()}"`);
-      // Automatically send the recognized text
-      setTimeout(() => {
-        sendSpokenText(latestInterimTranscript.trim());
-      }, 500);
-    }
   };
 }
 
@@ -315,23 +380,23 @@ function setMicButtonState(recording) {
 
   if (recording) {
     if (micBtn) micBtn.classList.add('recording');
-    if (micLabel) micLabel.textContent = "रोकने के लिए दबाएं";
+    if (micLabel) micLabel.textContent = "रोकने के लिए दबाएं (Stop)";
     if (micStatus) micStatus.textContent = cfg.statusListening;
     setWaveformActive(true);
   } else {
     if (micBtn) micBtn.classList.remove('recording');
-    if (micLabel) micLabel.textContent = "बोलने के लिए दबाएं";
+    if (micLabel) micLabel.textContent = "बोलने के लिए दबाएं (Speak)";
     if (micStatus) micStatus.textContent = cfg.statusProcessing;
     setWaveformActive(false);
   }
 }
 
 // --------------------------------------------------------------------------
-// Microphone Button Toggle & Turn Processing
+// Microphone Toggle & Recording Lifecycle
 // --------------------------------------------------------------------------
 async function toggleRecording() {
-  if (isRecording || isSpeechRecognizing) {
-    stopRecording();
+  if (isRecording || isAudioCapturing) {
+    await stopRecording();
   } else {
     await startRecording();
   }
@@ -339,56 +404,98 @@ async function toggleRecording() {
 
 async function startRecording() {
   latestInterimTranscript = "";
+  pcmBuffers = [];
   const cfg = LANGUAGE_CONFIG[currentLanguage] || LANGUAGE_CONFIG.hi;
 
-  // 1. Try Live Speech Recognition first (Chrome, Android, Edge, Safari)
+  showLiveSpeechBox(true);
+  setMicButtonState(true);
+  updateLiveSpeechStatus("🎙️ माइक सक्रिय है... कृपया बोलें");
+
+  // 1. Start parallel Web Speech API for real-time visual captioning
   if (speechRecognitionInstance) {
     try {
       speechRecognitionInstance.lang = cfg.sttCode;
       speechRecognitionInstance.start();
-      isRecording = true;
-      return;
     } catch (e) {
-      console.warn("SpeechRecognition start exception:", e);
+      console.warn("SpeechRecognition start notice:", e.message);
     }
   }
 
-  // 2. Fallback to MediaRecorder & AudioContext
+  // 2. Start Web Audio API PCM capture (produces genuine 16kHz WAV for Sarvam STT)
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    audioChunks = [];
-    mediaRecorder = new MediaRecorder(stream);
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new AudioContextClass();
 
-    mediaRecorder.ondataavailable = e => {
-      if (e.data.size > 0) audioChunks.push(e.data);
+    rawMicStream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        channelCount: 1,
+        echoCancellation: true,
+        noiseSuppression: true
+      }
+    });
+
+    mediaStreamSource = audioCtx.createMediaStreamSource(rawMicStream);
+    scriptProcessorNode = audioCtx.createScriptProcessor(4096, 1, 1);
+
+    scriptProcessorNode.onaudioprocess = (e) => {
+      if (!isRecording) return;
+      const input = e.inputBuffer.getChannelData(0);
+      pcmBuffers.push(new Float32Array(input));
     };
 
-    mediaRecorder.onstop = async () => {
-      const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-      await sendAudioToServer(audioBlob);
-    };
+    mediaStreamSource.connect(scriptProcessorNode);
+    scriptProcessorNode.connect(audioCtx.destination);
 
-    mediaRecorder.start();
     isRecording = true;
-    showLiveSpeechBox(true);
-    setMicButtonState(true);
+    isAudioCapturing = true;
   } catch (err) {
-    console.warn("getUserMedia failed:", err);
-    showLiveSpeechBox(true);
-    updateLiveSpeechStatus("⚠️ माइक चालू नहीं हो सका। कृपया नीचे दिए गए विकल्पों में से चुनें।");
+    console.warn("Web Audio API getUserMedia failed/blocked:", err);
+    isRecording = Boolean(speechRecognitionInstance && isSpeechRecognizing);
+    if (!isRecording) {
+      setMicButtonState(false);
+      updateLiveSpeechStatus("⚠️ माइक की अनुमति नहीं मिली। कृपया नीचे बॉक्स में लिखकर या विकल्प चुनकर भेजें।");
+    }
   }
 }
 
-function stopRecording() {
-  if (speechRecognitionInstance && isSpeechRecognizing) {
+async function stopRecording() {
+  setMicButtonState(false);
+  const wasCapturing = isRecording || isAudioCapturing;
+  isRecording = false;
+  isAudioCapturing = false;
+
+  // Stop Web Speech
+  if (speechRecognitionInstance) {
     try { speechRecognitionInstance.stop(); } catch (e) {}
   }
-  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-    try { mediaRecorder.stop(); } catch (e) {}
+
+  // Disconnect AudioContext and stop tracks
+  if (scriptProcessorNode) {
+    try { scriptProcessorNode.disconnect(); } catch (e) {}
   }
-  isRecording = false;
-  isSpeechRecognizing = false;
-  setMicButtonState(false);
+  if (mediaStreamSource) {
+    try { mediaStreamSource.disconnect(); } catch (e) {}
+  }
+  if (rawMicStream) {
+    rawMicStream.getTracks().forEach(t => t.stop());
+  }
+
+  const sampleRate = audioCtx ? audioCtx.sampleRate : 44100;
+  if (audioCtx && audioCtx.state !== 'closed') {
+    try { audioCtx.close(); } catch (e) {}
+  }
+
+  // If we collected PCM samples, encode genuine 16kHz mono WAV Blob
+  if (pcmBuffers.length > 0) {
+    updateLiveSpeechStatus("आवाज़ की जांच हो रही है (Sarvam Saaras v3)...");
+    const downsampledSamples = downsampleBuffer(pcmBuffers, sampleRate, 16000);
+    const wavBlob = encodeWav(downsampledSamples, 16000);
+    await sendAudioToServer(wavBlob);
+  } else if (latestInterimTranscript && latestInterimTranscript.trim().length > 1) {
+    sendSpokenText(latestInterimTranscript.trim());
+  } else if (wasCapturing) {
+    updateLiveSpeechStatus("आवाज़ नहीं सुनाई दी। कृपया दोबारा बोलें या नीचे दिए गए विकल्प चुनें।");
+  }
 }
 
 function setWaveformActive(active) {
@@ -410,7 +517,10 @@ async function sendSpokenText(forcedText = null) {
   if (!text) return;
 
   const cfg = LANGUAGE_CONFIG[currentLanguage] || LANGUAGE_CONFIG.hi;
+  showLiveSpeechBox(true);
   updateLiveSpeechStatus(`जांच चल रही है: "${text}"...`);
+  const transcriptEl = document.getElementById('liveSpeechTranscript');
+  if (transcriptEl) transcriptEl.textContent = `"${text}"`;
 
   try {
     const res = await fetch(`${API_BASE}/api/chat/turn`, {
@@ -418,7 +528,8 @@ async function sendSpokenText(forcedText = null) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         sessionId: currentSessionId,
-        text: text
+        text: text,
+        language: currentLanguage
       })
     });
     const result = await res.json();
@@ -436,9 +547,10 @@ async function sendAudioToServer(audioBlob) {
     const res = await fetch(`${API_BASE}/api/chat/audio`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'audio/webm',
+        'Content-Type': 'audio/wav',
         'x-session-id': currentSessionId,
-        'x-language': cfg.sttCode
+        'x-language': cfg.sttCode,
+        'x-fallback-transcript': encodeURIComponent(latestInterimTranscript || '')
       },
       body: audioBlob
     });
@@ -446,30 +558,73 @@ async function sendAudioToServer(audioBlob) {
     handleTurnResponse(result);
   } catch (err) {
     console.error("Audio upload error", err);
-    sendSpokenText();
+    if (latestInterimTranscript) {
+      sendSpokenText(latestInterimTranscript);
+    }
+  }
+}
+
+function updateDynamicStage(stage) {
+  for (let s = 1; s <= 3; s++) {
+    const node = document.getElementById(`step-stage-${s}`);
+    if (!node) continue;
+    node.className = 'step-node';
+    if (s < stage) node.classList.add('completed');
+    else if (s === stage) node.classList.add('active');
   }
 }
 
 function handleTurnResponse(result) {
-  const profile = result.session ? result.session.profile : {};
-  if (profile.age) document.getElementById('slot-age').textContent = `${profile.age} वर्ष`;
-  if (profile.marital_status) document.getElementById('slot-marital').textContent = profile.marital_status;
-  if (profile.landholding_acres !== undefined && profile.landholding_acres !== null) {
-    document.getElementById('slot-land').textContent = profile.landholding_acres === 0 ? "भूमिहीन" : `${profile.landholding_acres} एकड़`;
-  }
-  if (profile.annual_income_inr) {
-    document.getElementById('slot-income').textContent = `₹${profile.annual_income_inr.toLocaleString('en-IN')}`;
-  }
-  if (profile.state) {
-    document.getElementById('slot-location').textContent = `${profile.state} ${profile.district || ''}`;
+  if (result.type === 'NO_SPEECH_DETECTED') {
+    updateLiveSpeechStatus(result.replyText);
+    speakBrowserTTS(result.replyText);
+    return;
   }
 
-  if (result.isCompleted) {
-    updateStepper(5);
+  // 1. Update verified slots
+  const profile = result.profile || (result.session ? result.session.profile : {});
+  if (profile.age) {
+    const el = document.getElementById('slot-age');
+    if (el) el.textContent = `${profile.age} वर्ष`;
+  }
+  if (profile.marital_status) {
+    const el = document.getElementById('slot-marital');
+    if (el) el.textContent = profile.marital_status === 'widow' ? 'विधवा' : (profile.marital_status === 'married' ? 'विवाहित' : profile.marital_status);
+  }
+  if (profile.landholding_acres !== undefined && profile.landholding_acres !== null) {
+    const el = document.getElementById('slot-land');
+    if (el) el.textContent = profile.landholding_acres === 0 ? "भूमिहीन" : `${profile.landholding_acres} एकड़`;
+  }
+  if (profile.annual_income_inr) {
+    const el = document.getElementById('slot-income');
+    if (el) el.textContent = `₹${profile.annual_income_inr.toLocaleString('en-IN')}`;
+  }
+  if (profile.state) {
+    const el = document.getElementById('slot-location');
+    if (el) el.textContent = `${profile.state} ${profile.district || ''}`;
+  }
+
+  // 2. Show user's recognized words
+  if (result.userTranscript) {
+    const liveText = document.getElementById('liveSpeechTranscript');
+    if (liveText) liveText.textContent = `"${result.userTranscript}"`;
+    const manualInput = document.getElementById('manual-speech-input');
+    if (manualInput) manualInput.value = result.userTranscript;
+    updateLiveSpeechStatus(`✓ पहचाना गया: "${result.userTranscript}"`);
+  }
+
+  // 3. Branch by dynamic result type
+  if (result.type === 'TRIAGE_RESOLVED') {
+    updateDynamicStage(3);
+    switchMainTab('tab-stoppage-triage');
+    renderTriageView(result.triageData);
+  } else if (result.type === 'SCHEMES_MATCHED' || result.isCompleted) {
+    updateDynamicStage(3);
     renderEvaluationResults(result.evaluationResult, result.audioBase64);
   } else {
-    updateStepper(result.currentStep);
-    setPrompt(result.nextPromptText, result.promptHint, result.audioBase64);
+    // Follow-up question
+    updateDynamicStage(2);
+    setPrompt(result.replyText || result.nextPromptText, result.promptHint, result.audioBase64);
   }
 }
 
@@ -526,8 +681,7 @@ function replaySpokenAudio() {
 // --------------------------------------------------------------------------
 async function initSession() {
   currentSessionId = `session_${Date.now()}`;
-  currentStepIndex = 0;
-  updateStepper(0);
+  updateDynamicStage(1);
   const resultsCard = document.getElementById('results-card');
   if (resultsCard) resultsCard.style.display = 'none';
 
@@ -540,21 +694,10 @@ async function initSession() {
       body: JSON.stringify({ sessionId: currentSessionId, language: currentLanguage })
     });
     const data = await res.json();
-    setPrompt(cfg.welcomeText || data.promptText, cfg.hintText || data.promptHint, data.audioBase64);
+    setPrompt(data.promptText || cfg.welcomeText, data.promptHint || cfg.hintText, data.audioBase64);
   } catch (err) {
     console.warn("Init fallback:", err);
     setPrompt(cfg.welcomeText, cfg.hintText, null);
-  }
-}
-
-function updateStepper(step) {
-  currentStepIndex = step;
-  for (let i = 0; i < 5; i++) {
-    const node = document.getElementById(`step-${i}`);
-    if (!node) continue;
-    node.className = 'step-node';
-    if (i < step) node.classList.add('completed');
-    else if (i === step) node.classList.add('active');
   }
 }
 
@@ -727,12 +870,12 @@ async function loadPreset(presetKey) {
     const result = await res.json();
 
     document.getElementById('slot-age').textContent = `${profile.age} वर्ष`;
-    document.getElementById('slot-marital').textContent = profile.marital_status || 'लागू';
+    document.getElementById('slot-marital').textContent = profile.marital_status === 'widow' ? 'विधवा' : (profile.marital_status === 'married' ? 'विवाहित' : 'लागू');
     document.getElementById('slot-land').textContent = profile.landholding_acres === 0 ? "भूमिहीन" : `${profile.landholding_acres} एकड़`;
     document.getElementById('slot-income').textContent = `₹${profile.annual_income_inr.toLocaleString('en-IN')}`;
     document.getElementById('slot-location').textContent = `${profile.state} ${profile.district || ''}`;
 
-    updateStepper(4);
+    updateDynamicStage(3);
     renderEvaluationResults(result, result.ttsAudioBase64);
   } catch (err) {
     console.error("Preset evaluation error", err);
