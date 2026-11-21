@@ -8,11 +8,11 @@ const SARVAM_API_BASE = "https://api.sarvam.ai";
 /**
  * Speech-to-Text using Sarvam AI Saarika v2
  */
-export async function speechToText(audioBuffer, mimeType = "audio/wav", apiKey = process.env.SARVAM_API_KEY) {
+export async function speechToText(audioBuffer, mimeType = "audio/wav", apiKey = process.env.SARVAM_API_KEY, languageCode = "hi-IN") {
   if (!apiKey) {
     return {
       transcript: "हम 48 साल के हैं, हमारे पति नहीं रहे और हमारे पास कोई ज़मीन नहीं है।",
-      language_code: "hi-IN",
+      language_code: languageCode,
       is_fallback: true
     };
   }
@@ -21,8 +21,8 @@ export async function speechToText(audioBuffer, mimeType = "audio/wav", apiKey =
     const formData = new FormData();
     const blob = new Blob([audioBuffer], { type: mimeType });
     formData.append("file", blob, "recording.wav");
-    formData.append("model", "saarika:v2");
-    formData.append("language_code", "hi-IN");
+    formData.append("model", "saaras:v3");
+    formData.append("language_code", languageCode);
 
     const res = await fetch(`${SARVAM_API_BASE}/speech-to-text`, {
       method: "POST",

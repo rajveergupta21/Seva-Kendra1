@@ -89,7 +89,7 @@ def transcribe_audio(audio_bytes: bytes, filename: str = "query.wav", language_c
         body.append(f"--{boundary}".encode())
         body.append(b'Content-Disposition: form-data; name="model"')
         body.append(b"")
-        body.append(b"saarika:v2")
+        body.append(b"saaras:v3")
         
         body.append(f"--{boundary}--".encode())
         body.append(b"")

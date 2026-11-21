@@ -16,6 +16,47 @@
   <!-- 1. TRICOLOR TOP ACCENT STRIPE -->
   <div class="tricolor-stripe"></div>
 
+  <!-- FIRST-INTERACTION WELCOME & LANGUAGE SELECTION MODAL -->
+  <div class="lang-modal-overlay" id="langModalOverlay">
+    <div class="lang-modal-card">
+      <div class="lang-modal-header">
+        <div class="lang-modal-emblem">🇮🇳</div>
+        <h2>अपनी भाषा चुनें / Select Language</h2>
+        <p>आप जनसेवा केंद्र से किस भाषा में बात करना चाहते हैं?<br><span style="font-size: 12px; color: #64748b;">Please select your language to begin</span></p>
+      </div>
+      <div class="lang-options-grid">
+        <button class="lang-card-btn" onclick="selectInitialLanguage('hi')">
+          <div class="lang-flag">🇮🇳</div>
+          <div class="lang-name">हिन्दी (Hindi)</div>
+          <div class="lang-sub">बोलकर योजनाएं जानिए</div>
+        </button>
+        <button class="lang-card-btn" onclick="selectInitialLanguage('bhojpuri')">
+          <div class="lang-flag">🌾</div>
+          <div class="lang-name">भोजपुरी (Bhojpuri)</div>
+          <div class="lang-sub">हमार भाषा, हमार योजना</div>
+        </button>
+        <button class="lang-card-btn" onclick="selectInitialLanguage('bn')">
+          <div class="lang-flag">🌿</div>
+          <div class="lang-name">বাংলা (Bengali)</div>
+          <div class="lang-sub">আপনার ভাষায় সুবিধা জানুন</div>
+        </button>
+        <button class="lang-card-btn" onclick="selectInitialLanguage('maithili')">
+          <div class="lang-flag">🪷</div>
+          <div class="lang-name">मैथिली (Maithili)</div>
+          <div class="lang-sub">मातृभाषा में योजना जानकारी</div>
+        </button>
+        <button class="lang-card-btn" onclick="selectInitialLanguage('en')">
+          <div class="lang-flag">🌐</div>
+          <div class="lang-name">English</div>
+          <div class="lang-sub">Public Welfare Services</div>
+        </button>
+      </div>
+      <div style="font-size: 11px; color: #94a3b8; margin-top: 10px;">
+        💡 आप इसे बाद में ऊपर दिए गए बटन से कभी भी बदल सकते हैं।
+      </div>
+    </div>
+  </div>
+
   <!-- 2. TOP UTILITY & ACCESSIBILITY BAR (AgriWelfare Style) -->
   <div class="top-utility-bar">
     <div class="top-utility-inner">
@@ -25,15 +66,17 @@
         <span>डिजिटल पब्लिक इन्फ्रास्ट्रक्चर (DPI)</span>
       </div>
       <div class="accessibility-tools">
-        <span>फॉन्ट आकार:</span>
+        <button class="lang-change-trigger-btn" onclick="openLanguageModal()">🌐 भाषा बदलें (Language)</button>
+        <span>फॉन्ट:</span>
         <button class="access-btn" onclick="adjustFontSize(-1)">A-</button>
         <button class="access-btn" onclick="adjustFontSize(0)">A</button>
         <button class="access-btn" onclick="adjustFontSize(1)">A+</button>
-        <button class="access-btn" onclick="toggleHighContrast()">उच्च कंट्रास्ट</button>
-        <select class="lang-select-dropdown" id="globalLangSelector" onchange="changeLanguage(this.value)">
-          <option value="hi" selected>हिन्दी (Hindi)</option>
-          <option value="bhojpuri">भोजपुरी (Bhojpuri)</option>
-          <option value="bn">বাংলা (Bengali)</option>
+        <button class="access-btn" onclick="toggleHighContrast()">कंट्रास्ट</button>
+        <select class="lang-select-dropdown" id="globalLangSelector" onchange="selectInitialLanguage(this.value)">
+          <option value="hi" selected>हिन्दी</option>
+          <option value="bhojpuri">भोजपुरी</option>
+          <option value="bn">বাংলা</option>
+          <option value="maithili">मैथिली</option>
           <option value="en">English</option>
         </select>
       </div>
@@ -280,10 +323,29 @@
               बटन दबाकर अपनी मातृभाषा में बोलें (हिन्दी / भोजपुरी / मैथिली)
             </p>
 
+            <!-- Real-Time Speech Recognition Monitor Box -->
+            <div class="live-speech-box" id="liveSpeechBox">
+              <div class="live-speech-status">
+                <span class="pulse-mic-dot"></span>
+                <span id="liveSpeechStatusText">माइक सक्रिय है... बोलते रहें</span>
+              </div>
+              <div class="live-speech-transcript" id="liveSpeechTranscript">
+                "आप जो बोलेंगे वह यहाँ लाइव दिखाई देगा..."
+              </div>
+            </div>
+
             <!-- Manual input fallback -->
             <div class="text-sim-row">
               <input type="text" id="manual-speech-input" placeholder="या यहाँ बोलकर/लिखकर भेजें..." value="हम 48 साल के हैं, हमारे पति नहीं रहे और कोई जमीन नहीं है।">
               <button onclick="sendSpokenText()">जवाब भेजें ➔</button>
+            </div>
+
+            <!-- Quick Voice Response Chips -->
+            <div class="quick-speech-chips">
+              <span class="speech-chip" onclick="setQuickInput('हम 48 साल के हैं, विधवा हैं, कोई जमीन नहीं है।')">👵 48 वर्ष, विधवा, भूमिहीन</span>
+              <span class="speech-chip" onclick="setQuickInput('हमारे पास 2.5 एकड़ जमीन है, साल में 75 हजार कमाते हैं।')">🌾 2.5 एकड़ जमीन, किसान</span>
+              <span class="speech-chip" onclick="setQuickInput('हम 23 साल के हैं, पहली बार गर्भवती हैं।')">🤰 23 वर्ष, गर्भवती महिला</span>
+              <span class="speech-chip" onclick="setQuickInput('उम्र 63 साल है, बीपीएल राशन कार्ड है।')">👴 63 वर्ष, बुजुर्ग कारीगर</span>
             </div>
           </div>
         </div>

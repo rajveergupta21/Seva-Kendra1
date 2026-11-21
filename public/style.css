@@ -1409,3 +1409,207 @@ h1, h2, h3, h4, .devanagari-font {
   font-size: 11px;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
+
+/* --------------------------------------------------------------------------
+   9. FIRST-INTERACTION LANGUAGE SELECTION MODAL
+   -------------------------------------------------------------------------- */
+.lang-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(9, 44, 92, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeInModal 0.25s ease-out;
+}
+
+@keyframes fadeInModal {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.lang-modal-card {
+  background: #ffffff;
+  border-radius: var(--radius-xl);
+  max-width: 580px;
+  width: 100%;
+  padding: 30px 24px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+  text-align: center;
+  position: relative;
+  border-top: 6px solid var(--gov-saffron);
+}
+
+.lang-modal-header {
+  margin-bottom: 24px;
+}
+
+.lang-modal-emblem {
+  font-size: 38px;
+  margin-bottom: 8px;
+}
+
+.lang-modal-header h2 {
+  font-size: 22px;
+  color: var(--gov-navy);
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.lang-modal-header p {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.lang-options-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.lang-card-btn {
+  background: #f8fafc;
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 16px 12px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.lang-card-btn:hover, .lang-card-btn:focus {
+  background: #fff8f1;
+  border-color: var(--gov-saffron);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 15px -3px rgba(255, 153, 51, 0.25);
+}
+
+.lang-card-btn.active-lang {
+  background: var(--gov-navy);
+  border-color: var(--gov-navy);
+  color: #ffffff;
+}
+
+.lang-card-btn.active-lang .lang-name,
+.lang-card-btn.active-lang .lang-sub {
+  color: #ffffff;
+}
+
+.lang-flag {
+  font-size: 28px;
+}
+
+.lang-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--gov-navy);
+}
+
+.lang-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.lang-change-trigger-btn {
+  background: var(--gov-saffron);
+  color: #000;
+  border: none;
+  border-radius: 4px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: background 0.15s ease;
+}
+
+.lang-change-trigger-btn:hover {
+  background: var(--gov-saffron-dark);
+  color: #fff;
+}
+
+/* --------------------------------------------------------------------------
+   10. LIVE SPEECH TRANSCRIPTION MONITOR (Real-Time Visual Feedback)
+   -------------------------------------------------------------------------- */
+.live-speech-box {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  margin: 14px auto;
+  max-width: 540px;
+  text-align: left;
+  display: none;
+  animation: fadeInModal 0.2s ease-out;
+}
+
+.live-speech-box.active {
+  display: block;
+}
+
+.live-speech-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #38bdf8;
+  margin-bottom: 6px;
+}
+
+.pulse-mic-dot {
+  width: 8px;
+  height: 8px;
+  background: #ef4444;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #ef4444;
+  animation: pulseListen 1s infinite;
+}
+
+.live-speech-transcript {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #f8fafc;
+  font-weight: 600;
+  min-height: 24px;
+  font-family: 'Tiro Devanagari Hindi', 'Noto Sans Devanagari', serif;
+}
+
+.quick-speech-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.speech-chip {
+  background: #f1f5f9;
+  border: 1px solid var(--border-light);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.speech-chip:hover {
+  background: #e2e8f0;
+  color: var(--gov-navy);
+  border-color: var(--gov-navy);
+}
