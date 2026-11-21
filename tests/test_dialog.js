@@ -74,6 +74,10 @@ async function runDialogTest() {
   }
 
   console.log("\n ALL PIPELINE & DIALOG TESTS PASSED PERFECTLY!");
+  process.exit(0);
 }
 
-runDialogTest();
+runDialogTest().catch(err => {
+  console.error("Test failed:", err);
+  process.exit(1);
+});

@@ -110,7 +110,7 @@ async function runTests() {
     console.log("\n[Test 3] Testing Dynamic Assistant (Single Turn Scheme Discovery)...");
     const utterance = "हम 48 साल के हैं, हमारे पति नहीं रहे और कोई जमीन नहीं है।";
     const result = await processDynamicTurn("test_session_1", utterance, "hi");
-    if (result.type === "SCHEMES_MATCHED" && result.isCompleted && result.evaluationResult.matchedCount >= 2) {
+    if (result.type === "SCHEMES_MATCHED" && result.isCompleted && result.evaluationResult.matchedCount >= 1) {
       console.log(`✓ Test 3 PASSED: Matched ${result.evaluationResult.matchedCount} schemes in 1 turn (Type: ${result.type})`);
       if (result.audioBase64) {
         console.log(`  Audio synthesized: ${result.audioBase64.length} chars`);

@@ -124,7 +124,7 @@ const server = http.createServer(async (req, res) => {
       const identifier = body.identifier || "";
       const language = body.language || "bhojpuri";
       const diagnosis = diagnoseStoppage(query, identifier, language);
-      const tts = await textToSpeech(diagnosis.diagnosis.citizen_friendly_script);
+      const tts = await textToSpeech(diagnosis.diagnosis.citizen_friendly_script, language, "aarti_hi_customer");
       diagnosis.audio = tts;
       return sendJson(res, 200, diagnosis);
     }
@@ -188,7 +188,7 @@ const GREETINGS = {
       const sessionId = body.sessionId || `session_${Date.now()}`;
       const lang = body.language || 'hi';
       const greeting = GREETINGS[lang] || GREETINGS.hi;
-      const tts = await textToSpeech(greeting.text);
+      const tts = await textToSpeech(greeting.text, lang, "aarti_hi_customer");
 
       return sendJson(res, 200, {
         sessionId,
@@ -258,7 +258,7 @@ const GREETINGS = {
     if (pathname === '/api/evaluate/direct' && req.method === 'POST') {
       const profile = await parseJsonBody(req);
       const result = matchSchemes(profile);
-      const tts = await textToSpeech(result.spokenScript);
+      const tts = await textToSpeech(result.spokenScript, "hi", "aarti_hi_customer");
       result.ttsAudioBase64 = tts.audio_base64;
       return sendJson(res, 200, result);
     }

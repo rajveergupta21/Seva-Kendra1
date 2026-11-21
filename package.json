@@ -16,5 +16,8 @@
     "build-for-india"
   ],
   "author": "Build for India 3 Team",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "sarvamai": "^1.1.21"
+  }
 }

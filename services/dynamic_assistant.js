@@ -1,7 +1,8 @@
 /**
- * JanSeva Dynamic Conversational Engine
- * Replaces rigid hardcoded questions with dynamic, natural dialect conversation.
- * Handles free-form rural queries, intent detection, and instant resolution.
+ * Seva Kendra - Dynamic Conversational Engine
+ * Pure Voice-Driven Profile Construction (Zero Hardcoded User Details).
+ * Only user-spoken details are recorded and verified.
+ * Integrates Sarvam AI Bulbul v4-flash (aarti_hi_customer).
  */
 
 import { matchSchemes } from '../engine/eligibility.js';
@@ -27,8 +28,8 @@ export function getOrCreateConversation(sessionId, preferredLanguage = "hi") {
         has_minor_daughter: false,
         kutcha_house_or_homeless: null,
         is_informal_worker_or_vendor: false,
-        state: "Uttar Pradesh",
-        district: ""
+        state: null,
+        district: null
       },
       turns: [],
       intent: null,
@@ -40,14 +41,15 @@ export function getOrCreateConversation(sessionId, preferredLanguage = "hi") {
 }
 
 /**
- * Extracts all profile attributes and intent from free-form rural speech.
+ * Extracts profile attributes and intent strictly from user speech.
+ * Does NOT hardcode or assume any unmentioned information.
  */
 export function analyzeUserUtterance(text, currentProfile = {}) {
   const lower = text.toLowerCase();
   const profile = { ...currentProfile };
   let detectedIntent = null;
 
-  // 1. Detect Intent
+  // 1. Detect User Intent
   if (lower.includes("पेंशन") && (lower.includes("रुक") || lower.includes("ना आव") || lower.includes("नहीं आ") || lower.includes("बंद") || lower.includes("कट"))) {
     detectedIntent = "PENSION_STOPPAGE";
   } else if (lower.includes("मजदूरी") || lower.includes("मनरेगा") || lower.includes("mgnrega") || lower.includes("जॉब कार्ड")) {
@@ -68,12 +70,12 @@ export function analyzeUserUtterance(text, currentProfile = {}) {
     detectedIntent = "GENERAL_SCHEME_DISCOVERY";
   }
 
-  // 2. Extract Age (Numbers in Hindi/Digits)
-  const ageMatch = text.match(/(\d{1,2})\s*(?:साल|वर्ष|उम्र|बरस)/i) || text.match(/(?:उम्र|साल)\s*(\d{1,2})/i);
+  // 2. Extract Spoken Age (Digits or Vernacular Indic Words)
+  const ageMatch = text.match(/(\d{1,2})\s*(?:साल|वर्ष|उम्र|बरस|বছর|years?)/i) || 
+                   text.match(/(?:उम्र|साल|age)\s*[:=]?\s*(\d{1,2})/i);
   if (ageMatch) {
     profile.age = parseInt(ageMatch[1], 10);
   } else {
-    // Word numbers
     if (text.includes("अड़तालीस") || text.includes("48")) profile.age = 48;
     else if (text.includes("उनचास") || text.includes("49")) profile.age = 49;
     else if (text.includes("पचास") || text.includes("50")) profile.age = 50;
@@ -84,23 +86,25 @@ export function analyzeUserUtterance(text, currentProfile = {}) {
     else if (text.includes("सत्तर") || text.includes("70")) profile.age = 70;
     else if (text.includes("तेईस") || text.includes("23")) profile.age = 23;
     else if (text.includes("बयालीस") || text.includes("42")) profile.age = 42;
+    else if (text.includes("अट्ठाईस") || text.includes("28")) profile.age = 28;
+    else if (text.includes("अड़तीस") || text.includes("38")) profile.age = 38;
   }
 
-  // 3. Extract Marital Status & Gender
-  if (text.includes("विधवा") || text.includes("पति नहीं") || text.includes("पति गुजर") || text.includes("पति नइखन") || text.includes("पति शांत") || text.includes("বিধবা")) {
+  // 3. Extract Spoken Marital Status & Gender
+  if (text.includes("विधवा") || text.includes("पति नहीं") || text.includes("पति गुजर") || text.includes("पति नइखन") || text.includes("पति शांत") || text.includes("বিধবা") || text.includes("widow")) {
     profile.marital_status = "widow";
     profile.gender = "female";
-  } else if (text.includes("शादीशुदा") || text.includes("विवाहित") || text.includes("पत्नी") || text.includes("परिवार")) {
+  } else if (text.includes("शादीशुदा") || text.includes("विवाहित") || text.includes("पत्नी") || text.includes("परिवार") || text.includes("married")) {
     profile.marital_status = "married";
-  } else if (text.includes("अकेली") || text.includes("कुंवारी") || text.includes("तलाकशुदा")) {
+  } else if (text.includes("अकेली") || text.includes("कुंवारी") || text.includes("तलाकशुदा") || text.includes("single")) {
     profile.marital_status = "single";
   }
 
-  // 4. Extract Landholding
-  if (text.includes("भूमिहीन") || text.includes("कोई जमीन नहीं") || text.includes("जमीन नइखे") || text.includes("खेत नहीं") || text.includes("मजदूर") || text.includes("मजदूरी")) {
+  // 4. Extract Spoken Landholding
+  if (text.includes("भूमिहीन") || text.includes("कोई जमीन नहीं") || text.includes("जमीन नइखे") || text.includes("खेत नहीं") || text.includes("मजदूर") || text.includes("मजदूरी") || text.includes("জমি নেই") || text.includes("landless")) {
     profile.landholding_acres = 0.0;
   } else {
-    const landMatch = text.match(/(\d+(?:\.\d+)?)\s*(?:एकड़|बीघा|कट्ठा|एकड)/i);
+    const landMatch = text.match(/(\d+(?:\.\d+)?)\s*(?:एकड़|बीघा|कट्ठा|एकड|acres?)/i);
     if (landMatch) {
       let acres = parseFloat(landMatch[1]);
       if (text.includes("बीघा")) acres = acres * 0.62;
@@ -114,27 +118,27 @@ export function analyzeUserUtterance(text, currentProfile = {}) {
     }
   }
 
-  // 5. Extract Income / Ration Card
+  // 5. Extract Spoken Income / Ration Card Category
   if (text.includes("पीला") || text.includes("बीपीएल") || text.includes("bpl") || text.includes("अंत्योदय") || text.includes("गरीब")) {
     profile.annual_income_inr = 35000;
   } else {
-    const incMatch = text.match(/(\d+)\s*(?:हजार|लाख|रुपए|रु|हज़ार)/i);
+    const incMatch = text.match(/(\d+)\s*(?:हजार|लाख|रुपए|रु|हज़ार|হাজার|thousand)/i);
     if (incMatch) {
       let amount = parseInt(incMatch[1], 10);
-      if (text.includes("हजार") || text.includes("हज़ार")) amount *= 1000;
-      if (text.includes("महीने") || text.includes("माह")) amount *= 12;
+      if (text.includes("हजार") || text.includes("हज़ार") || text.includes("হাজার") || text.includes("thousand")) amount *= 1000;
+      if (text.includes("महीने") || text.includes("माह") || text.includes("month")) amount *= 12;
       profile.annual_income_inr = amount;
     }
   }
 
-  // 6. State / Location
-  if (text.includes("बिहार") || text.includes("पटना") || text.includes("मनेर") || text.includes("समस्तीपुर")) {
+  // 6. Extract Spoken State / Location
+  if (text.includes("बिहार") || text.includes("पटना") || text.includes("मनेर") || text.includes("समस्तीपुर") || text.includes("bihar")) {
     profile.state = "Bihar";
-  } else if (text.includes("बंगाल") || text.includes("कोलकाता") || text.includes("পশ্চিমবঙ্গ")) {
+  } else if (text.includes("बंगाल") || text.includes("कोलकाता") || text.includes("পশ্চিমবঙ্গ") || text.includes("bengal")) {
     profile.state = "West Bengal";
-  } else if (text.includes("मध्य प्रदेश") || text.includes("रीवा") || text.includes("भोपाल")) {
+  } else if (text.includes("मध्य प्रदेश") || text.includes("रीवा") || text.includes("भोपाल") || text.includes("mp")) {
     profile.state = "Madhya Pradesh";
-  } else if (text.includes("उत्तर प्रदेश") || text.includes("चंदौली") || text.includes("वाराणसी") || text.includes("लखनऊ")) {
+  } else if (text.includes("उत्तर प्रदेश") || text.includes("चंदौली") || text.includes("वाराणसी") || text.includes("लखनऊ") || text.includes("up")) {
     profile.state = "Uttar Pradesh";
   }
 
@@ -144,6 +148,7 @@ export function analyzeUserUtterance(text, currentProfile = {}) {
 /**
  * Main dynamic turn handler.
  * Dynamically resolves queries, triggers triage, or asks only the necessary missing question.
+ * Zero hardcoded user profile information.
  */
 export async function processDynamicTurn(sessionId, userSpeechText, language = "hi") {
   const conv = getOrCreateConversation(sessionId, language);
@@ -161,7 +166,7 @@ export async function processDynamicTurn(sessionId, userSpeechText, language = "
     conv.result = triageResult;
 
     const spokenScript = triageResult.diagnosis.citizen_friendly_script;
-    const tts = await textToSpeech(spokenScript, "kavya");
+    const tts = await textToSpeech(spokenScript, language, "aarti_hi_customer");
 
     return {
       type: "TRIAGE_RESOLVED",
@@ -174,23 +179,20 @@ export async function processDynamicTurn(sessionId, userSpeechText, language = "
     };
   }
 
-  // CASE 2: The user provided enough details to match schemes immediately!
-  // E.g., they mentioned age and marital status or land.
-  const hasCoreDetails = (conv.profile.age !== null) && 
-                         (conv.profile.marital_status !== null || conv.profile.landholding_acres !== null || conv.profile.pregnant_or_lactating);
+  // CASE 2: The user provided their real details through voice!
+  // Evaluate schemes strictly based on real information spoken by the user.
+  const hasAge = conv.profile.age !== null;
+  const hasSituation = conv.profile.marital_status !== null || 
+                       conv.profile.landholding_acres !== null || 
+                       conv.profile.pregnant_or_lactating || 
+                       conv.profile.is_informal_worker_or_vendor;
 
-  if (hasCoreDetails || conv.turns.length >= 2) {
-    // Fill safe rural defaults for any remaining unstated fields
-    if (conv.profile.age === null) conv.profile.age = 45;
-    if (conv.profile.landholding_acres === null) conv.profile.landholding_acres = 0.0;
-    if (conv.profile.annual_income_inr === null) conv.profile.annual_income_inr = 45000;
-    if (conv.profile.kutcha_house_or_homeless === null) conv.profile.kutcha_house_or_homeless = true;
-
+  if (hasAge && hasSituation) {
     const evaluation = matchSchemes(conv.profile);
     conv.resolved = true;
     conv.result = evaluation;
 
-    const tts = await textToSpeech(evaluation.spokenScript, "kavya");
+    const tts = await textToSpeech(evaluation.spokenScript, language, "aarti_hi_customer");
 
     return {
       type: "SCHEMES_MATCHED",
@@ -203,36 +205,50 @@ export async function processDynamicTurn(sessionId, userSpeechText, language = "
     };
   }
 
-  // CASE 3: Need one specific piece of missing information.
-  // Generate a dynamic, natural conversational question (NOT a robotic Q1-Q5 quiz)!
+  // CASE 3: Missing essential info - ask a natural conversational follow-up question
+  // Zero robotic hardcoded Q1-Q5 quiz. Only asks for what the user has not yet spoken!
   let naturalQuestion = "";
   let promptHint = "";
 
   if (conv.profile.age === null) {
     if (language === "bhojpuri") {
-      naturalQuestion = "ठीक बा। अपना बारे में तनी बताईं—राउर उमिर केतना बा, आ रउआ शादीशुदा बानी, विधवा बानी, या अकेली?";
-      promptHint = 'जैसे: "हमार उम्र 48 साल बा, हम विधवा बानी"';
+      naturalQuestion = "राउर बात सुन लीहल गइल। बताईं, राउर उमिर केतना साल बा, आ रउआ शादीशुदा बानी, विधवा बानी, या अकेले?";
+      promptHint = 'बोलें: अपनी उम्र और वैवाहिक स्थिति बताएं';
     } else if (language === "bn") {
-      naturalQuestion = "ঠিক আছে। আপনার সম্পর্কে একটু বলুন—আপনার বয়স কত እና আপনি কি বিবাহিত, বিধবা না একা থাকেন?";
-      promptHint = 'যেমন: "আমার বয়স ৪৮ বছর, স্বামী নেই"';
+      naturalQuestion = "আপনার কথা বুঝতে পেরেছি। বলুন, আপনার বয়স কত এবং আপনি বিবাহিত, বিধবা না একা থাকেন?";
+      promptHint = 'বলুন: আপনার বয়স ও পারিবারিক অবস্থা বলুন';
+    } else if (language === "en") {
+      naturalQuestion = "I have noted that. Please tell me your age, and whether you are married, widowed, or single?";
+      promptHint = 'Speak: Please tell your age and marital status';
     } else {
-      naturalQuestion = "नमस्ते। मैं आपको सही सरकारी योजना बताऊंगा। कृपया बताइए, आपकी उम्र कितनी है, और क्या आप शादीशुदा हैं, विधवा हैं, या अकेले?";
-      promptHint = 'जैसे: "हम 48 साल के हैं, हमारे पति नहीं रहे"';
+      naturalQuestion = "आपकी बात नोट कर ली गई है। कृपया बताइए, आपकी उम्र कितनी है, और क्या आप शादीशुदा हैं, विधवा हैं, या अकेले?";
+      promptHint = 'बोलें: अपनी उम्र और वैवाहिक स्थिति बताएं';
     }
-  } else if (conv.profile.landholding_acres === null) {
+  } else if (!hasSituation) {
     if (language === "bhojpuri") {
-      naturalQuestion = `ठीक बा। रउआ लगे या परिवार लगे कवनो खेती के ज़मीन बा का? कतना एकड़ बा?`;
-      promptHint = 'जैसे: "कोई जमीन नहीं है, हम मजदूर हैं" या "2 एकड़ है"';
+      naturalQuestion = "राउर उमिर नोट हो गइल। बताईं, रउआ शादीशुदा बानी, विधवा बानी, या परिवार लगे खेती के कवनो ज़मीन बा?";
+      promptHint = 'बोलें: वैवाहिक स्थिति या ज़मीन के बारे में बताएं';
+    } else if (language === "bn") {
+      naturalQuestion = "আপনার বয়স নোট করা হয়েছে। আপনার কি চাষের কোনো জমি আছে, নাকি দিনমজুরি করেন?";
+      promptHint = 'বলুন: জমি বা কাজের বিবরণ দিন';
+    } else if (language === "en") {
+      naturalQuestion = "Your age is recorded. Do you own any agricultural land, or what is your family situation?";
+      promptHint = 'Speak: Mention if you have land or your occupation';
     } else {
-      naturalQuestion = `ठीक है। क्या आपके या परिवार के नाम पर कोई खेती की ज़मीन है? अगर हाँ, तो कितनी?`;
-      promptHint = 'जैसे: "कोई जमीन नहीं है, हम मजदूर हैं" या "2 एकड़ है"';
+      naturalQuestion = "आपकी उम्र नोट कर ली गई है। क्या आप शादीशुदा हैं, विधवा हैं, या आपके पास खेती की कोई ज़मीन है?";
+      promptHint = 'बोलें: अपनी वैवाहिक स्थिति या ज़मीन के बारे में बताएं';
     }
   } else {
-    naturalQuestion = `परिवार में साल भर में कितनी कमाई हो जाती है? या आपके पास बीपीएल राशन कार्ड है?`;
-    promptHint = 'जैसे: "महीने में 4 हजार बनता है" या "बीपीएल कार्ड है"';
+    if (language === "bhojpuri") {
+      naturalQuestion = "का परिवार लगे राशन कार्ड बा? या साल भर में कमाई केतना हो जाला?";
+      promptHint = 'बोलें: राशन कार्ड या कमाई बताएं';
+    } else {
+      naturalQuestion = "क्या आपके पास बीपीएल या अंत्योदय राशन कार्ड है, या साल भर में कितनी कमाई हो जाती है?";
+      promptHint = 'बोलें: राशन कार्ड या कमाई बताएं';
+    }
   }
 
-  const tts = await textToSpeech(naturalQuestion, "kavya");
+  const tts = await textToSpeech(naturalQuestion, language, "aarti_hi_customer");
 
   return {
     type: "FOLLOW_UP_QUESTION",

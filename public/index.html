@@ -78,7 +78,7 @@
           "नमस्ते, सेवा केंद्र में आपका स्वागत है। बताइए, आपकी उम्र कितनी है, और क्या आप शादीशुदा हैं, विधवा हैं, या अकेली हैं?"
         </div>
         <div class="prompt-hint" id="assistant-prompt-hint">
-          💡 बोलें: "हम 48 साल के हैं, हमारे पति नहीं रहे और कोई जमीन नहीं है"
+          💡 माइक बटन दबाएं और अपनी उम्र, स्थिति या किसी भी योजना के बारे में बोलें
         </div>
         <button class="replay-audio-btn" id="ui-replayBtn" onclick="replayCurrentPromptAudio()">
           <span>▶️</span> फिर से सुनें (Listen Again)
@@ -119,27 +119,27 @@
           </div>
         </div>
 
-        <!-- Single Clean Manual Input Fallback (No Duplicates on Page) -->
+        <!-- Single Clean Manual Input Fallback (Starts Empty - Filled Purely by User Voice) -->
         <div class="single-input-row">
-          <input type="text" id="manual-speech-input" placeholder="या यहाँ बोलकर/लिखकर बताएं..." value="हम 48 साल के हैं, हमारे पति नहीं रहे और कोई जमीन नहीं है।">
+          <input type="text" id="manual-speech-input" placeholder="या यहाँ बोलकर/लिखकर बताएं..." value="">
           <button class="submit-input-btn" id="ui-sendBtn" onclick="sendSpokenText()">जवाब भेजें ➔</button>
         </div>
 
-        <!-- Quick 1-Tap Example Speech Chips -->
+        <!-- Conversational Guidance Chips (Real Voice Prompts) -->
         <div class="quick-chips-wrapper">
-          <span class="chips-label" id="ui-chipsLabel">⚡ त्वरित उदाहरण बोलें:</span>
+          <span class="chips-label" id="ui-chipsLabel">⚡ बोलकर पूछने के उदाहरण:</span>
           <div class="chips-flex">
-            <button class="example-chip" onclick="setQuickInput('हम 48 साल के हैं, विधवा हैं, कोई जमीन नहीं है।')">
-              👵 48 वर्ष, विधवा, भूमिहीन
+            <button class="example-chip" onclick="setQuickInput('मेरी उम्र 60 साल है, मुझे कौन सी पेंशन मिलेगी?')">
+              🎙️ "मेरी उम्र 60 साल है, पेंशन बताइए"
             </button>
-            <button class="example-chip" onclick="setQuickInput('हमारे पास 2.5 एकड़ जमीन है, किसान हैं।')">
-              🌾 2.5 एकड़ जमीन, किसान
-            </button>
-            <button class="example-chip" onclick="setQuickInput('हम 23 साल के हैं, पहली बार गर्भवती हैं।')">
-              🤰 23 वर्ष, गर्भवती महिला
+            <button class="example-chip" onclick="setQuickInput('हम किसान हैं, खेती के लिए कौन सी सरकारी सहायता है?')">
+              🎙️ "हम किसान हैं, खेती की सहायता"
             </button>
             <button class="example-chip" style="border-color: #f59e0b; color: #b45309; background: #fffbeb;" onclick="setQuickInput('हमार पेंशन तीन महीना से ना आवता')">
-              ⚠️ रुकी पेंशन जांच (पार्वती देवी)
+              ⚠️ "हमार पेंशन तीन महीना से ना आवता"
+            </button>
+            <button class="example-chip" onclick="setQuickInput('घर बनाने के लिए आवास योजना की जानकारी चाहिए')">
+              🎙️ "घर बनाने के लिए आवास योजना"
             </button>
           </div>
         </div>
