@@ -128,7 +128,7 @@
         <!-- Conversational Guidance Chips (Real Voice Prompts) -->
         <div class="quick-chips-wrapper">
           <span class="chips-label" id="ui-chipsLabel">⚡ बोलकर पूछने के उदाहरण:</span>
-          <div class="chips-flex">
+          <div class="chips-flex" id="ui-chipsFlex">
             <button class="example-chip" onclick="setQuickInput('मेरी उम्र 60 साल है, मुझे कौन सी पेंशन मिलेगी?')">
               🎙️ "मेरी उम्र 60 साल है, पेंशन बताइए"
             </button>
@@ -152,7 +152,7 @@
       <div class="slots-card">
         <div class="slots-card-header">
           <h3 id="ui-slotsTitle">📋 आपकी सत्यापित जानकारी (Verified Profile):</h3>
-          <button class="reset-link-btn" onclick="resetInterview()">शुरुआत से शुरू करें ↺</button>
+          <button class="reset-link-btn" id="ui-resetBtn" onclick="resetInterview()">शुरुआत से शुरू करें ↺</button>
         </div>
         <div class="slots-table-grid">
           <div class="slot-cell">
@@ -214,7 +214,7 @@
           <h3 class="results-title" id="ui-resultsTitle">📋 आप इन योजनाओं के लिए पात्र हो सकती हैं</h3>
           <span class="approved-badge" id="badge-count">संभावित योजनाएं</span>
         </div>
-        <button class="audio-listen-btn" onclick="replaySpokenAudio()">
+        <button class="audio-listen-btn" id="ui-listenBtn" onclick="replaySpokenAudio()">
           <span>▶️</span> पूरी जानकारी आवाज़ में सुनें
         </button>
       </div>
@@ -250,7 +250,7 @@
           <p id="office-destination" class="office-name">
             ग्राम पंचायत भवन (पंचायत सहायक)
           </p>
-          <p class="office-instruction">
+          <p class="office-instruction" id="ui-officeInstruction">
             सुबह 10 बजे से शाम 4 बजे के बीच अपने गाँव के पंचायत सचिवालय या नजदीकी जन सेवा केंद्र (CSC) में जाएं। अंतिम मंज़ूरी दफ़्तर में होगी।
           </p>
         </div>
@@ -329,13 +329,13 @@
 
       <!-- DRAWER MODULE 1: STALLED PENSION TRIAGE -->
       <div class="drawer-module active" id="drawer-triage">
-        <h4 class="module-title">⚠️ रुकी पेंशन व DBT भुगतान निवारण</h4>
-        <p class="module-desc">
+        <h4 class="module-title" id="ui-drawerTriageTitle">⚠️ रुकी पेंशन व DBT भुगतान निवारण</h4>
+        <p class="module-desc" id="ui-drawerTriageDesc">
           यदि वृद्धावस्था, विधवा या दिव्यांग पेंशन रुक गई है, तो आधार के अंतिम 4 अंक या मोबाइल नंबर डालें:
         </p>
         <div class="triage-input-box">
           <input type="text" id="triageIdentifierInput" placeholder="आधार के अंतिम 4 अंक (जैसे: 7193)..." value="7193">
-          <button class="triage-check-btn" onclick="runPensionTriage()">जांच करें ➔</button>
+          <button class="triage-check-btn" id="ui-drawerTriageBtn" onclick="runPensionTriage()">जांच करें ➔</button>
         </div>
         <div class="triage-quick-tests">
           <span>⚡ त्वरित टेस्ट केस:</span>
@@ -351,20 +351,20 @@
           <div class="triage-scheme-info" id="triageSchemeDetails">योजना: निराश्रित विधवा पेंशन | रुकी राशि: ₹3,000</div>
           
           <div class="triage-action-box">
-            <strong>आवश्यक समाधान (Action Required):</strong>
+            <strong id="ui-triageActionReq">आवश्यक समाधान (Action Required):</strong>
             <p id="triageActionText">गाँव के डाकघर (IPPB) या बैंक शाखा में ₹10 जमा करके खाता दोबारा चालू कराएं।</p>
           </div>
 
           <div class="triage-voice-box">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-              <strong>🔊 अपनी बोली में सुनें:</strong>
+              <strong id="ui-triageVoiceLabel">🔊 अपनी बोली में सुनें:</strong>
               <button class="play-audio-btn-sm" onclick="playTriageVoice()">▶️ सुनें</button>
             </div>
             <p id="triageDialectScript">"पार्वती दादी, घबराईं मत..."</p>
           </div>
 
           <div class="triage-ticket-box">
-            <span>सचिवालय टोकन कोड:</span>
+            <span id="ui-triageTokenLabel">सचिवालय टोकन कोड:</span>
             <strong id="triageTokenCode">JP-7193-72</strong>
           </div>
         </div>
@@ -372,8 +372,8 @@
 
       <!-- DRAWER MODULE 2: VERIFIED SCHEMES CATALOG -->
       <div class="drawer-module" id="drawer-schemes">
-        <h4 class="module-title">📂 सभी सत्यापित सरकारी योजनाएं</h4>
-        <p class="module-desc">भारत सरकार के गजट नियमों के अनुसार सत्यापित कल्याणकारी योजनाएं:</p>
+        <h4 class="module-title" id="ui-drawerSchemesTitle">📂 सभी सत्यापित सरकारी योजनाएं</h4>
+        <p class="module-desc" id="ui-drawerSchemesDesc">भारत सरकार के गजट नियमों के अनुसार सत्यापित कल्याणकारी योजनाएं:</p>
         <div class="schemes-cards-list" id="schemesCardsContainer">
           <!-- Dynamically populated from /api/schemes -->
         </div>
@@ -489,10 +489,10 @@
   <!-- FOOTER -->
   <footer class="app-footer">
     <div class="footer-container">
-      <p class="footer-copy">
+      <p class="footer-copy" id="ui-footerCopy">
         <strong>सेवा केंद्र (Seva Kendra)</strong> — भारत के ग्रामीण व निरक्षर नागरिकों के लिए समर्पित निःशुल्क लोक सेवा
       </p>
-      <p class="footer-sub">
+      <p class="footer-sub" id="ui-footerSub">
         100% सत्यापित नियम आधारित पात्रता • जीरो डेटा लॉस • सदैव निःशुल्क
       </p>
     </div>

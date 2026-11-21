@@ -93,7 +93,36 @@ const I18N_TRANSLATIONS = {
     smsSlipTitle: "📱 योजना पर्ची (पंचायत ऑपरेटर को दिखाएं - अंतिम मंज़ूरी दफ़्तर में होगी)",
     drawerHeading: "अतिरिक्त सेवाएं व टूल्स",
     langModalTitle: "अपनी भाषा चुनें / Select Language",
-    langModalSub: "आप सेवा केंद्र से किस भाषा में बात करना चाहते हैं?"
+    langModalSub: "आप सेवा केंद्र से किस भाषा में बात करना चाहते हैं?",
+    resetBtn: "शुरुआत से शुरू करें ↺",
+    listenBtn: "▶️ पूरी जानकारी आवाज़ में सुनें",
+    officeDestination: "ग्राम पंचायत भवन (पंचायत सहायक)",
+    officeInstruction: "सुबह 10 बजे से शाम 4 बजे के बीच अपने गाँव के पंचायत सचिवालय या नजदीकी जन सेवा केंद्र (CSC) में जाएं। अंतिम मंज़ूरी दफ़्तर में होगी।",
+    safetyTitle: "🚨 आपातकालीन सुरक्षा एवं सहायता (Emergency Helplines)",
+    safeExitBtn: "सुरक्षित बाहर निकलें (Safe Exit)",
+    safetySpeechText: "घबराइए मत, आप सुरक्षित जगह पर जाएं और तुरंत आपातकालीन सहायता नंबर पर कॉल करें।",
+    triageMainTitle: "🔍 भुगतान जांच सूची (Payment Recovery Checklist)",
+    footerCopy: "सेवा केंद्र (Seva Kendra) — भारत के ग्रामीण व निरक्षर नागरिकों के लिए समर्पित निःशुल्क लोक सेवा",
+    footerSub: "100% सत्यापित नियम आधारित पात्रता • जीरो डेटा लॉस • सदैव निःशुल्क",
+    yearsUnit: "वर्ष",
+    maritalLabels: {
+      widow: "विधवा",
+      married: "विवाहित",
+      single: "अविवाहित"
+    },
+    chips: [
+      { text: "मेरी उम्र 60 साल है, मुझे कौन सी पेंशन मिलेगी?", display: '🎙️ "मेरी उम्र 60 साल है, पेंशन बताइए"' },
+      { text: "हम किसान हैं, खेती के लिए कौन सी सरकारी सहायता है?", display: '🎙️ "हम किसान हैं, खेती की सहायता"' },
+      { text: "हमार पेंशन तीन महीना से ना आवता", display: '⚠️ "हमार पेंशन तीन महीना से ना आवता"', style: "border-color: #f59e0b; color: #b45309; background: #fffbeb;" },
+      { text: "घर बनाने के लिए आवास योजना की जानकारी चाहिए", display: '🎙️ "घर बनाने के लिए आवास योजना"' }
+    ],
+    helplines: [
+      { tel: "112", label: "📞 112 (आपातकालीन)", bg: "#ff4d4f" },
+      { tel: "181", label: "📞 181 (महिला हेल्पलाइन)", bg: "#eb2f96" },
+      { tel: "1098", label: "📞 1098 (चाइल्डलाइन)", bg: "#fa8c16" },
+      { tel: "15100", label: "📞 15100 (विधिक सहायता)", bg: "#1890ff" },
+      { tel: "14416", label: "📞 14416 (टेली-मानस)", bg: "#52c41a" }
+    ]
   },
   bhojpuri: {
     langName: "भोजपुरी",
@@ -128,7 +157,36 @@ const I18N_TRANSLATIONS = {
     smsSlipTitle: "📱 योजना पर्ची (पंचायत में देखाईं - अंतिम मंज़ूरी दफ़्तर में होई)",
     drawerHeading: "अउरी सेवा आ टूल्स",
     langModalTitle: "भाषा चुनीं / Select Language",
-    langModalSub: "रउआ सेवा केंद्र से कवन भाषा में बात करल चाहत बानी?"
+    langModalSub: "रउआ सेवा केंद्र से कवन भाषा में बात करल चाहत बानी?",
+    resetBtn: "शुरुआत से शुरू करीं ↺",
+    listenBtn: "▶️ पूरा जानकारी आवाज़ में सुनीं",
+    officeDestination: "ग्राम पंचायत भवन (पंचायत सहायक)",
+    officeInstruction: "सबेरे 10 बजे से सांझ 4 बजे के बीच गाँव के पंचायत सचिवालय या नजदीकी जन सेवा केंद्र (CSC) में जाईं। अंतिम मंज़ूरी दफ़्तर में होई।",
+    safetyTitle: "🚨 आपातकालीन सुरक्षा आ सहायता (Emergency Helplines)",
+    safeExitBtn: "सुरक्षित बाहर निकलीं (Safe Exit)",
+    safetySpeechText: "घबराईं मत, रउआ सुरक्षित जगह पर जाईं आ तुरंत आपातकालीन सहायता नंबर पर फोन करीं।",
+    triageMainTitle: "🔍 रुकल भुगतान जांच सूची (Payment Recovery Checklist)",
+    footerCopy: "सेवा केंद्र (Seva Kendra) — भारत के ग्रामीण आ निरक्षर नागरिकन खातिर समर्पित मुफ्त लोक सेवा",
+    footerSub: "१००% सत्यापित नियम आधारित पात्रता • जीरो डेटा लॉस • हमेशा मुफ्त",
+    yearsUnit: "साल",
+    maritalLabels: {
+      widow: "विधवा",
+      married: "विवाहित",
+      single: "अविवाहित"
+    },
+    chips: [
+      { text: "हमार उमिर ६० साल बा, हमरा कवन पेंशन मिली?", display: '🎙️ "हमार उमिर ६० साल बा, पेंशन बताईं"' },
+      { text: "हम किसान बानी, खेती खातिर कवन सरकारी सहायता बा?", display: '🎙️ "हम किसान बानी, खेती के सहायता"' },
+      { text: "हमार पेंशन तीन महीना से ना आवता", display: '⚠️ "हमार पेंशन तीन महीना से ना आवता"', style: "border-color: #f59e0b; color: #b45309; background: #fffbeb;" },
+      { text: "घर बनावे खातिर आवास योजना के जानकारी चाहीं", display: '🎙️ "घर बनावे खातिर आवास योजना"' }
+    ],
+    helplines: [
+      { tel: "112", label: "📞 112 (आपातकालीन)", bg: "#ff4d4f" },
+      { tel: "181", label: "📞 181 (महिला हेल्पलाइन)", bg: "#eb2f96" },
+      { tel: "1098", label: "📞 1098 (चाइल्डलाइन)", bg: "#fa8c16" },
+      { tel: "15100", label: "📞 15100 (विधिक सहायता)", bg: "#1890ff" },
+      { tel: "14416", label: "📞 14416 (टेली-मानस)", bg: "#52c41a" }
+    ]
   },
   bn: {
     langName: "বাংলা",
@@ -163,7 +221,36 @@ const I18N_TRANSLATIONS = {
     smsSlipTitle: "📱 প্রকল্প তথ্যের স্লিপ (পঞ্চায়েতে দেখান - চূড়ান্ত অনুমোদন অফিসে হবে)",
     drawerHeading: "অতিরিক্ত পরিষেবা ও টুলস",
     langModalTitle: "ভাষা নির্বাচন করুন / Select Language",
-    langModalSub: "আপনি সেবা কেন্দ্রের সাথে কোন ভাষায় কথা বলতে চান?"
+    langModalSub: "আপনি সেবা কেন্দ্রের সাথে কোন ভাষায় কথা বলতে চান?",
+    resetBtn: "প্রথম থেকে শুরু করুন ↺",
+    listenBtn: "▶️ সম্পূর্ণ তথ্য আওয়াজে শুনুন",
+    officeDestination: "গ্রাম পঞ্চায়েত ভবন (পঞ্চায়েত সহায়ক)",
+    officeInstruction: "সকাল ১০টা থেকে বিকেল ৪টের মধ্যে স্থানীয় গ্রাম পঞ্চায়েত বা নিকটবর্তী সিএসসি (CSC) কেন্দ্রে যোগাযোগ করুন। চূড়ান্ত অনুমোদন অফিসে হবে।",
+    safetyTitle: "🚨 জরুরি সুরক্ষা ও সহায়তা (Emergency Helplines)",
+    safeExitBtn: "নিরাপদে প্রস্থান (Safe Exit)",
+    safetySpeechText: "ভয় পাবেন না, নিরাপদ স্থানে থাকুন এবং অবিলম্বে জরুরি সহায়তা নম্বরে কল করুন।",
+    triageMainTitle: "🔍 বকেয়া পেমেন্ট রিকভারি চেকলিস্ট",
+    footerCopy: "সেবা কেন্দ্র (Seva Kendra) — ভারতের গ্রামীণ ও নিরক্ষর নাগরিকদের জন্য নিবেদিত বিনামূল্যে লোকসেবা",
+    footerSub: "১০০% যাচাইকৃত নিয়মভিত্তিক যোগ্যতা • জিরো ডেটা লস • সর্বদা বিনামূল্যে",
+    yearsUnit: "বছর",
+    maritalLabels: {
+      widow: "বিধবা",
+      married: "বিবাহিত",
+      single: "অবিবাহিত"
+    },
+    chips: [
+      { text: "আমার বয়স ৬০ বছর, আমি কী পেনশন পাবো?", display: '🎙️ "আমার বয়স ৬০, পেনশন বলুন"' },
+      { text: "আমরা কৃষক, চাষের জন্য কী সরকারি সহায়তা আছে?", display: '🎙️ "আমরা কৃষক, চাষের সহায়তা"' },
+      { text: "আমার পেনশন ৩ মাস ধরে আসছে না", display: '⚠️ "আমার পেনশন ৩ মাস ধরে আসেনি"', style: "border-color: #f59e0b; color: #b45309; background: #fffbeb;" },
+      { text: "বাড়ি তৈরির জন্য আবাস যোজনার তথ্য জানতে চাই", display: '🎙️ "বাড়ি তৈরির জন্য আবাস যোজনা"' }
+    ],
+    helplines: [
+      { tel: "112", label: "📞 ১১২ (জরুরি সহায়তা)", bg: "#ff4d4f" },
+      { tel: "181", label: "📞 ১৮১ (মহিলা হেল্পলাইন)", bg: "#eb2f96" },
+      { tel: "1098", label: "📞 ১০৯৮ (চাইল্ডলাইন)", bg: "#fa8c16" },
+      { tel: "15100", label: "📞 ১৫১০০ (আইনি সহায়তা)", bg: "#1890ff" },
+      { tel: "14416", label: "📞 ১৪৪১৬ (টেলি-মানস)", bg: "#52c41a" }
+    ]
   },
   maithili: {
     langName: "मैथिली",
@@ -198,7 +285,36 @@ const I18N_TRANSLATIONS = {
     smsSlipTitle: "📱 योजना पर्ची (पंचायत में देखाउ - अंतिम मंजूरी दफ्तर में होएत)",
     drawerHeading: "अन्य सेवा आ टूल्स",
     langModalTitle: "भाषा चुनू / Select Language",
-    langModalSub: "अहाँ सेवा केंद्र सँ कोन भाषा में बात करब?"
+    langModalSub: "अहाँ सेवा केंद्र सँ कोन भाषा में बात करब?",
+    resetBtn: "शुरुआत सँ शुरू करू ↺",
+    listenBtn: "▶️ संपूर्ण जानकारी आवाज़ में सुनू",
+    officeDestination: "ग्राम पंचायत भवन (पंचायत सहायक)",
+    officeInstruction: "प्रातः 10 बजे सँ साँझ 4 बजे धरि अपन पंचायत सचिवालय वा नजदीकी जन सेवा केंद्र (CSC) में जाउ। अंतिम मंजूरी दफ्तर में होएत।",
+    safetyTitle: "🚨 आपातकालीन सुरक्षा एवं सहायता (Emergency Helplines)",
+    safeExitBtn: "सुरक्षित बाहर निकलू (Safe Exit)",
+    safetySpeechText: "घबराउ नहि, अपने सुरक्षित स्थान पर जाउ आ तुरंत आपातकालीन सहायता नंबर पर फोन करू।",
+    triageMainTitle: "🔍 रुकल भुगतान जांच सूची (Payment Recovery Checklist)",
+    footerCopy: "सेवा केंद्र (Seva Kendra) — भारतक ग्रामीण आ निरक्षर नागरिक लेल समर्पित निःशुल्क लोक सेवा",
+    footerSub: "१००% सत्यापित नियम आधारित पात्रता • जीरो डेटा लॉस • सदैव निःशुल्क",
+    yearsUnit: "साल",
+    maritalLabels: {
+      widow: "विधवा",
+      married: "विवाहित",
+      single: "अविवाहित"
+    },
+    chips: [
+      { text: "हमर उमर ६० साल अछि, हमरा कोन पेंशन भेटत?", display: '🎙️ "हमर उमर ६० साल अछि, पेंशन बताउ"' },
+      { text: "हम किसान छी, खेती लेल कोन सरकारी सहायता अछि?", display: '🎙️ "हम किसान छी, खेतीक सहायता"' },
+      { text: "हमर पेंशन तीन मास सँ नहि आबि रहल अछि", display: '⚠️ "हमर पेंशन तीन मास सँ नहि आयल"', style: "border-color: #f59e0b; color: #b45309; background: #fffbeb;" },
+      { text: "घर बनयबाक लेल आवास योजनाक जानकारी चाही", display: '🎙️ "घर बनयबाक लेल आवास योजना"' }
+    ],
+    helplines: [
+      { tel: "112", label: "📞 112 (आपातकालीन)", bg: "#ff4d4f" },
+      { tel: "181", label: "📞 181 (महिला हेल्पलाइन)", bg: "#eb2f96" },
+      { tel: "1098", label: "📞 1098 (चाइल्डलाइन)", bg: "#fa8c16" },
+      { tel: "15100", label: "📞 15100 (विधिक सहायता)", bg: "#1890ff" },
+      { tel: "14416", label: "📞 14416 (टेली-मानस)", bg: "#52c41a" }
+    ]
   },
   en: {
     langName: "English",
@@ -233,7 +349,36 @@ const I18N_TRANSLATIONS = {
     smsSlipTitle: "📱 Scheme Summary Slip (Show to operator - Final approval at office)",
     drawerHeading: "Additional Services & Tools",
     langModalTitle: "Select Language / अपनी भाषा चुनें",
-    langModalSub: "In which language would you like to speak with Seva Kendra?"
+    langModalSub: "In which language would you like to speak with Seva Kendra?",
+    resetBtn: "Start Over ↺",
+    listenBtn: "▶️ Listen to full details in voice",
+    officeDestination: "Gram Panchayat Office (Panchayat Assistant)",
+    officeInstruction: "Visit your local Panchayat Secretariat or nearest Common Service Centre (CSC) between 10 AM and 4 PM. Final approval happens at the office.",
+    safetyTitle: "🚨 Emergency Safety & Protection Helplines",
+    safeExitBtn: "Safe Exit",
+    safetySpeechText: "Do not panic. Move to a safe location and immediately call the emergency helpline numbers.",
+    triageMainTitle: "🔍 Payment Stoppage Troubleshooting Checklist",
+    footerCopy: "Seva Kendra — Dedicated Free Public Welfare Assistance for Rural & Low-Literacy Citizens",
+    footerSub: "100% Verified Rule-Based Eligibility • Zero Data Loss • Always Free",
+    yearsUnit: "years",
+    maritalLabels: {
+      widow: "Widowed",
+      married: "Married",
+      single: "Unmarried"
+    },
+    chips: [
+      { text: "I am 60 years old, which pension can I get?", display: '🎙️ "I am 60, tell me about pension"' },
+      { text: "We are farmers, what government assistance is available for agriculture?", display: '🎙️ "We are farmers, farm assistance"' },
+      { text: "My pension has stopped coming for 3 months", display: '⚠️ "My pension has stopped for 3 months"', style: "border-color: #f59e0b; color: #b45309; background: #fffbeb;" },
+      { text: "I need information on housing scheme to construct a house", display: '🎙️ "Housing scheme for home construction"' }
+    ],
+    helplines: [
+      { tel: "112", label: "📞 112 (National Emergency)", bg: "#ff4d4f" },
+      { tel: "181", label: "📞 181 (Women Helpline)", bg: "#eb2f96" },
+      { tel: "1098", label: "📞 1098 (Childline)", bg: "#fa8c16" },
+      { tel: "15100", label: "📞 15100 (Legal Aid)", bg: "#1890ff" },
+      { tel: "14416", label: "📞 14416 (Tele-MANAS Mental Health)", bg: "#52c41a" }
+    ]
   }
 };
 
@@ -828,15 +973,22 @@ function handleTurnResponse(result) {
   const profile = result.extracted_profile || result.profile || (result.session ? result.session.profile : {});
   if (profile.age) {
     const el = document.getElementById('slot-age');
-    if (el) el.textContent = `${profile.age} वर्ष`;
+    if (el) el.textContent = `${profile.age} ${t.yearsUnit || 'वर्ष'}`;
   }
   if (profile.marital_status) {
     const el = document.getElementById('slot-marital');
-    if (el) el.textContent = profile.marital_status === 'widow' ? 'विधवा' : (profile.marital_status === 'married' ? 'विवाहित' : profile.marital_status);
+    if (el) {
+      const localized = (t.maritalLabels && t.maritalLabels[profile.marital_status]) || profile.marital_status;
+      el.textContent = localized;
+    }
   }
   if (profile.bpl_or_ration_card !== undefined && profile.bpl_or_ration_card !== null) {
     const el = document.getElementById('slot-income');
-    if (el) el.textContent = profile.bpl_or_ration_card ? "BPL / राशन कार्ड" : "सामान्य";
+    const bplText = currentLanguage === 'en' ? 'BPL / Ration Card' :
+                    (currentLanguage === 'bn' ? 'বিপিএল / রেশন কার্ড' : 'BPL / राशन कार्ड');
+    const genText = currentLanguage === 'en' ? 'General' :
+                    (currentLanguage === 'bn' ? 'সাধারণ' : 'सामान्य');
+    if (el) el.textContent = profile.bpl_or_ration_card ? bplText : genText;
   } else if (profile.annual_income_inr) {
     const el = document.getElementById('slot-income');
     if (el) el.textContent = `₹${profile.annual_income_inr.toLocaleString('en-IN')}`;
@@ -912,8 +1064,12 @@ function handleTurnResponse(result) {
     const triageCard = document.getElementById('triage-main-card');
     if (triageCard) triageCard.style.display = 'none';
 
+    const promptHintText = currentLanguage === 'en' ? "Check the scheme list on your screen" :
+                           (currentLanguage === 'bn' ? "স্ক্রিনে প্রকল্পের তালিকা দেখুন" :
+                           (currentLanguage === 'bhojpuri' ? "योजना के लिस्ट स्क्रीन पर देखीं" :
+                           (currentLanguage === 'maithili' ? "योजनाक सूची स्क्रीन पर देखू" : "योजनाओं की सूची स्क्रीन पर देखें")));
     renderEvaluationResults(result.screen_data || result.evaluationResult, audioUrl, audioBase64, spokenText);
-    setPrompt(spokenText, "योजनाओं की सूची स्क्रीन पर देखें", audioUrl, audioBase64);
+    setPrompt(spokenText, promptHintText, audioUrl, audioBase64);
     playAudio(audioUrl, audioBase64, spokenText);
     return;
   }
@@ -926,7 +1082,11 @@ function handleTurnResponse(result) {
   const resultsCard = document.getElementById('results-card');
   if (resultsCard) resultsCard.style.display = 'none';
 
-  setPrompt(spokenText || result.replyText, result.promptHint || "अपनी जानकारी बोलें", audioUrl, audioBase64);
+  const defaultHint = currentLanguage === 'en' ? "Please speak your details" :
+                      (currentLanguage === 'bn' ? "আপনার তথ্য বলুন" :
+                      (currentLanguage === 'bhojpuri' ? "आपन जानकारी बताईं" :
+                      (currentLanguage === 'maithili' ? "अपन जानकारी कहू" : "अपनी जानकारी बोलें")));
+  setPrompt(spokenText || result.replyText, result.promptHint || defaultHint, audioUrl, audioBase64);
   playAudio(audioUrl, audioBase64, spokenText);
 }
 
@@ -950,11 +1110,18 @@ function renderEvaluationResults(screenData, audioUrl, audioBase64, spokenReply)
 
   const badgeEl = document.getElementById('badge-count');
   if (badgeEl) {
-    badgeEl.textContent = `${verifiedCount} योजनाओं के लिए पात्र हो सकती हैं`;
+    const badgeText = currentLanguage === 'en' ? `${verifiedCount} potential schemes` :
+                      (currentLanguage === 'bn' ? `${verifiedCount}টি সম্ভাব্য প্রকল্প` :
+                      (currentLanguage === 'bhojpuri' ? `${verifiedCount} गो संभावित योजना` :
+                      (currentLanguage === 'maithili' ? `${verifiedCount} टा संभावित योजना` : `${verifiedCount} संभावित योजनाएं`)));
+    badgeEl.textContent = badgeText;
   }
   const transcriptEl = document.getElementById('spoken-audio-transcript');
   if (transcriptEl) {
-    transcriptEl.textContent = spokenReply || screenData?.spokenScript || "आप इन योजनाओं के लिए पात्र हो सकती हैं। अंतिम मंज़ूरी दफ़्तर में होगी।";
+    const defaultTranscript = currentLanguage === 'en' ? "You may be eligible for these schemes. Final verification happens at the office." :
+                              (currentLanguage === 'bn' ? "আপনি এই প্রকল্পগুলির জন্য যোগ্য হতে পারেন। চূড়ান্ত অনুমোদন অফিসে হবে।" :
+                              "आप इन योजनाओं के लिए पात्र हो सकती हैं। अंतिम मंज़ूरी दफ़्तर में होगी।");
+    transcriptEl.textContent = spokenReply || screenData?.spokenScript || defaultTranscript;
   }
 
   // Render Rich Scheme Cards
@@ -963,8 +1130,16 @@ function renderEvaluationResults(screenData, audioUrl, audioBase64, spokenReply)
     schemesList.innerHTML = schemes.map(s => {
       const isVerified = s.status === 'verified';
       const badgeStyle = isVerified ? 'background: #e6f4ea; color: #137333; font-weight: bold; padding: 4px 10px; border-radius: 4px; font-size: 0.85rem;' : 'background: #fef7e0; color: #b06000; font-weight: bold; padding: 4px 10px; border-radius: 4px; font-size: 0.85rem;';
-      const badgeText = isVerified ? '✓ Verified (सत्यापित)' : '⚠️ Ask at the office (दफ़्तर में पता करें)';
+      const badgeText = isVerified ?
+        (currentLanguage === 'en' ? '✓ Verified' : (currentLanguage === 'bn' ? '✓ যাচাইকৃত (Verified)' : '✓ सत्यापित (Verified)')) :
+        (currentLanguage === 'en' ? '⚠️ Ask at the office' : (currentLanguage === 'bn' ? '⚠️ অফিসে গিয়ে জানুন' : '⚠️ दफ़्तर में पता करें'));
       const docsHtml = (s.documents || []).map(doc => `<li style="margin-bottom: 2px;">• ${doc}</li>`).join('');
+
+      const labelBenefit = currentLanguage === 'en' ? 'Benefit' : (currentLanguage === 'bn' ? 'সুবিধা' : 'लाभ');
+      const labelWhy = currentLanguage === 'en' ? 'Why you may qualify' : (currentLanguage === 'bn' ? 'সম্ভাব্য কারণ' : 'पात्रता कारण');
+      const labelDocs = currentLanguage === 'en' ? 'Documents Checklist' : (currentLanguage === 'bn' ? 'প্রয়োজনীয় নথি' : 'ज़रूरी कागजात');
+      const labelOffice = currentLanguage === 'en' ? 'Office to visit' : (currentLanguage === 'bn' ? 'যে অফিসে যাবেন' : 'जाने का कार्यालय');
+      const labelSay = currentLanguage === 'en' ? 'What to say at counter' : (currentLanguage === 'bn' ? 'কাউন্টারে যা বলবেন' : 'काउंटर पर क्या कहें');
 
       return `
         <div class="scheme-rich-card" style="background: #ffffff; border: 1px solid #d9d9d9; border-radius: 10px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.04);">
@@ -974,17 +1149,17 @@ function renderEvaluationResults(screenData, audioUrl, audioBase64, spokenReply)
           </div>
 
           <div style="margin-bottom: 8px; font-size: 0.95rem; color: #1b5e20; font-weight: 600;">
-            💰 <strong>Benefit:</strong> ${s.benefit}
+            💰 <strong>${labelBenefit}:</strong> ${s.benefit}
           </div>
 
           ${s.why_you_may_qualify ? `
           <div style="margin-bottom: 8px; font-size: 0.9rem; color: #374151;">
-            🔍 <strong>Why you may qualify:</strong> ${s.why_you_may_qualify}
+            🔍 <strong>${labelWhy}:</strong> ${s.why_you_may_qualify}
           </div>` : ''}
 
           ${(s.documents && s.documents.length > 0) ? `
           <div style="margin-bottom: 8px;">
-            <strong style="font-size: 0.88rem; color: #1f2937;">📂 Documents Checklist:</strong>
+            <strong style="font-size: 0.88rem; color: #1f2937;">📂 ${labelDocs}:</strong>
             <ul style="margin: 4px 0 0 16px; padding: 0; font-size: 0.85rem; color: #4b5563;">
               ${docsHtml}
             </ul>
@@ -992,12 +1167,12 @@ function renderEvaluationResults(screenData, audioUrl, audioBase64, spokenReply)
 
           ${s.office_to_visit ? `
           <div style="margin-bottom: 8px; font-size: 0.88rem; color: #1f2937;">
-            📍 <strong>Office to visit:</strong> ${s.office_to_visit}
+            📍 <strong>${labelOffice}:</strong> ${s.office_to_visit}
           </div>` : ''}
 
           ${s.what_to_say ? `
           <div class="what-to-say-box" style="background: #f0fdf4; border-left: 4px solid #16a34a; padding: 8px 12px; border-radius: 4px; margin-bottom: 8px;">
-            <span style="font-size: 0.78rem; font-weight: bold; text-transform: uppercase; color: #15803d; display: block; margin-bottom: 2px;">💬 What to say at the counter:</span>
+            <span style="font-size: 0.78rem; font-weight: bold; text-transform: uppercase; color: #15803d; display: block; margin-bottom: 2px;">💬 ${labelSay}:</span>
             <span style="font-size: 0.9rem; color: #166534; font-style: italic;">"${s.what_to_say}"</span>
           </div>` : ''}
 
@@ -1023,11 +1198,26 @@ function renderEvaluationResults(screenData, audioUrl, audioBase64, spokenReply)
   // Render SMS action slip
   const smsEl = document.getElementById('sms-text-content');
   if (smsEl) {
-    let slip = `[सेवा केंद्र - योजना पर्ची]\n`;
+    const slipHeader = currentLanguage === 'en' ? '[Seva Kendra - Scheme Summary Slip]' :
+                       (currentLanguage === 'bn' ? '[সেবা কেন্দ্র - প্রকল্প তথ্য স্লিপ]' :
+                       (currentLanguage === 'bhojpuri' ? '[सेवा केंद्र - योजना पर्ची]' :
+                       (currentLanguage === 'maithili' ? '[सेवा केंद्र - योजना पर्ची]' : '[सेवा केंद्र - योजना पर्ची]')));
+    const slipEligible = currentLanguage === 'en' ? 'May be eligible' :
+                         (currentLanguage === 'bn' ? 'যোগ্য হতে পারেন' : 'पात्र हो सकती हैं');
+    const slipAsk = currentLanguage === 'en' ? 'Inquire at office' :
+                    (currentLanguage === 'bn' ? 'অফিসে জানুন' : 'दफ़्तर में पता करें');
+    const slipBenefit = currentLanguage === 'en' ? 'Benefit' :
+                        (currentLanguage === 'bn' ? 'সুবিধা' : 'लाभ');
+    const slipNote = currentLanguage === 'en' ? 'Note: Final verification and approval happen at the office.' :
+                     (currentLanguage === 'bn' ? 'নোট: চূড়ান্ত যাচাই ও অনুমোদন অফিসে হবে।' :
+                     (currentLanguage === 'bhojpuri' ? 'नोट: अंतिम मंज़ूरी दफ़्तर में होई।' :
+                     (currentLanguage === 'maithili' ? 'नोट: अंतिम मंजूरी दफ्तर में होएत।' : 'नोट: अंतिम मंज़ूरी दफ़्तर में होगी।')));
+
+    let slip = `${slipHeader}\n`;
     schemes.forEach((s, idx) => {
-      slip += `${idx + 1}. ${s.name} (${s.status === 'verified' ? 'पात्र हो सकती हैं' : 'दफ़्तर में पता करें'})\n   लाभ: ${s.benefit}\n`;
+      slip += `${idx + 1}. ${s.name} (${s.status === 'verified' ? slipEligible : slipAsk})\n   ${slipBenefit}: ${s.benefit}\n`;
     });
-    slip += `\nनोट: अंतिम मंज़ूरी दफ़्तर में होगी।`;
+    slip += `\n${slipNote}`;
     smsEl.textContent = slip;
   }
 
@@ -1430,6 +1620,52 @@ function applyLanguage(langCode) {
   if (smsTitle) smsTitle.textContent = t.smsSlipTitle;
   const drawerHead = document.getElementById('ui-drawerHeading');
   if (drawerHead) drawerHead.textContent = t.drawerHeading;
+
+  // 1. Dynamic Quick Guidance Chips (Translates all example voice queries)
+  const chipsFlex = document.getElementById('ui-chipsFlex');
+  if (chipsFlex && t.chips) {
+    chipsFlex.innerHTML = t.chips.map(c => `
+      <button type="button" class="example-chip" ${c.style ? `style="${c.style}"` : ''} onclick="setQuickInput(${JSON.stringify(c.text)})">
+        ${c.display}
+      </button>
+    `).join('');
+  }
+
+  // 2. Reset Button & Audio Listen Button
+  const resetBtn = document.getElementById('ui-resetBtn');
+  if (resetBtn && t.resetBtn) resetBtn.textContent = t.resetBtn;
+  const listenBtn = document.getElementById('ui-listenBtn');
+  if (listenBtn && t.listenBtn) listenBtn.innerHTML = `<span>▶️</span> ${t.listenBtn.replace(/^▶️\s*/, '')}`;
+
+  // 3. Office Destination & Instructions
+  const offDest = document.getElementById('office-destination');
+  if (offDest && t.officeDestination) offDest.textContent = t.officeDestination;
+  const offInst = document.getElementById('ui-officeInstruction');
+  if (offInst && t.officeInstruction) offInst.textContent = t.officeInstruction;
+
+  // 4. Safety Card & Clickable Helplines
+  const safetyTitle = document.getElementById('ui-safetyTitle');
+  if (safetyTitle && t.safetyTitle) safetyTitle.textContent = t.safetyTitle;
+  const safeExit = document.getElementById('safe-exit-btn');
+  if (safeExit && t.safeExitBtn) safeExit.textContent = t.safeExitBtn;
+  const safetySpeech = document.getElementById('safety-speech-text');
+  if (safetySpeech && t.safetySpeechText) safetySpeech.textContent = t.safetySpeechText;
+  const helplineGrid = document.getElementById('helplineGrid');
+  if (helplineGrid && t.helplines) {
+    helplineGrid.innerHTML = t.helplines.map(h => `
+      <a href="tel:${h.tel}" class="helpline-btn" style="display: block; text-align: center; background: ${h.bg}; color: white; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 1.1rem;">${h.label}</a>
+    `).join('');
+  }
+
+  // 5. Payment Recovery Triage Title
+  const triageTitle = document.getElementById('ui-triageMainTitle');
+  if (triageTitle && t.triageMainTitle) triageTitle.textContent = t.triageMainTitle;
+
+  // 6. Footer Information
+  const footCopy = document.getElementById('ui-footerCopy');
+  if (footCopy && t.footerCopy) footCopy.innerHTML = `<strong>${t.brandName}</strong> — ${t.footerCopy.split('—')[1] || t.footerCopy}`;
+  const footSub = document.getElementById('ui-footerSub');
+  if (footSub && t.footerSub) footSub.textContent = t.footerSub;
 
   document.querySelectorAll('.lang-option-card').forEach(btn => {
     btn.classList.remove('active');
