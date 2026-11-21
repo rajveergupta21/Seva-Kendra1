@@ -149,7 +149,7 @@ def synthesize_speech(text: str, target_language_code: str = "hi-IN", speaker: s
             "loudness": 1.5,
             "speech_sample_rate": 8000,  # 8kHz narrowband audio for extreme 2G bandwidth savings
             "enable_preprocessing": True,
-            "model": "bulbul:v1"
+            "model": "bulbul:v3"
         }
         
         req = urllib.request.Request(

@@ -73,7 +73,7 @@ export async function textToSpeech(text, speaker = "kavya", apiKey = process.env
       pace: 0.95,
       speech_sample_rate: 16000,
       enable_preprocessing: true,
-      model: "bulbul:v2"
+      model: "bulbul:v3"
     };
 
     const res = await fetch(`${SARVAM_API_BASE}/text-to-speech`, {
