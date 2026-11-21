@@ -1,4 +1,4 @@
-# 🇮🇳 JanKalyan Voice Gateway (सेवा भंडार)
+# 🇮🇳 Seva Kendra
 ### *Zero-Literacy Voice Protocol for Indian Welfare Scheme Eligibility*
 **Track:** Public Good / Voice AI for Bharat | **Event:** Build for India 3 Hackathon  
 **Target:** 350M+ rural and low-income Indians with zero reading skills
