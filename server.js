@@ -14,6 +14,24 @@ import { diagnoseStoppage, BENEFICIARIES, listGrievances } from './engine/triage
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Auto-load .env file if present (Zero-dependency .env loader)
+const envPath = path.join(__dirname, '.env');
+if (fs.existsSync(envPath)) {
+  const envContent = fs.readFileSync(envPath, 'utf8');
+  for (const line of envContent.split('\n')) {
+    const trimmed = line.trim();
+    if (trimmed && !trimmed.startsWith('#') && trimmed.includes('=')) {
+      const idx = trimmed.indexOf('=');
+      const key = trimmed.slice(0, idx).trim();
+      const val = trimmed.slice(idx + 1).trim().replace(/^["']|["']$/g, '');
+      if (val) {
+        process.env[key] = val;
+      }
+    }
+  }
+}
+
 const PORT = process.env.PORT || 3000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
@@ -271,9 +289,25 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    const nextPort = Number(PORT) + 1;
+    console.warn(`⚠️ [Port ${PORT} is already in use. Retrying on port ${nextPort}...]`);
+    server.listen(nextPort, '0.0.0.0', () => {
+      console.log(`=======================================================`);
+      console.log(` JanKalyan Voice Gateway (Seva Kendra Engine) Active `);
+      console.log(` URL: http://localhost:${nextPort}`);
+      console.log(` Zero-Literacy Voice Scheme Eligibility Protocol       `);
+      console.log(`=======================================================`);
+    });
+  } else {
+    console.error("Server error:", err);
+  }
+});
+
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`=======================================================`);
-  console.log(` JanKalyan Voice Gateway (Seva Bhandar Engine) Active `);
+  console.log(` JanKalyan Voice Gateway (Seva Kendra Engine) Active `);
   console.log(` URL: http://localhost:${PORT}`);
   console.log(` Zero-Literacy Voice Scheme Eligibility Protocol       `);
   console.log(`=======================================================`);
