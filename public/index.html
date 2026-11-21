@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#166534">
   <title>सेवा केंद्र (Seva Kendra) — ग्रामीण नागरिक कल्याण एवं योजना सहायता</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=2.2">
   <link rel="manifest" href="manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -261,7 +261,7 @@
       <div class="sms-slip-wrapper">
         <div class="sms-slip-header">
           <span id="ui-smsSlipTitle">📱 योजना पर्ची (पंचायत ऑपरेटर को दिखाएं - अंतिम मंज़ूरी दफ़्तर में होगी)</span>
-          <span class="dlt-tag">सेवा केंद्र पर्ची</span>
+          <span class="dlt-tag" id="ui-slipTag">सेवा केंद्र पर्ची</span>
         </div>
         <pre class="sms-slip-content" id="sms-text-content">
 [सेवा केंद्र - योजना पर्ची]
@@ -297,32 +297,32 @@
         <button class="drawer-item-btn active" onclick="switchDrawerModule('drawer-triage')">
           <span class="drawer-item-icon">⚠️</span>
           <div class="drawer-item-text">
-            <strong>रुकी पेंशन व DBT जांच</strong>
-            <small>खाता बंद / आधार सीडिंग निवारण</small>
+            <strong id="ui-navTriage">रुकी पेंशन व DBT जांच</strong>
+            <small id="ui-navTriageSub">खाता बंद / आधार सीडिंग निवारण</small>
           </div>
         </button>
 
         <button class="drawer-item-btn" onclick="switchDrawerModule('drawer-schemes')">
           <span class="drawer-item-icon">📂</span>
           <div class="drawer-item-text">
-            <strong>संपूर्ण योजना निर्देशिका</strong>
-            <small>सभी 7 सत्यापित योजनाएं व नियम</small>
+            <strong id="ui-navSchemes">संपूर्ण योजना निर्देशिका</strong>
+            <small id="ui-navSchemesSub">सभी सत्यापित योजनाएं व नियम</small>
           </div>
         </button>
 
         <button class="drawer-item-btn" onclick="switchDrawerModule('drawer-offline')">
           <span class="drawer-item-icon">📞</span>
           <div class="drawer-item-text">
-            <strong>ऑफलाइन 2G कॉल व व्हाट्सऐप</strong>
-            <small>बिना इंटरनेट साधारण फोन पर सहायता</small>
+            <strong id="ui-navOffline">ऑफलाइन 2G कॉल व व्हाट्सऐप</strong>
+            <small id="ui-navOfflineSub">बिना इंटरनेट साधारण फोन पर सहायता</small>
           </div>
         </button>
 
         <button class="drawer-item-btn" onclick="switchDrawerModule('drawer-panchayat')">
           <span class="drawer-item-icon">📋</span>
           <div class="drawer-item-text">
-            <strong>ग्राम पंचायत सचिवालय रजिस्टर</strong>
-            <small>वार्ड स्तर की रुकी पेंशन सूची</small>
+            <strong id="ui-navPanchayat">ग्राम पंचायत सचिवालय रजिस्टर</strong>
+            <small id="ui-navPanchayatSub">वार्ड स्तर की रुकी पेंशन सूची</small>
           </div>
         </button>
       </div>
@@ -481,7 +481,7 @@
       </div>
 
       <div class="lang-modal-footer">
-        <button type="button" class="lang-close-btn" onclick="closeLanguageModal()">✕ बंद करें</button>
+        <button type="button" class="lang-close-btn" id="ui-langCloseBtn" onclick="closeLanguageModal()">✕ बंद करें</button>
       </div>
     </div>
   </div>
@@ -504,6 +504,6 @@
   <!-- LATENCY & EDGE TELEMETRY DEBUG OVERLAY (?debug=1) -->
   <div id="debugLatencyOverlay" class="debug-overlay" style="display: none;"></div>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=2.2"></script>
 </body>
 </html>

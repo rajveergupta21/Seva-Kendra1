@@ -429,9 +429,13 @@ const server = http.createServer(async (req, res) => {
     if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
       const ext = path.extname(filePath).toLowerCase();
       const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+      const noCacheExts = ['.html', '.js', '.css', '.json'];
+      const cacheControl = noCacheExts.includes(ext)
+        ? 'no-cache, no-store, must-revalidate'
+        : 'public, max-age=3600';
       res.writeHead(200, {
         'Content-Type': contentType,
-        'Cache-Control': ext === '.html' ? 'no-cache' : 'public, max-age=3600'
+        'Cache-Control': cacheControl
       });
       fs.createReadStream(filePath).pipe(res);
       return;

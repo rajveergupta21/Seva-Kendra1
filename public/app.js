@@ -91,9 +91,32 @@ const I18N_TRANSLATIONS = {
     triadDocsTitle: "📂 2. सिर्फ ये 3 कागज़ ले जाएं",
     triadOfficeTitle: "📍 3. यहाँ जाकर जमा करें",
     smsSlipTitle: "📱 योजना पर्ची (पंचायत ऑपरेटर को दिखाएं - अंतिम मंज़ूरी दफ़्तर में होगी)",
+    slipTag: "सेवा केंद्र पर्ची",
+    replayBtn: "फिर से सुनें (Listen Again)",
+    liveSpeechActive: "माइक सक्रिय है... आवाज़ सुनी जा रही है",
+    liveSpeechPlaceholder: '"आप जो बोलेंगे, वह यहाँ तुरंत दिखाई देगा..."',
+    resultsBadge: "संभावित योजनाएं",
     drawerHeading: "अतिरिक्त सेवाएं व टूल्स",
+    drawerTriageTitle: "⚠️ रुकी पेंशन व DBT भुगतान निवारण",
+    drawerTriageDesc: "यदि वृद्धावस्था, विधवा या दिव्यांग पेंशन रुक गई है, तो आधार के अंतिम 4 अंक या मोबाइल नंबर डालें:",
+    triagePlaceholder: "आधार के अंतिम 4 अंक (जैसे: 7193)...",
+    triageBtn: "जांच करें ➔",
+    triageActionReq: "आवश्यक समाधान (Action Required):",
+    triageVoiceLabel: "🔊 अपनी बोली में सुनें:",
+    triageTokenLabel: "सचिवालय टोकन कोड:",
+    drawerSchemesTitle: "📂 सभी सत्यापित सरकारी योजनाएं",
+    drawerSchemesDesc: "भारत सरकार के गजट नियमों के अनुसार सत्यापित कल्याणकारी योजनाएं:",
+    navTriage: "रुकी पेंशन व DBT जांच",
+    navTriageSub: "खाता बंद / आधार सीडिंग निवारण",
+    navSchemes: "संपूर्ण योजना निर्देशिका",
+    navSchemesSub: "सभी सत्यापित योजनाएं व नियम",
+    navOffline: "ऑफलाइन 2G कॉल व व्हाट्सऐप",
+    navOfflineSub: "बिना इंटरनेट साधारण फोन पर सहायता",
+    navPanchayat: "ग्राम पंचायत सचिवालय रजिस्टर",
+    navPanchayatSub: "वार्ड स्तर की रुकी पेंशन सूची",
     langModalTitle: "अपनी भाषा चुनें / Select Language",
     langModalSub: "आप सेवा केंद्र से किस भाषा में बात करना चाहते हैं?",
+    langCloseBtn: "✕ बंद करें",
     resetBtn: "शुरुआत से शुरू करें ↺",
     listenBtn: "▶️ पूरी जानकारी आवाज़ में सुनें",
     officeDestination: "ग्राम पंचायत भवन (पंचायत सहायक)",
@@ -155,9 +178,32 @@ const I18N_TRANSLATIONS = {
     triadDocsTitle: "📂 2. बस ई 3 गो कागजात ले जाईं",
     triadOfficeTitle: "📍 3. इहाँ जाके जमा करीं",
     smsSlipTitle: "📱 योजना पर्ची (पंचायत में देखाईं - अंतिम मंज़ूरी दफ़्तर में होई)",
+    slipTag: "सेवा केंद्र पर्ची",
+    replayBtn: "फेरु से सुनीं (Listen Again)",
+    liveSpeechActive: "माइक चालू बा... आवाज़ सुनल जा रहल बा",
+    liveSpeechPlaceholder: '"रउआ जवन बोलब, ऊ इहाँ देखाई दी..."',
+    resultsBadge: "मिले वाला योजना",
     drawerHeading: "अउरी सेवा आ टूल्स",
+    drawerTriageTitle: "⚠️ रुकल पेंशन आ DBT भुगतान निवारण",
+    drawerTriageDesc: "अगर बुढ़ापा, विधवा या दिव्यांग पेंशन रुक गइल बा, त आधार के अंतिम 4 अंक या मोबाइल नंबर डालीं:",
+    triagePlaceholder: "आधार के अंतिम 4 अंक (जैसे: 7193)...",
+    triageBtn: "जांच करीं ➔",
+    triageActionReq: "जरूरी उपाय (Action Required):",
+    triageVoiceLabel: "🔊 अपना बोली में सुनीं:",
+    triageTokenLabel: "सचिवालय टोकन कोड:",
+    drawerSchemesTitle: "📂 सब जाँचल सरकारी योजना",
+    drawerSchemesDesc: "भारत सरकार के नियम अनुसार जाँचल कल्याणकारी योजना:",
+    navTriage: "रुकल पेंशन आ DBT जांच",
+    navTriageSub: "खाता बंद / आधार सीडिंग सुधार",
+    navSchemes: "सब योजना निर्देशिका",
+    navSchemesSub: "सत्यापित योजना आ नियम",
+    navOffline: "ऑफलाइन 2G कॉल आ व्हाट्सऐप",
+    navOfflineSub: "बिना इंटरनेट सादा फोन पर सहायता",
+    navPanchayat: "पंचायत सचिवालय रजिस्टर",
+    navPanchayatSub: "वार्ड स्तर के रुकल पेंशन सूची",
     langModalTitle: "भाषा चुनीं / Select Language",
     langModalSub: "रउआ सेवा केंद्र से कवन भाषा में बात करल चाहत बानी?",
+    langCloseBtn: "✕ बंद करीं",
     resetBtn: "शुरुआत से शुरू करीं ↺",
     listenBtn: "▶️ पूरा जानकारी आवाज़ में सुनीं",
     officeDestination: "ग्राम पंचायत भवन (पंचायत सहायक)",
@@ -219,9 +265,32 @@ const I18N_TRANSLATIONS = {
     triadDocsTitle: "📂 ২. শুধুমাত্র এই ৩টি নথি সাথে নিন",
     triadOfficeTitle: "📍 ৩. এখানে গিয়ে জমা দিন",
     smsSlipTitle: "📱 প্রকল্প তথ্যের স্লিপ (পঞ্চায়েতে দেখান - চূড়ান্ত অনুমোদন অফিসে হবে)",
+    slipTag: "সেবা কেন্দ্র স্লিপ",
+    replayBtn: "আবার শুনুন (Listen Again)",
+    liveSpeechActive: "মাইক চালু রয়েছে... কথা শোনা হচ্ছে",
+    liveSpeechPlaceholder: '"আপনি যা বলবেন, তা এখানে দেখা যাবে..."',
+    resultsBadge: "সম্ভাব্য প্রকল্পসমূহ",
     drawerHeading: "অতিরিক্ত পরিষেবা ও টুলস",
+    drawerTriageTitle: "⚠️ বকেয়া পেনশন ও DBT সহায়তা",
+    drawerTriageDesc: "বার্ধক্য, বিধবা বা প্রতিবন্ধী পেনশন বন্ধ থাকলে আধারের শেষ ৪টি সংখ্যা বা মোবাইল নম্বর লিখুন:",
+    triagePlaceholder: "আধারের শেষ ৪টি সংখ্যা (যেমন: ৭১৯৩)...",
+    triageBtn: "যাচাই করুন ➔",
+    triageActionReq: "প্রয়োজনীয় পদক্ষেপ (Action Required):",
+    triageVoiceLabel: "🔊 নিজের ভাষায় শুনুন:",
+    triageTokenLabel: "সচিবালয় টোকেন কোড:",
+    drawerSchemesTitle: "📂 সমস্ত যাচাইকৃত সরকারি প্রকল্প",
+    drawerSchemesDesc: "সরকারি নিয়ম অনুযায়ী যাচাই করা জনকল্যাণমূলক প্রকল্পসমূহ:",
+    navTriage: "বকেয়া পেনশন ও DBT পরীক্ষা",
+    navTriageSub: "অ্যাকাউন্ট চালু ও আধার সিডিং সমাধান",
+    navSchemes: "সম্পূর্ণ প্রকল্প তালিকা",
+    navSchemesSub: "যাচাইকৃত সমস্ত প্রকল্প ও নিয়মাবলী",
+    navOffline: "অফলাইন ২জি কল ও হোয়াটসঅ্যাপ",
+    navOfflineSub: "ইন্টারনেট ছাড়া সাধারণ ফোনে সহায়তা",
+    navPanchayat: "গ্রাম পঞ্চায়েত সচিবালয় খাতা",
+    navPanchayatSub: "ওয়ার্ড ভিত্তিক বকেয়া পেনশনের তালিকা",
     langModalTitle: "ভাষা নির্বাচন করুন / Select Language",
     langModalSub: "আপনি সেবা কেন্দ্রের সাথে কোন ভাষায় কথা বলতে চান?",
+    langCloseBtn: "✕ বন্ধ করুন",
     resetBtn: "প্রথম থেকে শুরু করুন ↺",
     listenBtn: "▶️ সম্পূর্ণ তথ্য আওয়াজে শুনুন",
     officeDestination: "গ্রাম পঞ্চায়েত ভবন (পঞ্চায়েত সহায়ক)",
@@ -283,9 +352,32 @@ const I18N_TRANSLATIONS = {
     triadDocsTitle: "📂 2. मात्र ई 3 टा कागजात ल जाउ",
     triadOfficeTitle: "📍 3. एतय जा क जमा करू",
     smsSlipTitle: "📱 योजना पर्ची (पंचायत में देखाउ - अंतिम मंजूरी दफ्तर में होएत)",
+    slipTag: "सेवा केंद्र पर्ची",
+    replayBtn: "पुनः सुनू (Listen Again)",
+    liveSpeechActive: "माइक चालू अछि... आवाज सुनल जा रहल अछि",
+    liveSpeechPlaceholder: '"अहाँ जे बाजब, से एतय देखाए पड़त..."',
+    resultsBadge: "संभावित योजना",
     drawerHeading: "अन्य सेवा आ टूल्स",
+    drawerTriageTitle: "⚠️ रुकल पेंशन आ DBT भुगतान समाधान",
+    drawerTriageDesc: "जँ वृद्धावस्था, विधवा वा दिव्यांग पेंशन रुकि गेल अछि, तँ आधारक अंतिम 4 अंक वा मोबाइल नंबर लिखू:",
+    triagePlaceholder: "आधारक अंतिम 4 अंक (जहिना: 7193)...",
+    triageBtn: "जांच करू ➔",
+    triageActionReq: "आवश्यक समाधान (Action Required):",
+    triageVoiceLabel: "🔊 अपन बोली में सुनू:",
+    triageTokenLabel: "सचिवालय टोकन कोड:",
+    drawerSchemesTitle: "📂 सभटा सत्यापित सरकारी योजना",
+    drawerSchemesDesc: "भारत सरकारक नियमक अनुसार सत्यापित कल्याणकारी योजना:",
+    navTriage: "रुकल पेंशन आ DBT जांच",
+    navTriageSub: "खाता बंद / आधार सीडिंग निवारण",
+    navSchemes: "संपूर्ण योजना निर्देशिका",
+    navSchemesSub: "सत्यापित योजना आ नियम",
+    navOffline: "ऑफलाइन 2G कॉल आ व्हाट्सऐप",
+    navOfflineSub: "बिना इंटरनेट साधारण फोन पर सहायता",
+    navPanchayat: "ग्राम पंचायत सचिवालय रजिस्टर",
+    navPanchayatSub: "वार्ड स्तरक रुकल पेंशन सूची",
     langModalTitle: "भाषा चुनू / Select Language",
     langModalSub: "अहाँ सेवा केंद्र सँ कोन भाषा में बात करब?",
+    langCloseBtn: "✕ बंद करू",
     resetBtn: "शुरुआत सँ शुरू करू ↺",
     listenBtn: "▶️ संपूर्ण जानकारी आवाज़ में सुनू",
     officeDestination: "ग्राम पंचायत भवन (पंचायत सहायक)",
@@ -347,9 +439,32 @@ const I18N_TRANSLATIONS = {
     triadDocsTitle: "📂 2. Bring Only These 3 Documents",
     triadOfficeTitle: "📍 3. Submit At This Local Office",
     smsSlipTitle: "📱 Scheme Summary Slip (Show to operator - Final approval at office)",
+    slipTag: "Seva Kendra Slip",
+    replayBtn: "Listen Again",
+    liveSpeechActive: "Microphone active... listening to your voice",
+    liveSpeechPlaceholder: '"What you speak will appear here in real time..."',
+    resultsBadge: "Potential Schemes",
     drawerHeading: "Additional Services & Tools",
+    drawerTriageTitle: "⚠️ Stalled Pension & DBT Troubleshooting",
+    drawerTriageDesc: "If old age, widow, or disability pension has stopped, enter last 4 digits of Aadhaar or mobile number:",
+    triagePlaceholder: "Last 4 digits of Aadhaar (e.g., 7193)...",
+    triageBtn: "Check Status ➔",
+    triageActionReq: "Action Required:",
+    triageVoiceLabel: "🔊 Listen in your dialect:",
+    triageTokenLabel: "Secretariat Token Code:",
+    drawerSchemesTitle: "📂 All Verified Government Schemes",
+    drawerSchemesDesc: "Welfare schemes verified as per Government of India Gazette rules:",
+    navTriage: "Stalled Pension & DBT Triage",
+    navTriageSub: "Dormant account & Aadhaar seeding fix",
+    navSchemes: "All Verified Schemes Directory",
+    navSchemesSub: "Official gazetted welfare schemes & rules",
+    navOffline: "Offline 2G Call & WhatsApp",
+    navOfflineSub: "Assistance on basic phones without internet",
+    navPanchayat: "Gram Panchayat Register",
+    navPanchayatSub: "Ward-level stalled pension list",
     langModalTitle: "Select Language / अपनी भाषा चुनें",
     langModalSub: "In which language would you like to speak with Seva Kendra?",
+    langCloseBtn: "✕ Close",
     resetBtn: "Start Over ↺",
     listenBtn: "▶️ Listen to full details in voice",
     officeDestination: "Gram Panchayat Office (Panchayat Assistant)",
@@ -1259,7 +1374,9 @@ async function initSession() {
     if (data && data.sessionId) {
       currentSessionId = data.sessionId;
     }
-    setPrompt(data.promptText || t.welcomePrompt, data.promptHint || t.welcomeHint, data.audioUrl, data.audioBase64);
+    const promptText = (data && data.language === currentLanguage && data.promptText) ? data.promptText : t.welcomePrompt;
+    const promptHint = (data && data.language === currentLanguage && data.promptHint) ? data.promptHint : t.welcomeHint;
+    setPrompt(promptText, promptHint, data.audioUrl, data.audioBase64);
   } catch (err) {
     console.warn("Init fallback:", err);
     setPrompt(t.welcomePrompt, t.welcomeHint, null, null);
@@ -1564,6 +1681,7 @@ window.selectInitialLanguage = selectInitialLanguage;
 
 function applyLanguage(langCode) {
   const t = I18N_TRANSLATIONS[langCode] || I18N_TRANSLATIONS.hi;
+  currentLanguage = langCode;
   document.documentElement.lang = langCode === 'bn' ? 'bn' : (langCode === 'en' ? 'en' : 'hi');
 
   const langLabel = document.getElementById('ui-currentLangLabel');
@@ -1584,18 +1702,50 @@ function applyLanguage(langCode) {
   if (promptText) promptText.textContent = t.welcomePrompt;
   const promptHint = document.getElementById('assistant-prompt-hint');
   if (promptHint) promptHint.textContent = t.welcomeHint;
+
+  // Replay Prompt Audio Button
+  const replayBtn = document.getElementById('ui-replayBtn');
+  if (replayBtn) replayBtn.innerHTML = `<span>▶️</span> ${t.replayBtn || 'Listen Again'}`;
+
+  // Mic Centerpiece
+  const micBtn = document.getElementById('mic-btn');
+  if (micBtn) micBtn.setAttribute('aria-label', isRecording ? t.micLabelRecording : t.micLabelIdle);
   const micLabel = document.getElementById('mic-label');
   if (micLabel) micLabel.textContent = isRecording ? t.micLabelRecording : t.micLabelIdle;
   const micStatus = document.getElementById('mic-status-text');
   if (micStatus) micStatus.textContent = isRecording ? t.micStatusListening : t.micStatusIdle;
+
+  // Live Speech Box Captions
+  const liveStatus = document.getElementById('liveSpeechStatusText');
+  if (liveStatus && t.liveSpeechActive) liveStatus.textContent = t.liveSpeechActive;
+  const liveTranscript = document.getElementById('liveSpeechTranscript');
+  if (liveTranscript && (!userHasSpokenInTurn) && t.liveSpeechPlaceholder) {
+    liveTranscript.textContent = t.liveSpeechPlaceholder;
+  }
+
+  // Manual Input Row
   const manualInput = document.getElementById('manual-speech-input');
   if (manualInput) manualInput.placeholder = t.manualPlaceholder;
   const sendBtn = document.getElementById('ui-sendBtn');
   if (sendBtn) sendBtn.textContent = t.sendBtn;
+
+  // Conversational Guidance Chips (Example voice queries)
   const chipsLabel = document.getElementById('ui-chipsLabel');
   if (chipsLabel) chipsLabel.textContent = t.chipsLabel;
+  const chipsFlex = document.getElementById('ui-chipsFlex');
+  if (chipsFlex && t.chips) {
+    chipsFlex.innerHTML = t.chips.map(c => `
+      <button type="button" class="example-chip" ${c.style ? `style="${c.style}"` : ''} onclick="setQuickInput(${JSON.stringify(c.text)})">
+        ${c.display}
+      </button>
+    `).join('');
+  }
+
+  // Slots Section
   const slotsTitle = document.getElementById('ui-slotsTitle');
   if (slotsTitle) slotsTitle.textContent = t.slotsTitle;
+  const resetBtn = document.getElementById('ui-resetBtn');
+  if (resetBtn && t.resetBtn) resetBtn.textContent = t.resetBtn;
   const slotAge = document.getElementById('ui-slotAgeLabel');
   if (slotAge) slotAge.textContent = t.slotAgeLabel;
   const slotMar = document.getElementById('ui-slotMaritalLabel');
@@ -1606,8 +1756,14 @@ function applyLanguage(langCode) {
   if (slotInc) slotInc.textContent = t.slotIncomeLabel;
   const slotState = document.getElementById('ui-slotStateLabel');
   if (slotState) slotState.textContent = t.slotStateLabel;
+
+  // Results Card
   const resTitle = document.getElementById('ui-resultsTitle');
   if (resTitle) resTitle.textContent = t.resultsTitle;
+  const resBadge = document.getElementById('badge-count');
+  if (resBadge && t.resultsBadge) resBadge.textContent = t.resultsBadge;
+  const listenBtn = document.getElementById('ui-listenBtn');
+  if (listenBtn && t.listenBtn) listenBtn.innerHTML = `<span>▶️</span> ${t.listenBtn.replace(/^▶️\s*/, '')}`;
   const voiceExp = document.getElementById('ui-voiceExpTitle');
   if (voiceExp) voiceExp.textContent = t.voiceExpTitle;
   const triadSch = document.getElementById('ui-triadSchemesTitle');
@@ -1616,34 +1772,20 @@ function applyLanguage(langCode) {
   if (triadDoc) triadDoc.textContent = t.triadDocsTitle;
   const triadOff = document.getElementById('ui-triadOfficeTitle');
   if (triadOff) triadOff.textContent = t.triadOfficeTitle;
-  const smsTitle = document.getElementById('ui-smsSlipTitle');
-  if (smsTitle) smsTitle.textContent = t.smsSlipTitle;
-  const drawerHead = document.getElementById('ui-drawerHeading');
-  if (drawerHead) drawerHead.textContent = t.drawerHeading;
 
-  // 1. Dynamic Quick Guidance Chips (Translates all example voice queries)
-  const chipsFlex = document.getElementById('ui-chipsFlex');
-  if (chipsFlex && t.chips) {
-    chipsFlex.innerHTML = t.chips.map(c => `
-      <button type="button" class="example-chip" ${c.style ? `style="${c.style}"` : ''} onclick="setQuickInput(${JSON.stringify(c.text)})">
-        ${c.display}
-      </button>
-    `).join('');
-  }
-
-  // 2. Reset Button & Audio Listen Button
-  const resetBtn = document.getElementById('ui-resetBtn');
-  if (resetBtn && t.resetBtn) resetBtn.textContent = t.resetBtn;
-  const listenBtn = document.getElementById('ui-listenBtn');
-  if (listenBtn && t.listenBtn) listenBtn.innerHTML = `<span>▶️</span> ${t.listenBtn.replace(/^▶️\s*/, '')}`;
-
-  // 3. Office Destination & Instructions
+  // Office Destination & Instructions
   const offDest = document.getElementById('office-destination');
   if (offDest && t.officeDestination) offDest.textContent = t.officeDestination;
   const offInst = document.getElementById('ui-officeInstruction');
   if (offInst && t.officeInstruction) offInst.textContent = t.officeInstruction;
 
-  // 4. Safety Card & Clickable Helplines
+  // SMS Slip
+  const smsTitle = document.getElementById('ui-smsSlipTitle');
+  if (smsTitle) smsTitle.textContent = t.smsSlipTitle;
+  const slipTag = document.getElementById('ui-slipTag');
+  if (slipTag && t.slipTag) slipTag.textContent = t.slipTag;
+
+  // Safety Card & Clickable Helplines
   const safetyTitle = document.getElementById('ui-safetyTitle');
   if (safetyTitle && t.safetyTitle) safetyTitle.textContent = t.safetyTitle;
   const safeExit = document.getElementById('safe-exit-btn');
@@ -1657,11 +1799,59 @@ function applyLanguage(langCode) {
     `).join('');
   }
 
-  // 5. Payment Recovery Triage Title
-  const triageTitle = document.getElementById('ui-triageMainTitle');
-  if (triageTitle && t.triageMainTitle) triageTitle.textContent = t.triageMainTitle;
+  // Payment Recovery Triage Title & Drawer
+  const triageMainTitle = document.getElementById('ui-triageMainTitle');
+  if (triageMainTitle && t.triageMainTitle) triageMainTitle.textContent = t.triageMainTitle;
 
-  // 6. Footer Information
+  const drawerHead = document.getElementById('ui-drawerHeading');
+  if (drawerHead) drawerHead.textContent = t.drawerHeading;
+  const drawerTriageTitle = document.getElementById('ui-drawerTriageTitle');
+  if (drawerTriageTitle && t.drawerTriageTitle) drawerTriageTitle.textContent = t.drawerTriageTitle;
+  const drawerTriageDesc = document.getElementById('ui-drawerTriageDesc');
+  if (drawerTriageDesc && t.drawerTriageDesc) drawerTriageDesc.textContent = t.drawerTriageDesc;
+  const triageInput = document.getElementById('triageIdentifierInput');
+  if (triageInput && t.triagePlaceholder) triageInput.placeholder = t.triagePlaceholder;
+  const triageBtn = document.getElementById('ui-drawerTriageBtn');
+  if (triageBtn && t.triageBtn) triageBtn.textContent = t.triageBtn;
+  const triageAction = document.getElementById('ui-triageActionReq');
+  if (triageAction && t.triageActionReq) triageAction.textContent = t.triageActionReq;
+  const triageVoice = document.getElementById('ui-triageVoiceLabel');
+  if (triageVoice && t.triageVoiceLabel) triageVoice.textContent = t.triageVoiceLabel;
+  const triageToken = document.getElementById('ui-triageTokenLabel');
+  if (triageToken && t.triageTokenLabel) triageToken.textContent = t.triageTokenLabel;
+
+  const drawerSchemesTitle = document.getElementById('ui-drawerSchemesTitle');
+  if (drawerSchemesTitle && t.drawerSchemesTitle) drawerSchemesTitle.textContent = t.drawerSchemesTitle;
+  const drawerSchemesDesc = document.getElementById('ui-drawerSchemesDesc');
+  if (drawerSchemesDesc && t.drawerSchemesDesc) drawerSchemesDesc.textContent = t.drawerSchemesDesc;
+
+  // Drawer Nav Tabs
+  const navTriage = document.getElementById('ui-navTriage');
+  if (navTriage && t.navTriage) navTriage.textContent = t.navTriage;
+  const navTriageSub = document.getElementById('ui-navTriageSub');
+  if (navTriageSub && t.navTriageSub) navTriageSub.textContent = t.navTriageSub;
+  const navSchemes = document.getElementById('ui-navSchemes');
+  if (navSchemes && t.navSchemes) navSchemes.textContent = t.navSchemes;
+  const navSchemesSub = document.getElementById('ui-navSchemesSub');
+  if (navSchemesSub && t.navSchemesSub) navSchemesSub.textContent = t.navSchemesSub;
+  const navOffline = document.getElementById('ui-navOffline');
+  if (navOffline && t.navOffline) navOffline.textContent = t.navOffline;
+  const navOfflineSub = document.getElementById('ui-navOfflineSub');
+  if (navOfflineSub && t.navOfflineSub) navOfflineSub.textContent = t.navOfflineSub;
+  const navPanchayat = document.getElementById('ui-navPanchayat');
+  if (navPanchayat && t.navPanchayat) navPanchayat.textContent = t.navPanchayat;
+  const navPanchayatSub = document.getElementById('ui-navPanchayatSub');
+  if (navPanchayatSub && t.navPanchayatSub) navPanchayatSub.textContent = t.navPanchayatSub;
+
+  // Language Modal
+  const langModalTitle = document.getElementById('ui-langModalTitle');
+  if (langModalTitle && t.langModalTitle) langModalTitle.textContent = t.langModalTitle;
+  const langModalSub = document.getElementById('ui-langModalSub');
+  if (langModalSub && t.langModalSub) langModalSub.textContent = t.langModalSub;
+  const langCloseBtn = document.getElementById('ui-langCloseBtn');
+  if (langCloseBtn && t.langCloseBtn) langCloseBtn.textContent = t.langCloseBtn;
+
+  // Footer Information
   const footCopy = document.getElementById('ui-footerCopy');
   if (footCopy && t.footerCopy) footCopy.innerHTML = `<strong>${t.brandName}</strong> — ${t.footerCopy.split('—')[1] || t.footerCopy}`;
   const footSub = document.getElementById('ui-footerSub');
@@ -1751,11 +1941,12 @@ window.addEventListener('DOMContentLoaded', async () => {
   const storedLang = localStorage.getItem('sevakendra_lang');
   const sessionConfirmed = sessionStorage.getItem('sevakendra_lang_confirmed');
 
+  currentLanguage = storedLang || 'hi';
+  applyLanguage(currentLanguage);
+
   if (!sessionConfirmed) {
     openLanguageModal();
   } else {
-    currentLanguage = storedLang || 'hi';
-    applyLanguage(currentLanguage);
     await initSession();
   }
 });
