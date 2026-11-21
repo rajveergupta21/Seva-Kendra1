@@ -1031,24 +1031,11 @@ function renderEvaluationResults(screenData, audioUrl, audioBase64, spokenReply)
     smsEl.textContent = slip;
   }
 
-  card.scrollIntoView({ behavior: 'smooth' });
-}
-
-  // Render 3 Physical Documents
-  const docsList = document.getElementById('docs-list');
-  docsList.innerHTML = evaluation.primaryDocuments.map((doc, idx) => `
-    <li><strong>[ ] ${idx + 1}.</strong> ${doc}</li>
-  `).join('');
-
-  // Render Office Destination
-  document.getElementById('office-destination').textContent = evaluation.primaryOffice;
-
-  // Render SMS Action Slip
-  document.getElementById('sms-text-content').textContent = evaluation.smsChecklist;
-
   currentSpokenAudioUrl = audioUrl;
   currentSpokenAudioBase64 = audioBase64;
-  playAudio(audioUrl, audioBase64, evaluation.spokenScript);
+  if (audioUrl || audioBase64 || spokenReply) {
+    playAudio(audioUrl, audioBase64, spokenReply);
+  }
 
   card.scrollIntoView({ behavior: 'smooth' });
 }
@@ -1485,6 +1472,17 @@ function updateDebugOverlay(m) {
     p50El.className = m.e2e_first_audio_ms <= 1500 ? "target-pass" : "target-warn";
   }
 }
+
+// Explicit window exports for inline HTML onclick handlers
+window.openLanguageModal = openLanguageModal;
+window.closeLanguageModal = closeLanguageModal;
+window.selectInitialLanguage = selectInitialLanguage;
+window.toggleSlidingDrawer = toggleSlidingDrawer;
+window.toggleRecording = toggleRecording;
+window.replaySpokenAudio = replaySpokenAudio;
+window.sendSpokenText = sendSpokenText;
+window.setQuickInput = setQuickInput;
+window.triggerSafeExit = triggerSafeExit;
 
 // --------------------------------------------------------------------------
 // 13. DOM Initialization
