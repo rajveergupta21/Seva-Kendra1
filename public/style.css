@@ -1266,6 +1266,10 @@ body {
   transition: all 0.2s;
 }
 
+.lang-option-card * {
+  pointer-events: none;
+}
+
 .lang-option-card:hover {
   background-color: var(--green-soft);
   border-color: var(--green-primary);

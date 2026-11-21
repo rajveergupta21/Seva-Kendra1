@@ -1339,27 +1339,38 @@ function openLanguageModal() {
   const overlay = document.getElementById('langModalOverlay');
   if (overlay) overlay.style.display = 'flex';
 }
+window.openLanguageModal = openLanguageModal;
 
 function closeLanguageModal() {
   const overlay = document.getElementById('langModalOverlay');
   if (overlay) overlay.style.display = 'none';
 }
+window.closeLanguageModal = closeLanguageModal;
 
-async function selectInitialLanguage(langCode) {
-  await unlockAudioPlayback();
-  currentLanguage = langCode || 'hi';
-  localStorage.setItem('sevakendra_lang', currentLanguage);
-  sessionStorage.setItem('sevakendra_lang_confirmed', 'true');
+function selectInitialLanguage(langCode) {
+  const code = langCode || 'hi';
+  currentLanguage = code;
+  try {
+    localStorage.setItem('sevakendra_lang', code);
+    sessionStorage.setItem('sevakendra_lang_confirmed', 'true');
+  } catch (e) {}
 
-  applyLanguage(currentLanguage);
+  // 1. Immediately dismiss modal and apply UI language on click
   closeLanguageModal();
+  applyLanguage(code);
 
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type: 'init', sessionId: currentSessionId, language: currentLanguage }));
-  }
-
-  await initSession();
+  // 2. Non-blocking background initialization
+  setTimeout(() => {
+    try { unlockAudioPlayback(); } catch (e) {}
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      try {
+        ws.send(JSON.stringify({ type: 'init', sessionId: currentSessionId, language: code }));
+      } catch (e) {}
+    }
+    initSession().catch(err => console.warn("initSession error:", err));
+  }, 0);
 }
+window.selectInitialLanguage = selectInitialLanguage;
 
 function applyLanguage(langCode) {
   const t = I18N_TRANSLATIONS[langCode] || I18N_TRANSLATIONS.hi;

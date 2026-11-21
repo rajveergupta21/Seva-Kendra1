@@ -440,7 +440,7 @@
   <!-- =========================================================================
        7. FIRST-INTERACTION & ACCESSIBILITY LANGUAGE MODAL
        ========================================================================= -->
-  <div class="lang-modal-overlay" id="langModalOverlay">
+  <div class="lang-modal-overlay" id="langModalOverlay" onclick="if(event.target === this) closeLanguageModal()">
     <div class="lang-modal-card">
       <div class="lang-modal-header">
         <div class="lang-modal-icon">🌐</div>
@@ -449,31 +449,31 @@
       </div>
       
       <div class="lang-options-grid">
-        <button class="lang-option-card active" onclick="selectInitialLanguage('hi')">
+        <button type="button" class="lang-option-card active" onclick="selectInitialLanguage('hi')">
           <div class="lang-symbol">🇮🇳</div>
           <div class="lang-title">हिन्दी (Hindi)</div>
           <div class="lang-hint">बोलकर योजनाएं जानिए</div>
         </button>
 
-        <button class="lang-option-card" onclick="selectInitialLanguage('bhojpuri')">
+        <button type="button" class="lang-option-card" onclick="selectInitialLanguage('bhojpuri')">
           <div class="lang-symbol">🌾</div>
           <div class="lang-title">भोजपुरी (Bhojpuri)</div>
           <div class="lang-hint">हमार बोली, हमार योजना</div>
         </button>
 
-        <button class="lang-option-card" onclick="selectInitialLanguage('bn')">
+        <button type="button" class="lang-option-card" onclick="selectInitialLanguage('bn')">
           <div class="lang-symbol">🌿</div>
           <div class="lang-title">বাংলা (Bengali)</div>
           <div class="lang-hint">আপনার ভাষায় সুবিধা জানুন</div>
         </button>
 
-        <button class="lang-option-card" onclick="selectInitialLanguage('maithili')">
+        <button type="button" class="lang-option-card" onclick="selectInitialLanguage('maithili')">
           <div class="lang-symbol">🪷</div>
           <div class="lang-title">मैथिली (Maithili)</div>
           <div class="lang-hint">मातृभाषा में योजनाक जानकारी</div>
         </button>
 
-        <button class="lang-option-card" onclick="selectInitialLanguage('en')">
+        <button type="button" class="lang-option-card" onclick="selectInitialLanguage('en')">
           <div class="lang-symbol">🌐</div>
           <div class="lang-title">English</div>
           <div class="lang-hint">Public Welfare Services</div>
@@ -481,7 +481,7 @@
       </div>
 
       <div class="lang-modal-footer">
-        <button class="lang-close-btn" onclick="closeLanguageModal()">✕ बंद करें</button>
+        <button type="button" class="lang-close-btn" onclick="closeLanguageModal()">✕ बंद करें</button>
       </div>
     </div>
   </div>
