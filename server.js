@@ -16,6 +16,7 @@ import { processDynamicTurn } from './services/dynamic_assistant.js';
 import { ERROR_CODES, getErrorMessage } from './services/error_messages.js';
 import { recordTurnMetrics, updatePlaybackStart, getMetricsSummary } from './services/metrics.js';
 import { GREETINGS, CACHE_DIR, MEMORY_AUDIO_CACHE, getOrSynthesizeCachedAudio, prewarmTtsCache, generateEarconWav } from './services/tts_cache.js';
+import schemesData from './schemes_data.json' with { type: 'json' };
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -106,6 +107,18 @@ function sendJson(res, statusCode, data) {
 }
 
 function parseJsonBody(req, limitBytes = 2 * 1024 * 1024) {
+  // If running in serverless environment (e.g., Vercel) where req.body is pre-parsed
+  if (req.body !== undefined && req.body !== null) {
+    if (typeof req.body === 'object') return Promise.resolve(req.body);
+    if (typeof req.body === 'string' && req.body.trim()) {
+      try {
+        return Promise.resolve(JSON.parse(req.body));
+      } catch (e) {
+        return Promise.resolve({});
+      }
+    }
+  }
+
   return new Promise((resolve, reject) => {
     let body = '';
     let bytes = 0;
@@ -129,6 +142,14 @@ function parseJsonBody(req, limitBytes = 2 * 1024 * 1024) {
 }
 
 function parseRawBody(req, limitBytes = 2 * 1024 * 1024) { // 2MB upload cap
+  // If running in serverless environment where req.body is already a Buffer or string
+  if (req.body && Buffer.isBuffer(req.body)) {
+    return Promise.resolve(req.body);
+  }
+  if (req.body && typeof req.body === 'string') {
+    return Promise.resolve(Buffer.from(req.body, 'base64'));
+  }
+
   return new Promise((resolve, reject) => {
     const chunks = [];
     let bytes = 0;
@@ -270,8 +291,7 @@ const server = http.createServer(async (req, res) => {
 
     // 1. API: List all verified schemes
     if (pathname === '/api/schemes' && req.method === 'GET') {
-      const schemesRaw = fs.readFileSync(path.join(__dirname, 'schemes_data.json'), 'utf8');
-      return sendJson(res, 200, JSON.parse(schemesRaw));
+      return sendJson(res, 200, schemesData);
     }
 
     // 2. API: Initial Language Greeting (Zero-latency cached)

@@ -8,19 +8,12 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import schemesData from '../schemes_data.json' with { type: 'json' };
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const schemesPath = path.join(__dirname, '..', 'schemes_data.json');
-let SCHEMES_CACHE = [];
-
-try {
-  const raw = fs.readFileSync(schemesPath, 'utf8');
-  SCHEMES_CACHE = JSON.parse(raw);
-} catch (e) {
-  console.error("Failed to load schemes_data.json", e);
-}
+let SCHEMES_CACHE = schemesData || [];
 
 // Known West Bengal districts mapping
 const WB_DISTRICTS = [

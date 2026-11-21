@@ -207,7 +207,7 @@ async function callSarvamChat({ apiKey, systemPrompt, messages, jsonMode, temper
  */
 export async function callLlm({ systemPrompt = "", messages = [], jsonMode = false, temperature = 0.2 }) {
   const provider = (process.env.LLM_PROVIDER || "gemini").toLowerCase().trim();
-  const apiKey = process.env.LLM_API_KEY || (provider === "sarvam" ? process.env.SARVAM_API_KEY : null);
+  const apiKey = process.env.LLM_API_KEY || process.env.GEMINI_API_KEY || (provider === "sarvam" ? process.env.SARVAM_API_KEY : null);
   const model = process.env.LLM_MODEL || "gemini-2.5-flash";
 
   if (!apiKey) {
