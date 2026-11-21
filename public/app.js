@@ -1,163 +1,287 @@
 /**
- * JanSeva Kendra (सेवा केंद्र) - Universal Client Application
- * Modeled on UMANG (web.umang.gov.in) & Ministry of Agriculture (agriwelfare.gov.in)
- * Zero-Literacy Voice Controller, Real-time Speech-to-Text & Sarvam AI Integration
+ * Seva Kendra (सेवा केंद्र) - Master Client Application
+ * Hardware-Friendly, Multilingual (Hi, Bhojpuri, Bn, Maithili, En), Single-Audio Controlled,
+ * 16kHz PCM WAV Audio Capture + Sarvam AI Engine
  */
 
 const API_BASE = window.location.origin;
 let currentSessionId = `session_${Date.now()}`;
-let mediaRecorder = null;
-let audioChunks = [];
-let isRecording = false;
+let currentLanguage = 'hi';
+
+// Audio Management: Single instance to prevent multiple voices playing simultaneously
+let currentAudioInstance = null;
 let currentPromptAudioBase64 = null;
 let currentSpokenAudioBase64 = null;
 let currentTriageAudioBase64 = null;
 let currentTriageScriptText = "";
-let currentStepIndex = 0;
-let currentCategoryFilter = 'all';
-let allLoadedSchemes = [];
-let currentFontSizeLevel = 0;
 
-// Language & Speech State
-let currentLanguage = 'hi';
+// Web Audio PCM Capture State
+let audioCtx = null;
+let rawMicStream = null;
+let mediaStreamSource = null;
+let scriptProcessorNode = null;
+let pcmBuffers = [];
+let isAudioCapturing = false;
+let isRecording = false;
+
+// Speech Recognition (Visual Feedback) State
 let speechRecognitionInstance = null;
 let isSpeechRecognizing = false;
 let latestInterimTranscript = "";
 
-// Dialect greetings for welcome audio
-const LANGUAGE_CONFIG = {
+// Verified Schemes Cache
+let allLoadedSchemes = [];
+
+// --------------------------------------------------------------------------
+// 1. Comprehensive Multilingual UI Dictionary (i18n)
+// --------------------------------------------------------------------------
+const I18N_TRANSLATIONS = {
   hi: {
-    name: "हिन्दी",
+    langName: "हिन्दी",
     sttCode: "hi-IN",
-    welcomeText: "नमस्ते, जनसेवा केंद्र में आपका स्वागत है। बताइए, आपकी उम्र कितनी है, और क्या आप शादीशुदा हैं, विधवा हैं, या अकेली हैं?",
-    hintText: '💡 बोलें: "हम 48 साल के हैं, हमारे पति नहीं रहे"',
-    statusListening: "🎙️ सुन रहे हैं... कृपया बोलिए",
-    statusProcessing: "जांच की जा रही है..."
+    brandName: "सेवा केंद्र (Seva Kendra)",
+    brandTagline: "ग्रामीण नागरिक कल्याण एवं योजना सहायता",
+    menuBtnText: "अन्य सेवाएं",
+    heroTitle: "बोलकर जानिए अपने हक की सरकारी योजनाएं",
+    heroSubtitle: "बिना किसी फॉर्म या दलाल के — सिर्फ अपनी मातृभाषा में बोलें और तुरंत लाभ व ज़रूरी कागज़ जानें।",
+    assistantTag: "सेवा केंद्र वाणी सहायक:",
+    welcomePrompt: "नमस्ते, सेवा केंद्र में आपका स्वागत है। बताइए, आपकी उम्र कितनी है, और क्या आप शादीशुदा हैं, विधवा हैं, या अकेली हैं?",
+    welcomeHint: '💡 बोलें: "हम 48 साल के हैं, हमारे पति नहीं रहे और कोई जमीन नहीं है"',
+    micLabelIdle: "बोलने के लिए दबाएं",
+    micLabelRecording: "रोकने के लिए दबाएं",
+    micStatusIdle: "बटन दबाकर अपनी मातृभाषा में बोलें",
+    micStatusListening: "🎙️ सुन रहे हैं... कृपया बोलिए",
+    micStatusProcessing: "जांच की जा रही है...",
+    manualPlaceholder: "या यहाँ बोलकर/लिखकर बताएं...",
+    sendBtn: "जवाब भेजें ➔",
+    chipsLabel: "⚡ त्वरित उदाहरण बोलें:",
+    slotsTitle: "📋 आपकी सत्यापित जानकारी (Verified Profile):",
+    slotAgeLabel: "उम्र:",
+    slotMaritalLabel: "वैवाहिक स्थिति:",
+    slotLandLabel: "खेती की ज़मीन:",
+    slotIncomeLabel: "सालाना कमाई:",
+    slotStateLabel: "राज्य/जिला:",
+    resultsTitle: "🎉 आपके लिए स्वीकृत सरकारी योजनाएं",
+    voiceExpTitle: "🔊 वाणी समाधान (Spoken Solution):",
+    triadSchemesTitle: "💰 1. मिलने वाली योजनाएं",
+    triadDocsTitle: "📂 2. सिर्फ ये 3 कागज़ ले जाएं",
+    triadOfficeTitle: "📍 3. यहाँ जाकर जमा करें",
+    smsSlipTitle: "📱 आपके मोबाइल पर भेजा गया SMS (पंचायत ऑपरेटर को दिखाएं)",
+    drawerHeading: "अतिरिक्त सेवाएं व टूल्स",
+    langModalTitle: "अपनी भाषा चुनें / Select Language",
+    langModalSub: "आप सेवा केंद्र से किस भाषा में बात करना चाहते हैं?"
   },
   bhojpuri: {
-    name: "भोजपुरी",
+    langName: "भोजपुरी",
     sttCode: "hi-IN",
-    welcomeText: "प्रणाम, जनसेवा केंद्र में राउर स्वागत बा। बताईं, राउर उमिर केतना बा, आ रउआ शादीशुदा बानी, विधवा बानी, या अकेले बानी?",
-    hintText: '💡 बोलीं: "हम 48 साल के बानी, हमार पति नइखन"',
-    statusListening: "🎙️ सुनत बानी... बोलीं",
-    statusProcessing: "जांच हो रहल बा..."
+    brandName: "सेवा केंद्र (Seva Kendra)",
+    brandTagline: "गाँव-जवार कल्याण आ योजना सहायता केंद्र",
+    menuBtnText: "अउरी सेवा",
+    heroTitle: "बोल के जानीं अपना हक के सरकारी योजना",
+    heroSubtitle: "बिना कवनो फॉर्म या दलाल के — अपना बोली में बताईं आ तुरंत लाभ आ कागजात जानीं।",
+    assistantTag: "सेवा केंद्र वाणी सहायक:",
+    welcomePrompt: "प्रणाम, सेवा केंद्र में राउर स्वागत बा। बताईं, राउर उमिर केतना बा, आ रउआ शादीशुदा बानी, विधवा बानी, या अकेले बानी?",
+    welcomeHint: '💡 बोलीं: "हम 48 साल के बानी, हमार पति नइखन, जमीन नइखे"',
+    micLabelIdle: "बोले खातिर दबाईं",
+    micLabelRecording: "रोके खातिर दबाईं",
+    micStatusIdle: "बटन दबाके अपना बोली में बोलीं",
+    micStatusListening: "🎙️ सुनत बानी... बोलीं",
+    micStatusProcessing: "जांच हो रहल बा...",
+    manualPlaceholder: "या इहाँ बोल के/लिख के बताईं...",
+    sendBtn: "भेजीं ➔",
+    chipsLabel: "⚡ तुरंत बोले वाला उदाहरण:",
+    slotsTitle: "📋 राउर जाँचल जानकारी (Verified Profile):",
+    slotAgeLabel: "उमिर:",
+    slotMaritalLabel: "वैवाहिक स्थिति:",
+    slotLandLabel: "खेती के ज़मीन:",
+    slotIncomeLabel: "सालाना कमाई:",
+    slotStateLabel: "राज्य/जिला:",
+    resultsTitle: "🎉 राउर मंजूर भइल सरकारी योजना",
+    voiceExpTitle: "🔊 वाणी समाधान (Spoken Solution):",
+    triadSchemesTitle: "💰 1. मिले वाला योजना",
+    triadDocsTitle: "📂 2. बस ई 3 गो कागजात ले जाईं",
+    triadOfficeTitle: "📍 3. इहाँ जाके जमा करीं",
+    smsSlipTitle: "📱 राउर मोबाइल पर भेजल SMS (पंचायत में देखाईं)",
+    drawerHeading: "अउरी सेवा आ टूल्स",
+    langModalTitle: "भाषा चुनीं / Select Language",
+    langModalSub: "रउआ सेवा केंद्र से कवन भाषा में बात करल चाहत बानी?"
   },
   bn: {
-    name: "বাংলা",
+    langName: "বাংলা",
     sttCode: "bn-IN",
-    welcomeText: "নমস্কার, জনসেবা কেন্দ্রে আপনাকে স্বাগত। বলুন, আপনার বয়স কত এবং আপনি বিবাহিত, বিধবা না একা থাকেন?",
-    hintText: '💡 বলুন: "আমার বয়স ৪৮ বছর, স্বামী নেই"',
-    statusListening: "🎙️ শুনছি... বলুন",
-    statusProcessing: "যাচাই করা হচ্ছে..."
+    brandName: "সেবা কেন্দ্র (Seva Kendra)",
+    brandTagline: "গ্রামীণ নাগরিক কল্যাণ ও সরকারি প্রকল্প সহায়তা কেন্দ্র",
+    menuBtnText: "অন্যান্য পরিষেবা",
+    heroTitle: "মুখে বলে জানুন আপনার প্রাপ্য সরকারি প্রকল্প",
+    heroSubtitle: "কোনো ফর্ম বা দালাল ছাড়াই — নিজের ভাষায় বলুন এবং সাথে সাথে সুবিধা ও প্রয়োজনীয় নথি জানুন।",
+    assistantTag: "সেবা কেন্দ্র কন্ঠ সহকারী:",
+    welcomePrompt: "নমস্কার, সেবা কেন্দ্রে আপনাকে স্বাগত। বলুন, আপনার বয়স কত এবং আপনি বিবাহিত, বিধবা না একা থাকেন?",
+    welcomeHint: '💡 বলুন: "আমার বয়স ৪৮ বছর, স্বামী নেই, জমি নেই"',
+    micLabelIdle: "বলার জন্য চাপুন",
+    micLabelRecording: "থামানোর জন্য চাপুন",
+    micStatusIdle: "বোতাম চেপে নিজের ভাষায় বলুন",
+    micStatusListening: "🎙️ শুনছি... বলুন",
+    micStatusProcessing: "যাচাই করা হচ্ছে...",
+    manualPlaceholder: "অথবা এখানে লিখে/বলে জানান...",
+    sendBtn: "পাঠান ➔",
+    chipsLabel: "⚡ এক ক্লিকে বলার উদাহরণ:",
+    slotsTitle: "📋 আপনার যাচাইকৃত তথ্য (Verified Profile):",
+    slotAgeLabel: "বয়স:",
+    slotMaritalLabel: "বৈবাহিক অবস্থা:",
+    slotLandLabel: "চাষের জমি:",
+    slotIncomeLabel: "বার্ষিক আয়:",
+    slotStateLabel: "রাজ্য/জেলা:",
+    resultsTitle: "🎉 আপনার জন্য অনুমোদিত সরকারি প্রকল্পসমূহ",
+    voiceExpTitle: "🔊 সমাধান (Spoken Solution):",
+    triadSchemesTitle: "💰 ১. প্রাপ্যতা প্রকল্পসমূহ",
+    triadDocsTitle: "📂 ২. শুধুমাত্র এই ৩টি নথি সাথে নিন",
+    triadOfficeTitle: "📍 ৩. এখানে গিয়ে জমা দিন",
+    smsSlipTitle: "📱 আপনার মোবাইলে পাঠানো SMS (পঞ্চায়েতে দেখান)",
+    drawerHeading: "অতিরিক্ত পরিষেবা ও টুলস",
+    langModalTitle: "ভাষা নির্বাচন করুন / Select Language",
+    langModalSub: "আপনি সেবা কেন্দ্রের সাথে কোন ভাষায় কথা বলতে চান?"
   },
   maithili: {
-    name: "मैथिली",
+    langName: "मैथिली",
     sttCode: "hi-IN",
-    welcomeText: "प्रणाम, जनसेवा केंद्र में अहाँक स्वागत अछि। कहू, अहाँक उमर कते अछि, आ अहाँ विवाहित छी, विधवा छी, या अकेली छी?",
-    hintText: '💡 कहू: "हमर उमर 48 साल अछि, पति नहि छथि"',
-    statusListening: "🎙️ सुनैत छी... कहू",
-    statusProcessing: "जांच भ रहल अछि..."
+    brandName: "सेवा केंद्र (Seva Kendra)",
+    brandTagline: "ग्रामीण नागरिक कल्याण आ योजना सहायता केंद्र",
+    menuBtnText: "अन्य सेवा",
+    heroTitle: "बाज के जानू अपन हकक सरकारी योजना",
+    heroSubtitle: "बिना कोनो फॉर्म या दलालक — अपन मातृभाषा में कहू आ तुरंत लाभ आ कागजात जानू।",
+    assistantTag: "सेवा केंद्र वाणी सहायक:",
+    welcomePrompt: "प्रणाम, सेवा केंद्र में अहाँक स्वागत अछि। कहू, अहाँक उमर कते अछि, आ अहाँ विवाहित छी, विधवा छी, या अकेली छी?",
+    welcomeHint: '💡 कहू: "हमर उमर 48 साल अछि, पति नहि छथि, जमीन नहि अछि"',
+    micLabelIdle: "बाजए लेल दबाउ",
+    micLabelRecording: "रोकए लेल दबाउ",
+    micStatusIdle: "बटन दबा क अपन मातृभाषा में कहू",
+    micStatusListening: "🎙️ सुनैत छी... कहू",
+    micStatusProcessing: "जांच भ रहल अछि...",
+    manualPlaceholder: "या एतय बाज के/लिख क पठाउ...",
+    sendBtn: "पठाउ ➔",
+    chipsLabel: "⚡ त्वरित उदाहरण कहू:",
+    slotsTitle: "📋 अहाँक सत्यापित जानकारी (Verified Profile):",
+    slotAgeLabel: "उमर:",
+    slotMaritalLabel: "वैवाहिक स्थिति:",
+    slotLandLabel: "खेतीक ज़मीन:",
+    slotIncomeLabel: "सालाना कमाई:",
+    slotStateLabel: "राज्य/जिला:",
+    resultsTitle: "🎉 अहाँक लेल स्वीकृत सरकारी योजना",
+    voiceExpTitle: "🔊 वाणी समाधान (Spoken Solution):",
+    triadSchemesTitle: "💰 1. भेटय बला योजना",
+    triadDocsTitle: "📂 2. मात्र ई 3 टा कागजात ल जाउ",
+    triadOfficeTitle: "📍 3. एतय जा क जमा करू",
+    smsSlipTitle: "📱 अहाँक मोबाइल पर पठाओल गेल SMS",
+    drawerHeading: "अन्य सेवा आ टूल्स",
+    langModalTitle: "भाषा चुनू / Select Language",
+    langModalSub: "अहाँ सेवा केंद्र सँ कोन भाषा में बात करब?"
   },
   en: {
-    name: "English",
+    langName: "English",
     sttCode: "en-IN",
-    welcomeText: "Welcome to JanSeva Kendra. To begin, please tell me your age, and whether you are married, widowed, or single?",
-    hintText: '💡 Say: "I am 48 years old and a widow"',
-    statusListening: "🎙️ Listening... please speak",
-    statusProcessing: "Processing your request..."
-  }
-};
-
-// Preset profiles for instant judge evaluation
-const PRESETS = {
-  kamla: {
-    name: "कमला देवी (उत्तर प्रदेश)",
-    age: 49,
-    gender: "female",
-    marital_status: "widow",
-    landholding_acres: 0.0,
-    annual_income_inr: 45000,
-    is_tax_payer: false,
-    pregnant_or_lactating: false,
-    has_minor_daughter: false,
-    kutcha_house_or_homeless: true,
-    is_informal_worker_or_vendor: false,
-    state: "Uttar Pradesh",
-    district: "Chandauli"
-  },
-  ramesh: {
-    name: "रमेश कुमार (बिहार)",
-    age: 42,
-    gender: "male",
-    marital_status: "married",
-    landholding_acres: 2.5,
-    annual_income_inr: 75000,
-    is_tax_payer: false,
-    pregnant_or_lactating: false,
-    has_minor_daughter: false,
-    kutcha_house_or_homeless: false,
-    is_informal_worker_or_vendor: false,
-    state: "Bihar",
-    district: "Samastipur"
-  },
-  sunita: {
-    name: "सुनीता देवी (मध्य प्रदेश)",
-    age: 23,
-    gender: "female",
-    marital_status: "married",
-    landholding_acres: 0.0,
-    annual_income_inr: 35000,
-    is_tax_payer: false,
-    pregnant_or_lactating: true,
-    has_minor_daughter: true,
-    kutcha_house_or_homeless: true,
-    is_informal_worker_or_vendor: false,
-    state: "Madhya Pradesh",
-    district: "Rewa"
-  },
-  elderly: {
-    name: "मुन्ना लाल (उत्तर प्रदेश)",
-    age: 63,
-    gender: "male",
-    marital_status: "married",
-    landholding_acres: 0.0,
-    annual_income_inr: 30000,
-    is_tax_payer: false,
-    pregnant_or_lactating: false,
-    has_minor_daughter: false,
-    kutcha_house_or_homeless: true,
-    is_informal_worker_or_vendor: true,
-    state: "Uttar Pradesh",
-    district: "Varanasi"
+    brandName: "Seva Kendra",
+    brandTagline: "Rural Public Welfare & Direct Scheme Access Centre",
+    menuBtnText: "More Services",
+    heroTitle: "Discover Your Eligible Government Schemes by Voice",
+    heroSubtitle: "Zero forms, zero brokers — just speak in your native dialect to find your entitlements and required documents.",
+    assistantTag: "Seva Kendra Voice Assistant:",
+    welcomePrompt: "Welcome to Seva Kendra. To begin, please tell me your age, and whether you are married, widowed, or single?",
+    welcomeHint: '💡 Say: "I am 48 years old, a widow, and landless"',
+    micLabelIdle: "Tap to Speak",
+    micLabelRecording: "Tap to Stop",
+    micStatusIdle: "Press button and speak in your language",
+    micStatusListening: "🎙️ Listening... please speak",
+    micStatusProcessing: "Processing your details...",
+    manualPlaceholder: "Or type/speak your query here...",
+    sendBtn: "Submit ➔",
+    chipsLabel: "⚡ Quick Speech Examples:",
+    slotsTitle: "📋 Verified Profile Information:",
+    slotAgeLabel: "Age:",
+    slotMaritalLabel: "Marital Status:",
+    slotLandLabel: "Agricultural Land:",
+    slotIncomeLabel: "Annual Income:",
+    slotStateLabel: "State/District:",
+    resultsTitle: "🎉 Qualified Government Schemes",
+    voiceExpTitle: "🔊 Spoken Solution:",
+    triadSchemesTitle: "💰 1. Qualified Schemes",
+    triadDocsTitle: "📂 2. Bring Only These 3 Documents",
+    triadOfficeTitle: "📍 3. Submit At This Local Office",
+    smsSlipTitle: "📱 SMS Action Checklist (Show to Panchayat Operator)",
+    drawerHeading: "Additional Services & Tools",
+    langModalTitle: "Select Language / अपनी भाषा चुनें",
+    langModalSub: "In which language would you like to speak with Seva Kendra?"
   }
 };
 
 // --------------------------------------------------------------------------
-// Application Initialization
+// 2. Audio Management (Zero Overlapping Voices)
+// --------------------------------------------------------------------------
+function stopAllAudio() {
+  if (currentAudioInstance) {
+    try {
+      currentAudioInstance.pause();
+      currentAudioInstance.currentTime = 0;
+    } catch (e) {}
+    currentAudioInstance = null;
+  }
+  if ('speechSynthesis' in window) {
+    try {
+      window.speechSynthesis.cancel();
+    } catch (e) {}
+  }
+}
+
+function playSpokenAudio(base64Audio, fallbackText = "") {
+  stopAllAudio();
+
+  if (base64Audio && base64Audio.length > 100) {
+    try {
+      currentAudioInstance = new Audio("data:audio/wav;base64," + base64Audio);
+      currentAudioInstance.play().catch(err => {
+        console.warn("Audio autoplay blocked by browser policy, fallback to TTS:", err);
+        if (fallbackText) speakBrowserTTS(fallbackText);
+      });
+    } catch (e) {
+      console.warn("Audio instance error:", e);
+      if (fallbackText) speakBrowserTTS(fallbackText);
+    }
+  } else if (fallbackText) {
+    speakBrowserTTS(fallbackText);
+  }
+}
+
+function speakBrowserTTS(text) {
+  if (!('speechSynthesis' in window)) return;
+  stopAllAudio();
+  const utter = new SpeechSynthesisUtterance(text);
+  const cfg = I18N_TRANSLATIONS[currentLanguage] || I18N_TRANSLATIONS.hi;
+  utter.lang = cfg.sttCode;
+  utter.rate = 0.92;
+  window.speechSynthesis.speak(utter);
+}
+
+// --------------------------------------------------------------------------
+// 3. Application Initialization & Language Handling
 // --------------------------------------------------------------------------
 window.addEventListener('DOMContentLoaded', async () => {
   initSpeechRecognition();
   await loadSchemesCatalog();
   await loadPanchayatGrievances();
 
-  // Check if language was selected this session
-  const storedLang = localStorage.getItem('janseva_lang');
-  const sessionConfirmed = sessionStorage.getItem('janseva_lang_confirmed');
+  const storedLang = localStorage.getItem('sevakendra_lang');
+  const sessionConfirmed = sessionStorage.getItem('sevakendra_lang_confirmed');
 
   if (!sessionConfirmed) {
     openLanguageModal();
   } else {
     currentLanguage = storedLang || 'hi';
-    const selector = document.getElementById('globalLangSelector');
-    if (selector) selector.value = currentLanguage;
+    applyLanguage(currentLanguage);
     await initSession();
   }
 });
 
-// --------------------------------------------------------------------------
-// Language Selection Modal (First-Interaction Step)
-// --------------------------------------------------------------------------
 function openLanguageModal() {
+  stopAllAudio();
   const overlay = document.getElementById('langModalOverlay');
   if (overlay) overlay.style.display = 'flex';
 }
@@ -169,72 +293,143 @@ function closeLanguageModal() {
 
 async function selectInitialLanguage(langCode) {
   currentLanguage = langCode || 'hi';
-  localStorage.setItem('janseva_lang', currentLanguage);
-  sessionStorage.setItem('janseva_lang_confirmed', 'true');
+  localStorage.setItem('sevakendra_lang', currentLanguage);
+  sessionStorage.setItem('sevakendra_lang_confirmed', 'true');
 
-  const selector = document.getElementById('globalLangSelector');
-  if (selector) selector.value = currentLanguage;
-
+  applyLanguage(currentLanguage);
   closeLanguageModal();
 
-  // Re-initialize session with chosen language
+  // Reset conversation session with the new language and speak greeting
   await initSession();
 }
 
-// --------------------------------------------------------------------------
-// Navigation & Tab Switching
-// --------------------------------------------------------------------------
-function switchMainTab(tabId) {
-  document.querySelectorAll('.module-panel').forEach(panel => panel.classList.remove('active'));
-  document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+function applyLanguage(langCode) {
+  const t = I18N_TRANSLATIONS[langCode] || I18N_TRANSLATIONS.hi;
+  document.documentElement.lang = langCode === 'bn' ? 'bn' : (langCode === 'en' ? 'en' : 'hi');
 
-  const targetPanel = document.getElementById(tabId);
-  if (targetPanel) {
-    targetPanel.classList.add('active');
-  }
+  // Update Language Badge in Header
+  const langLabel = document.getElementById('ui-currentLangLabel');
+  if (langLabel) langLabel.textContent = t.langName;
 
-  document.querySelectorAll('.nav-link').forEach(link => {
-    if (link.getAttribute('onclick')?.includes(tabId)) {
-      link.classList.add('active');
+  // Update Brand and Header Texts
+  const brandName = document.getElementById('ui-brandName');
+  if (brandName) brandName.textContent = t.brandName;
+  const brandTagline = document.getElementById('ui-brandTagline');
+  if (brandTagline) brandTagline.textContent = t.brandTagline;
+  const menuBtnText = document.getElementById('ui-menuBtnText');
+  if (menuBtnText) menuBtnText.textContent = t.menuBtnText;
+
+  // Update Hero Section
+  const heroTitle = document.getElementById('ui-heroTitle');
+  if (heroTitle) heroTitle.textContent = t.heroTitle;
+  const heroSubtitle = document.getElementById('ui-heroSubtitle');
+  if (heroSubtitle) heroSubtitle.textContent = t.heroSubtitle;
+
+  // Update Assistant Prompt Area
+  const assistantTag = document.getElementById('ui-assistantTag');
+  if (assistantTag) assistantTag.textContent = t.assistantTag;
+  const promptText = document.getElementById('assistant-prompt-text');
+  if (promptText) promptText.textContent = t.welcomePrompt;
+  const promptHint = document.getElementById('assistant-prompt-hint');
+  if (promptHint) promptHint.textContent = t.welcomeHint;
+
+  // Update Mic and Inputs
+  const micLabel = document.getElementById('mic-label');
+  if (micLabel) micLabel.textContent = isRecording ? t.micLabelRecording : t.micLabelIdle;
+  const micStatus = document.getElementById('mic-status-text');
+  if (micStatus) micStatus.textContent = isRecording ? t.micStatusListening : t.micStatusIdle;
+  const manualInput = document.getElementById('manual-speech-input');
+  if (manualInput) manualInput.placeholder = t.manualPlaceholder;
+  const sendBtn = document.getElementById('ui-sendBtn');
+  if (sendBtn) sendBtn.textContent = t.sendBtn;
+  const chipsLabel = document.getElementById('ui-chipsLabel');
+  if (chipsLabel) chipsLabel.textContent = t.chipsLabel;
+
+  // Update Verified Slots
+  const slotsTitle = document.getElementById('ui-slotsTitle');
+  if (slotsTitle) slotsTitle.textContent = t.slotsTitle;
+  const slotAge = document.getElementById('ui-slotAgeLabel');
+  if (slotAge) slotAge.textContent = t.slotAgeLabel;
+  const slotMar = document.getElementById('ui-slotMaritalLabel');
+  if (slotMar) slotMar.textContent = t.slotMaritalLabel;
+  const slotLand = document.getElementById('ui-slotLandLabel');
+  if (slotLand) slotLand.textContent = t.slotLandLabel;
+  const slotInc = document.getElementById('ui-slotIncomeLabel');
+  if (slotInc) slotInc.textContent = t.slotIncomeLabel;
+  const slotState = document.getElementById('ui-slotStateLabel');
+  if (slotState) slotState.textContent = t.slotStateLabel;
+
+  // Update Results Card
+  const resTitle = document.getElementById('ui-resultsTitle');
+  if (resTitle) resTitle.textContent = t.resultsTitle;
+  const voiceExp = document.getElementById('ui-voiceExpTitle');
+  if (voiceExp) voiceExp.textContent = t.voiceExpTitle;
+  const triadSch = document.getElementById('ui-triadSchemesTitle');
+  if (triadSch) triadSch.textContent = t.triadSchemesTitle;
+  const triadDoc = document.getElementById('ui-triadDocsTitle');
+  if (triadDoc) triadDoc.textContent = t.triadDocsTitle;
+  const triadOff = document.getElementById('ui-triadOfficeTitle');
+  if (triadOff) triadOff.textContent = t.triadOfficeTitle;
+  const smsTitle = document.getElementById('ui-smsSlipTitle');
+  if (smsTitle) smsTitle.textContent = t.smsSlipTitle;
+
+  // Update Drawer
+  const drawerHead = document.getElementById('ui-drawerHeading');
+  if (drawerHead) drawerHead.textContent = t.drawerHeading;
+
+  // Update Active Card in Language Modal
+  document.querySelectorAll('.lang-option-card').forEach(btn => {
+    btn.classList.remove('active');
+    if (btn.getAttribute('onclick')?.includes(langCode)) {
+      btn.classList.add('active');
     }
   });
+}
 
-  const mainWrapper = document.querySelector('.main-wrapper');
-  if (mainWrapper) {
-    window.scrollTo({ top: mainWrapper.offsetTop - 60, behavior: 'smooth' });
+// --------------------------------------------------------------------------
+// 4. Sliding Menu Drawer Controls
+// --------------------------------------------------------------------------
+function toggleSlidingDrawer() {
+  const drawer = document.getElementById('slidingDrawer');
+  const backdrop = document.getElementById('drawerBackdrop');
+  if (drawer.classList.contains('active')) {
+    closeSlidingDrawer();
+  } else {
+    openSlidingDrawer();
   }
 }
 
-// --------------------------------------------------------------------------
-// Accessibility Helpers
-// --------------------------------------------------------------------------
-function adjustFontSize(delta) {
-  if (delta === 0) currentFontSizeLevel = 0;
-  else currentFontSizeLevel += delta;
-
-  if (currentFontSizeLevel > 2) currentFontSizeLevel = 2;
-  if (currentFontSizeLevel < -1) currentFontSizeLevel = -1;
-
-  document.body.style.fontSize = `${15 + currentFontSizeLevel * 1.5}px`;
+function openSlidingDrawer() {
+  const drawer = document.getElementById('slidingDrawer');
+  const backdrop = document.getElementById('drawerBackdrop');
+  if (drawer) drawer.classList.add('active');
+  if (backdrop) backdrop.classList.add('active');
 }
 
-function toggleHighContrast() {
-  document.body.classList.toggle('high-contrast-mode');
-  document.body.style.filter = document.body.classList.contains('high-contrast-mode')
-    ? "contrast(1.3) saturate(1.1)"
-    : "none";
+function closeSlidingDrawer() {
+  const drawer = document.getElementById('slidingDrawer');
+  const backdrop = document.getElementById('drawerBackdrop');
+  if (drawer) drawer.classList.remove('active');
+  if (backdrop) backdrop.classList.remove('active');
+}
+
+function switchDrawerModule(moduleId) {
+  document.querySelectorAll('.drawer-module').forEach(m => m.classList.remove('active'));
+  document.querySelectorAll('.drawer-item-btn').forEach(b => b.classList.remove('active'));
+
+  const targetModule = document.getElementById(moduleId);
+  if (targetModule) targetModule.classList.add('active');
+
+  document.querySelectorAll('.drawer-item-btn').forEach(btn => {
+    if (btn.getAttribute('onclick')?.includes(moduleId)) {
+      btn.classList.add('active');
+    }
+  });
 }
 
 // --------------------------------------------------------------------------
-// Web Audio PCM Capture & 16kHz WAV Encoding (Zero-Hallucination Audio Engine)
+// 5. Web Audio PCM Capture & 16kHz WAV Encoding (Zero-Hallucination Audio)
 // --------------------------------------------------------------------------
-let audioCtx = null;
-let mediaStreamSource = null;
-let scriptProcessorNode = null;
-let rawMicStream = null;
-let pcmBuffers = [];
-let isAudioCapturing = false;
-
 function writeWavString(view, offset, string) {
   for (let i = 0; i < string.length; i++) {
     view.setUint8(offset + i, string.charCodeAt(i));
@@ -245,26 +440,26 @@ function encodeWav(samples, sampleRate = 16000) {
   const buffer = new ArrayBuffer(44 + samples.length * 2);
   const view = new DataView(buffer);
 
-  // RIFF chunk descriptor
+  // RIFF Chunk
   writeWavString(view, 0, 'RIFF');
   view.setUint32(4, 36 + samples.length * 2, true);
   writeWavString(view, 8, 'WAVE');
 
-  // fmt sub-chunk
+  // fmt Subchunk
   writeWavString(view, 12, 'fmt ');
-  view.setUint32(16, 16, true); // Subchunk1Size (16 for PCM)
-  view.setUint16(20, 1, true);  // AudioFormat (1 = PCM)
-  view.setUint16(22, 1, true);  // NumChannels (1 = Mono)
-  view.setUint32(24, sampleRate, true); // SampleRate (16000)
-  view.setUint32(28, sampleRate * 2, true); // ByteRate
-  view.setUint16(32, 2, true);  // BlockAlign
-  view.setUint16(34, 16, true); // BitsPerSample (16)
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);             // PCM
+  view.setUint16(22, 1, true);             // Mono
+  view.setUint32(24, sampleRate, true);    // 16000
+  view.setUint32(28, sampleRate * 2, true);// ByteRate
+  view.setUint16(32, 2, true);             // BlockAlign
+  view.setUint16(34, 16, true);            // 16-bit
 
-  // data sub-chunk
+  // data Subchunk
   writeWavString(view, 36, 'data');
   view.setUint32(40, samples.length * 2, true);
 
-  // Write 16-bit PCM samples
+  // PCM Float to 16-bit Int conversion
   let offset = 44;
   for (let i = 0; i < samples.length; i++, offset += 2) {
     const s = Math.max(-1, Math.min(1, samples[i]));
@@ -307,12 +502,12 @@ function downsampleBuffer(buffers, inputSampleRate, targetSampleRate = 16000) {
 }
 
 // --------------------------------------------------------------------------
-// Speech Recognition & Live Visualizer
+// 6. Real-Time Speech Recognition (Live Visual Captioning)
 // --------------------------------------------------------------------------
 function initSpeechRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
-    console.warn("Web Speech API not supported; using direct AudioContext / Sarvam STT.");
+    console.warn("Web Speech API not supported; AudioContext PCM used exclusively.");
     return;
   }
 
@@ -324,7 +519,7 @@ function initSpeechRecognition() {
   speechRecognitionInstance.onstart = () => {
     isSpeechRecognizing = true;
     showLiveSpeechBox(true);
-    updateLiveSpeechStatus("🎙️ आवाज़ सुनी जा रही है... बोलते रहें (Listening...)");
+    setMicButtonState(true);
   };
 
   speechRecognitionInstance.onresult = (event) => {
@@ -350,8 +545,7 @@ function initSpeechRecognition() {
   };
 
   speechRecognitionInstance.onerror = (event) => {
-    console.warn("Web Speech notice:", event.error);
-    // Don't kill audio capture; AudioContext captures genuine 16kHz WAV concurrently
+    console.warn("Web Speech note:", event.error);
   };
 
   speechRecognitionInstance.onend = () => {
@@ -367,32 +561,34 @@ function showLiveSpeechBox(show) {
   }
 }
 
-function updateLiveSpeechStatus(statusMsg) {
-  const statusEl = document.getElementById('liveSpeechStatusText');
-  if (statusEl) statusEl.textContent = statusMsg;
-}
-
 function setMicButtonState(recording) {
   const micBtn = document.getElementById('mic-btn');
   const micLabel = document.getElementById('mic-label');
   const micStatus = document.getElementById('mic-status-text');
-  const cfg = LANGUAGE_CONFIG[currentLanguage] || LANGUAGE_CONFIG.hi;
+  const t = I18N_TRANSLATIONS[currentLanguage] || I18N_TRANSLATIONS.hi;
 
   if (recording) {
     if (micBtn) micBtn.classList.add('recording');
-    if (micLabel) micLabel.textContent = "रोकने के लिए दबाएं (Stop)";
-    if (micStatus) micStatus.textContent = cfg.statusListening;
+    if (micLabel) micLabel.textContent = t.micLabelRecording;
+    if (micStatus) micStatus.textContent = t.micStatusListening;
     setWaveformActive(true);
   } else {
     if (micBtn) micBtn.classList.remove('recording');
-    if (micLabel) micLabel.textContent = "बोलने के लिए दबाएं (Speak)";
-    if (micStatus) micStatus.textContent = cfg.statusProcessing;
+    if (micLabel) micLabel.textContent = t.micLabelIdle;
+    if (micStatus) micStatus.textContent = t.micStatusIdle;
     setWaveformActive(false);
   }
 }
 
+function setWaveformActive(active) {
+  document.querySelectorAll('.wave-pillar').forEach(p => {
+    if (active) p.classList.add('active');
+    else p.classList.remove('active');
+  });
+}
+
 // --------------------------------------------------------------------------
-// Microphone Toggle & Recording Lifecycle
+// 7. Microphone Recording Toggle & Turn Execution
 // --------------------------------------------------------------------------
 async function toggleRecording() {
   if (isRecording || isAudioCapturing) {
@@ -403,25 +599,25 @@ async function toggleRecording() {
 }
 
 async function startRecording() {
+  stopAllAudio(); // Stop any audio playing before starting recording
   latestInterimTranscript = "";
   pcmBuffers = [];
-  const cfg = LANGUAGE_CONFIG[currentLanguage] || LANGUAGE_CONFIG.hi;
+  const t = I18N_TRANSLATIONS[currentLanguage] || I18N_TRANSLATIONS.hi;
 
   showLiveSpeechBox(true);
   setMicButtonState(true);
-  updateLiveSpeechStatus("🎙️ माइक सक्रिय है... कृपया बोलें");
 
-  // 1. Start parallel Web Speech API for real-time visual captioning
+  // 1. Start parallel Web Speech API for visual text feedback
   if (speechRecognitionInstance) {
     try {
-      speechRecognitionInstance.lang = cfg.sttCode;
+      speechRecognitionInstance.lang = t.sttCode;
       speechRecognitionInstance.start();
     } catch (e) {
-      console.warn("SpeechRecognition start notice:", e.message);
+      console.warn("SpeechRecognition start exception:", e.message);
     }
   }
 
-  // 2. Start Web Audio API PCM capture (produces genuine 16kHz WAV for Sarvam STT)
+  // 2. Start Web Audio API PCM capture (genuine 16kHz WAV for Sarvam STT)
   try {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     audioCtx = new AudioContextClass();
@@ -449,18 +645,19 @@ async function startRecording() {
     isRecording = true;
     isAudioCapturing = true;
   } catch (err) {
-    console.warn("Web Audio API getUserMedia failed/blocked:", err);
+    console.warn("getUserMedia failed:", err);
     isRecording = Boolean(speechRecognitionInstance && isSpeechRecognizing);
     if (!isRecording) {
       setMicButtonState(false);
-      updateLiveSpeechStatus("⚠️ माइक की अनुमति नहीं मिली। कृपया नीचे बॉक्स में लिखकर या विकल्प चुनकर भेजें।");
+      const statusText = document.getElementById('mic-status-text');
+      if (statusText) statusText.textContent = "⚠️ माइक की अनुमति नहीं मिली। नीचे दिए गए उदाहरण चुनें या लिखकर भेजें।";
     }
   }
 }
 
 async function stopRecording() {
-  setMicButtonState(false);
   const wasCapturing = isRecording || isAudioCapturing;
+  setMicButtonState(false);
   isRecording = false;
   isAudioCapturing = false;
 
@@ -485,30 +682,44 @@ async function stopRecording() {
     try { audioCtx.close(); } catch (e) {}
   }
 
-  // If we collected PCM samples, encode genuine 16kHz mono WAV Blob
+  // If PCM samples were captured, encode genuine 16kHz mono WAV Blob
   if (pcmBuffers.length > 0) {
-    updateLiveSpeechStatus("आवाज़ की जांच हो रही है (Sarvam Saaras v3)...");
+    const micStatus = document.getElementById('mic-status-text');
+    if (micStatus) micStatus.textContent = "पहचान की जा रही है (Sarvam STT)...";
+
     const downsampledSamples = downsampleBuffer(pcmBuffers, sampleRate, 16000);
     const wavBlob = encodeWav(downsampledSamples, 16000);
     await sendAudioToServer(wavBlob);
   } else if (latestInterimTranscript && latestInterimTranscript.trim().length > 1) {
-    sendSpokenText(latestInterimTranscript.trim());
+    await sendSpokenText(latestInterimTranscript.trim());
   } else if (wasCapturing) {
-    updateLiveSpeechStatus("आवाज़ नहीं सुनाई दी। कृपया दोबारा बोलें या नीचे दिए गए विकल्प चुनें।");
+    const micStatus = document.getElementById('mic-status-text');
+    if (micStatus) micStatus.textContent = "आवाज़ नहीं सुनाई दी। कृपया दोबारा बोलें।";
   }
 }
 
-function setWaveformActive(active) {
-  document.querySelectorAll('.wave-bar').forEach(b => {
-    if (active) b.classList.add('active');
-    else b.classList.remove('active');
-  });
-}
+async function sendAudioToServer(audioBlob) {
+  const t = I18N_TRANSLATIONS[currentLanguage] || I18N_TRANSLATIONS.hi;
 
-function setQuickInput(text) {
-  const input = document.getElementById('manual-speech-input');
-  if (input) input.value = text;
-  sendSpokenText(text);
+  try {
+    const res = await fetch(`${API_BASE}/api/chat/audio`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'audio/wav',
+        'x-session-id': currentSessionId,
+        'x-language': t.sttCode,
+        'x-fallback-transcript': encodeURIComponent(latestInterimTranscript || '')
+      },
+      body: audioBlob
+    });
+    const result = await res.json();
+    handleTurnResponse(result);
+  } catch (err) {
+    console.error("Audio upload error", err);
+    if (latestInterimTranscript) {
+      sendSpokenText(latestInterimTranscript);
+    }
+  }
 }
 
 async function sendSpokenText(forcedText = null) {
@@ -516,11 +727,13 @@ async function sendSpokenText(forcedText = null) {
   const text = (forcedText || (input ? input.value : "")).trim();
   if (!text) return;
 
-  const cfg = LANGUAGE_CONFIG[currentLanguage] || LANGUAGE_CONFIG.hi;
+  stopAllAudio();
   showLiveSpeechBox(true);
-  updateLiveSpeechStatus(`जांच चल रही है: "${text}"...`);
-  const transcriptEl = document.getElementById('liveSpeechTranscript');
-  if (transcriptEl) transcriptEl.textContent = `"${text}"`;
+  const liveText = document.getElementById('liveSpeechTranscript');
+  if (liveText) liveText.textContent = `"${text}"`;
+
+  const micStatus = document.getElementById('mic-status-text');
+  if (micStatus) micStatus.textContent = `जांच चल रही है...`;
 
   try {
     const res = await fetch(`${API_BASE}/api/chat/turn`, {
@@ -539,49 +752,28 @@ async function sendSpokenText(forcedText = null) {
   }
 }
 
-async function sendAudioToServer(audioBlob) {
-  const cfg = LANGUAGE_CONFIG[currentLanguage] || LANGUAGE_CONFIG.hi;
-  updateLiveSpeechStatus("ऑडियो सार्वम एआई (saaras:v3) को भेजा जा रहा है...");
-
-  try {
-    const res = await fetch(`${API_BASE}/api/chat/audio`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'audio/wav',
-        'x-session-id': currentSessionId,
-        'x-language': cfg.sttCode,
-        'x-fallback-transcript': encodeURIComponent(latestInterimTranscript || '')
-      },
-      body: audioBlob
-    });
-    const result = await res.json();
-    handleTurnResponse(result);
-  } catch (err) {
-    console.error("Audio upload error", err);
-    if (latestInterimTranscript) {
-      sendSpokenText(latestInterimTranscript);
-    }
-  }
+function setQuickInput(text) {
+  const input = document.getElementById('manual-speech-input');
+  if (input) input.value = text;
+  sendSpokenText(text);
 }
 
-function updateDynamicStage(stage) {
-  for (let s = 1; s <= 3; s++) {
-    const node = document.getElementById(`step-stage-${s}`);
-    if (!node) continue;
-    node.className = 'step-node';
-    if (s < stage) node.classList.add('completed');
-    else if (s === stage) node.classList.add('active');
-  }
-}
-
+// --------------------------------------------------------------------------
+// 8. Turn Response Handler (Unified Dynamic Router)
+// --------------------------------------------------------------------------
 function handleTurnResponse(result) {
+  const micStatus = document.getElementById('mic-status-text');
+  const t = I18N_TRANSLATIONS[currentLanguage] || I18N_TRANSLATIONS.hi;
+  if (micStatus) micStatus.textContent = t.micStatusIdle;
+
   if (result.type === 'NO_SPEECH_DETECTED') {
-    updateLiveSpeechStatus(result.replyText);
-    speakBrowserTTS(result.replyText);
+    const liveText = document.getElementById('liveSpeechTranscript');
+    if (liveText) liveText.textContent = `"${result.replyText}"`;
+    playSpokenAudio(null, result.replyText);
     return;
   }
 
-  // 1. Update verified slots
+  // 1. Update Verified Profile Slots
   const profile = result.profile || (result.session ? result.session.profile : {});
   if (profile.age) {
     const el = document.getElementById('slot-age');
@@ -604,72 +796,69 @@ function handleTurnResponse(result) {
     if (el) el.textContent = `${profile.state} ${profile.district || ''}`;
   }
 
-  // 2. Show user's recognized words
+  // 2. Show Recognized Words
   if (result.userTranscript) {
     const liveText = document.getElementById('liveSpeechTranscript');
     if (liveText) liveText.textContent = `"${result.userTranscript}"`;
     const manualInput = document.getElementById('manual-speech-input');
     if (manualInput) manualInput.value = result.userTranscript;
-    updateLiveSpeechStatus(`✓ पहचाना गया: "${result.userTranscript}"`);
   }
 
-  // 3. Branch by dynamic result type
+  // 3. Dynamic Result Branching
   if (result.type === 'TRIAGE_RESOLVED') {
-    updateDynamicStage(3);
-    switchMainTab('tab-stoppage-triage');
+    // Open Stalled Pension Drawer module immediately!
+    openSlidingDrawer();
+    switchDrawerModule('drawer-triage');
     renderTriageView(result.triageData);
   } else if (result.type === 'SCHEMES_MATCHED' || result.isCompleted) {
-    updateDynamicStage(3);
+    // Render Actionable Triad Results underneath
     renderEvaluationResults(result.evaluationResult, result.audioBase64);
   } else {
-    // Follow-up question
-    updateDynamicStage(2);
+    // Natural Follow-Up Question
     setPrompt(result.replyText || result.nextPromptText, result.promptHint, result.audioBase64);
   }
 }
 
+// --------------------------------------------------------------------------
+// 9. Results Rendering (Actionable Triad)
+// --------------------------------------------------------------------------
 function renderEvaluationResults(evaluation, audioBase64) {
   const card = document.getElementById('results-card');
   card.style.display = 'block';
 
   document.getElementById('badge-count').textContent = `${evaluation.matchedCount} योजनाएं स्वीकृत`;
-  document.getElementById('badge-count').style.background = '#e8f5e9';
   document.getElementById('spoken-audio-transcript').textContent = evaluation.spokenScript;
 
-  // Schemes List
+  // Render Schemes
   const schemesList = document.getElementById('schemes-list');
   schemesList.innerHTML = evaluation.matchedSchemes.map(s => `
-    <div class="scheme-item">
-      <div class="scheme-name">✓ ${s.title_hi}</div>
-      <div class="scheme-benefit">लाभ: ${s.monthly_benefit_inr > 0 ? `₹${s.monthly_benefit_inr.toLocaleString('en-IN')}/माह` : `₹${s.annual_benefit_inr.toLocaleString('en-IN')} वार्षिक अनुदान`}</div>
+    <div class="scheme-card-box">
+      <div class="scheme-title-text">✓ ${s.title_hi}</div>
+      <div class="scheme-benefit-text">लाभ: ${s.monthly_benefit_inr > 0 ? `₹${s.monthly_benefit_inr.toLocaleString('en-IN')}/माह` : `₹${s.annual_benefit_inr.toLocaleString('en-IN')} वार्षिक अनुदान`}</div>
     </div>
   `).join('');
 
-  // 3 Physical Documents
+  // Render 3 Physical Documents
   const docsList = document.getElementById('docs-list');
   docsList.innerHTML = evaluation.primaryDocuments.map((doc, idx) => `
     <li><strong>[ ] ${idx + 1}.</strong> ${doc}</li>
   `).join('');
 
-  // Office Destination
+  // Render Office Destination
   document.getElementById('office-destination').textContent = evaluation.primaryOffice;
 
-  // SMS Action Slip
+  // Render SMS Action Slip
   document.getElementById('sms-text-content').textContent = evaluation.smsChecklist;
 
   currentSpokenAudioBase64 = audioBase64;
-  if (audioBase64) {
-    playBase64Audio(audioBase64);
-  } else {
-    speakBrowserTTS(evaluation.spokenScript);
-  }
+  playSpokenAudio(audioBase64, evaluation.spokenScript);
 
   card.scrollIntoView({ behavior: 'smooth' });
 }
 
 function replaySpokenAudio() {
   if (currentSpokenAudioBase64) {
-    playBase64Audio(currentSpokenAudioBase64);
+    playSpokenAudio(currentSpokenAudioBase64);
   } else {
     const text = document.getElementById('spoken-audio-transcript').textContent;
     speakBrowserTTS(text);
@@ -677,15 +866,14 @@ function replaySpokenAudio() {
 }
 
 // --------------------------------------------------------------------------
-// Session & Stepper Control
+// 10. Session Reset & Prompt Setting
 // --------------------------------------------------------------------------
 async function initSession() {
   currentSessionId = `session_${Date.now()}`;
-  updateDynamicStage(1);
   const resultsCard = document.getElementById('results-card');
   if (resultsCard) resultsCard.style.display = 'none';
 
-  const cfg = LANGUAGE_CONFIG[currentLanguage] || LANGUAGE_CONFIG.hi;
+  const t = I18N_TRANSLATIONS[currentLanguage] || I18N_TRANSLATIONS.hi;
 
   try {
     const res = await fetch(`${API_BASE}/api/chat/init`, {
@@ -694,10 +882,10 @@ async function initSession() {
       body: JSON.stringify({ sessionId: currentSessionId, language: currentLanguage })
     });
     const data = await res.json();
-    setPrompt(data.promptText || cfg.welcomeText, data.promptHint || cfg.hintText, data.audioBase64);
+    setPrompt(data.promptText || t.welcomePrompt, data.promptHint || t.welcomeHint, data.audioBase64);
   } catch (err) {
     console.warn("Init fallback:", err);
-    setPrompt(cfg.welcomeText, cfg.hintText, null);
+    setPrompt(t.welcomePrompt, t.welcomeHint, null);
   }
 }
 
@@ -708,16 +896,12 @@ function setPrompt(text, hint, audioBase64) {
   if (hintEl) hintEl.textContent = hint;
 
   currentPromptAudioBase64 = audioBase64;
-  if (audioBase64) {
-    playBase64Audio(audioBase64);
-  } else {
-    speakBrowserTTS(text);
-  }
+  playSpokenAudio(audioBase64, text);
 }
 
 function replayCurrentPromptAudio() {
   if (currentPromptAudioBase64) {
-    playBase64Audio(currentPromptAudioBase64);
+    playSpokenAudio(currentPromptAudioBase64);
   } else {
     const text = document.getElementById('assistant-prompt-text').textContent;
     speakBrowserTTS(text);
@@ -725,7 +909,6 @@ function replayCurrentPromptAudio() {
 }
 
 function resetInterview() {
-  initSession();
   document.getElementById('slot-age').textContent = "--";
   document.getElementById('slot-marital').textContent = "--";
   document.getElementById('slot-land').textContent = "--";
@@ -733,56 +916,16 @@ function resetInterview() {
   document.getElementById('slot-location').textContent = "--";
   document.getElementById('results-card').style.display = 'none';
   showLiveSpeechBox(false);
+  initSession();
+}
+
+function resetToHome() {
+  closeSlidingDrawer();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // --------------------------------------------------------------------------
-// Hero Central Voice Search
-// --------------------------------------------------------------------------
-function triggerHeroVoiceSearch() {
-  const btn = document.getElementById('heroVoiceSearchBtn');
-  const text = document.getElementById('heroMicBtnText');
-  const cfg = LANGUAGE_CONFIG[currentLanguage] || LANGUAGE_CONFIG.hi;
-
-  if (speechRecognitionInstance) {
-    speechRecognitionInstance.lang = cfg.sttCode;
-    speechRecognitionInstance.onresult = (event) => {
-      const query = event.results[0][0].transcript;
-      document.getElementById('heroSearchInput').value = query;
-      processHeroSearch(query);
-    };
-    speechRecognitionInstance.start();
-    btn.classList.add('listening');
-    text.textContent = "सुन रहे हैं...";
-
-    speechRecognitionInstance.onend = () => {
-      btn.classList.remove('listening');
-      text.textContent = "माइक से बोलें";
-    };
-  } else {
-    processHeroSearch("हमार पेंशन 3 महीना से ना आवता");
-  }
-}
-
-function quickSearchTag(tagText) {
-  document.getElementById('heroSearchInput').value = tagText;
-  processHeroSearch(tagText);
-}
-
-function processHeroSearch(query) {
-  const lower = query.toLowerCase();
-  if (lower.includes('रुकी') || lower.includes('पेंशन नहीं') || lower.includes('ना आवता') || lower.includes('stoppage')) {
-    switchMainTab('tab-stoppage-triage');
-    document.getElementById('triageIdentifierInput').value = "7193";
-    runPensionTriage();
-  } else {
-    switchMainTab('tab-schemes-directory');
-    document.getElementById('catalogSearchField').value = query;
-    filterSchemesCards(query);
-  }
-}
-
-// --------------------------------------------------------------------------
-// Module 2: Stalled Pension & DBT Recovery Triage
+// 11. Stalled Pension & DBT Recovery Triage (Inside Drawer)
 // --------------------------------------------------------------------------
 async function runPensionTriage() {
   const idInput = document.getElementById('triageIdentifierInput');
@@ -822,7 +965,7 @@ function loadSakinaTriageTest() {
 
 function renderTriageView(data) {
   const view = document.getElementById('triageResultsView');
-  view.style.display = 'grid';
+  view.style.display = 'block';
 
   const ben = data.beneficiary;
   const diag = data.diagnosis;
@@ -832,66 +975,32 @@ function renderTriageView(data) {
   document.getElementById('triageSchemeDetails').textContent = `योजना: ${ben.scheme} | रुकी राशि: ${ben.pending_recovery_amount}`;
   document.getElementById('triageActionText').textContent = diag.action_required;
   document.getElementById('triageTokenCode').textContent = data.ticket_token;
-  document.getElementById('triageEscalationText').textContent = diag.panchayat_escalation;
 
   currentTriageScriptText = diag.citizen_friendly_script;
   document.getElementById('triageDialectScript').textContent = `"${currentTriageScriptText}"`;
 
   currentTriageAudioBase64 = (data.audio && data.audio.audio_base64) ? data.audio.audio_base64 : null;
   playTriageVoice();
-
-  view.scrollIntoView({ behavior: 'smooth' });
 }
 
 function playTriageVoice() {
   if (currentTriageAudioBase64) {
-    playBase64Audio(currentTriageAudioBase64);
+    playSpokenAudio(currentTriageAudioBase64);
   } else if (currentTriageScriptText) {
     speakBrowserTTS(currentTriageScriptText);
   }
 }
 
 // --------------------------------------------------------------------------
-// 1-Click Judge Presets
-// --------------------------------------------------------------------------
-async function loadPreset(presetKey) {
-  document.querySelectorAll('.preset-pill-btn').forEach(b => b.classList.remove('active'));
-  if (event && event.target) event.target.classList.add('active');
-
-  const profile = PRESETS[presetKey];
-  if (!profile) return;
-
-  try {
-    const res = await fetch(`${API_BASE}/api/evaluate/direct`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(profile)
-    });
-    const result = await res.json();
-
-    document.getElementById('slot-age').textContent = `${profile.age} वर्ष`;
-    document.getElementById('slot-marital').textContent = profile.marital_status === 'widow' ? 'विधवा' : (profile.marital_status === 'married' ? 'विवाहित' : 'लागू');
-    document.getElementById('slot-land').textContent = profile.landholding_acres === 0 ? "भूमिहीन" : `${profile.landholding_acres} एकड़`;
-    document.getElementById('slot-income').textContent = `₹${profile.annual_income_inr.toLocaleString('en-IN')}`;
-    document.getElementById('slot-location').textContent = `${profile.state} ${profile.district || ''}`;
-
-    updateDynamicStage(3);
-    renderEvaluationResults(result, result.ttsAudioBase64);
-  } catch (err) {
-    console.error("Preset evaluation error", err);
-  }
-}
-
-// --------------------------------------------------------------------------
-// Offline Simulators (2G IVR & WhatsApp)
+// 12. Offline Simulators (2G IVR & WhatsApp)
 // --------------------------------------------------------------------------
 function simulateIvrCall() {
   const screen = document.getElementById('ivrCaptionScreen');
   screen.innerHTML = "📞 <em>कॉल कनेक्ट हो रहा है (1800-180-SEVA)...</em>";
 
   setTimeout(() => {
-    screen.innerHTML = "<strong>नमस्ते दीदी।</strong> मैं आपको सरकारी योजनाओं की सही जानकारी दूँगा। आपकी उम्र क्या है और क्या आप शादीशुदा हैं?";
-    speakBrowserTTS("नमस्ते दीदी। मैं आपको सरकारी योजनाओं की सही जानकारी दूँगा। आपकी उम्र क्या है और क्या आप शादीशुदा हैं?");
+    screen.innerHTML = "<strong>नमस्ते दीदी।</strong> मैं सेवा केंद्र वाणी सहायक हूँ। आपकी उम्र क्या है और क्या आप शादीशुदा हैं?";
+    playSpokenAudio(null, "नमस्ते दीदी। मैं सेवा केंद्र वाणी सहायक हूँ। आपकी उम्र क्या है और क्या आप शादीशुदा हैं?");
   }, 1200);
 
   setTimeout(() => {
@@ -899,8 +1008,8 @@ function simulateIvrCall() {
   }, 3500);
 
   setTimeout(() => {
-    screen.innerHTML = "<strong>सत्यापन पूर्ण:</strong> दीदी, आप <strong>विधवा पेंशन योजना</strong> के लिए पात्र हैं। हर महीने <strong>₹1,000</strong> मिलेंगे। कागजों का SMS आपके फोन पर भेजा गया है।";
-    speakBrowserTTS("दीदी, आप विधवा पेंशन योजना के लिए पात्र हैं। हर महीने ₹1,000 मिलेंगे। कागजों का SMS आपके फोन पर भेजा गया है।");
+    screen.innerHTML = "<strong>सत्यापन पूर्ण:</strong> दीदी, आप <strong>विधवा पेंशन योजना</strong> के लिए पात्र हैं। हर महीने <strong>₹1,000</strong> मिलेंगे। कागजों का SMS आपके फोन पर भेज दिया गया है।";
+    playSpokenAudio(null, "दीदी, आप विधवा पेंशन योजना के लिए पात्र हैं। हर महीने ₹1,000 मिलेंगे। कागजों का SMS आपके फोन पर भेज दिया गया है।");
   }, 5500);
 }
 
@@ -911,8 +1020,8 @@ function simulateWhatsAppVoice() {
   userMsg.className = 'wa-bubble user';
   userMsg.innerHTML = `
     <div style="display: flex; align-items: center; gap: 6px;">
-      <span>▶️ 0:06</span>
-      <span style="font-size: 9px; opacity: 0.8;"> ▂▃▅▆▇</span>
+      <span>▶️ 0:05</span>
+      <span style="font-size: 10px; opacity: 0.8;"> ▂▃▅▆▇</span>
     </div>
     <div style="font-size: 9px; text-align: right; margin-top: 2px;">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ✓✓</div>
   `;
@@ -923,26 +1032,26 @@ function simulateWhatsAppVoice() {
     botMsg.className = 'wa-bubble bot';
     botMsg.innerHTML = `
       <div style="display: flex; align-items: center; gap: 6px;">
-        <span>▶️ 0:28</span>
-        <span style="font-size: 9px; opacity: 0.8;"> ▂▃▅▆▇</span>
+        <span>▶️ 0:24</span>
+        <span style="font-size: 10px; opacity: 0.8;"> ▂▃▅▆▇</span>
       </div>
-      <div style="margin-top: 4px; font-size: 11px; line-height: 1.4;">
+      <div style="margin-top: 4px; font-size: 12px; line-height: 1.4;">
         <strong>सेवा केंद्र योजना पर्ची:</strong><br>
         ✓ उ.प्र. विधवा पेंशन: ₹1,000/माह<br>
         ✓ पीएम आवास: ₹1,20,000<br>
-        <small style="color: #7dd3fc;">3 कागज़ ले जाएं: आधार, मृत्यु प्रमाण पत्र, पासबुक।</small>
+        <small style="color: #0369a1;">3 कागज़ ले जाएं: आधार, मृत्यु प्रमाण पत्र, बैंक पासबुक।</small>
       </div>
       <div style="font-size: 9px; text-align: right; margin-top: 2px;">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
     `;
     chatBody.appendChild(botMsg);
     chatBody.scrollTop = chatBody.scrollHeight;
 
-    speakBrowserTTS("दीदी, आपका वॉइस नोट सुन लिया गया है। आप विधवा पेंशन और आवास योजना के लिए पात्र हैं।");
+    playSpokenAudio(null, "दीदी, आपका वॉइस नोट सुन लिया गया है। आप विधवा पेंशन और आवास योजना के लिए पात्र हैं।");
   }, 1400);
 }
 
 // --------------------------------------------------------------------------
-// Schemes Catalog & Panchayat Desk
+// 13. Schemes Directory & Panchayat Desk Data Loaders
 // --------------------------------------------------------------------------
 async function loadSchemesCatalog() {
   try {
@@ -959,57 +1068,23 @@ function renderSchemesCards(schemes) {
   if (!container) return;
 
   container.innerHTML = schemes.map(s => `
-    <div class="scheme-card-item">
-      <div>
-        <div class="scheme-ministry-tag">🏛️ ${s.category || 'भारत सरकार कल्याण'}</div>
-        <div class="scheme-card-title">${s.title_hi}</div>
-        <div class="scheme-card-benefit">
-          💰 ${s.monthly_benefit_inr > 0 ? `₹${s.monthly_benefit_inr.toLocaleString('en-IN')}/माह` : `₹${s.annual_benefit_inr.toLocaleString('en-IN')} वार्षिक अनुदान`}
-        </div>
-        <div class="scheme-card-docs">
-          <strong>ज़रूरी कागज़:</strong><br>
-          ${s.documents_hi ? s.documents_hi.slice(0, 3).map(d => `• ${d}`).join('<br>') : 'आधार कार्ड, बैंक पासबुक'}
-        </div>
+    <div class="scheme-drawer-item">
+      <div class="scheme-drawer-title">${s.title_hi}</div>
+      <div class="scheme-drawer-benefit">💰 ${s.monthly_benefit_inr > 0 ? `₹${s.monthly_benefit_inr.toLocaleString('en-IN')}/माह` : `₹${s.annual_benefit_inr.toLocaleString('en-IN')} वार्षिक अनुदान`}</div>
+      <div class="scheme-drawer-docs">
+        <strong>ज़रूरी कागज़:</strong> ${s.documents_hi ? s.documents_hi.slice(0, 3).join(', ') : 'आधार, पासबुक'}<br>
+        <strong>जमा करें:</strong> ${s.where_to_submit_hi || 'पंचायत भवन'}
       </div>
-      <button class="scheme-apply-btn" onclick="startVoiceApply('${s.id}')">
-        🎙️ बोलकर आवेदन करें
+      <button class="offline-demo-btn" style="margin-top: 8px; padding: 6px 12px; font-size: 12px;" onclick="applySchemeFromDrawer('${s.title_hi}')">
+        🎙️ इस योजना के लिए बोलें
       </button>
     </div>
   `).join('');
 }
 
-function filterCategory(cat, btn) {
-  currentCategoryFilter = cat;
-  document.querySelectorAll('.catalog-filter-btn').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-
-  if (cat === 'all') {
-    renderSchemesCards(allLoadedSchemes);
-  } else {
-    renderSchemesCards(allLoadedSchemes.filter(s => s.category === cat));
-  }
-}
-
-function filterSchemesCards(query) {
-  if (!query) {
-    filterCategory(currentCategoryFilter);
-    return;
-  }
-  const lower = query.toLowerCase();
-  const matched = allLoadedSchemes.filter(s => 
-    s.title_hi.toLowerCase().includes(lower) || 
-    (s.title_en && s.title_en.toLowerCase().includes(lower)) ||
-    (s.category && s.category.toLowerCase().includes(lower))
-  );
-  renderSchemesCards(matched);
-}
-
-function startVoiceApply(schemeId) {
-  switchMainTab('tab-voice-eligibility');
-  const target = allLoadedSchemes.find(s => s.id === schemeId);
-  if (target) {
-    setQuickInput(`हम ${target.title_hi} के लिए आवेदन करना चाहते हैं।`);
-  }
+function applySchemeFromDrawer(schemeTitle) {
+  closeSlidingDrawer();
+  setQuickInput(`हम ${schemeTitle} के लिए आवेदन करना चाहते हैं।`);
 }
 
 async function loadPanchayatGrievances() {
@@ -1023,41 +1098,14 @@ async function loadPanchayatGrievances() {
 
     tbody.innerHTML = list.map(g => `
       <tr>
-        <td><strong>${g.id}</strong></td>
         <td><strong>${g.citizen}</strong><br><small style="color:#64748b;">${g.phone}</small></td>
-        <td>${g.village}</td>
-        <td><span style="color:var(--gov-navy); font-weight:700;">${g.scheme}</span></td>
+        <td>${g.scheme}</td>
         <td><strong style="color:#dc2626;">${g.amount_blocked}</strong></td>
-        <td>${g.issue}</td>
         <td>${g.remediation}</td>
-        <td><span class="status-tag alert-sent">${g.status}</span></td>
+        <td><span style="background:#fee2e2; color:#991b1b; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:700;">${g.status}</span></td>
       </tr>
     `).join('');
   } catch (err) {
-    console.error("Grievance load error", err);
+    console.error("Grievances load error", err);
   }
-}
-
-// --------------------------------------------------------------------------
-// Audio Playback
-// --------------------------------------------------------------------------
-function playBase64Audio(base64) {
-  try {
-    const audio = new Audio("data:audio/wav;base64," + base64);
-    audio.play().catch(err => {
-      console.warn("Audio autoplay blocked by browser policy, user interaction required:", err);
-    });
-  } catch (err) {
-    console.warn("Audio play error", err);
-  }
-}
-
-function speakBrowserTTS(text) {
-  if (!('speechSynthesis' in window)) return;
-  window.speechSynthesis.cancel();
-  const utter = new SpeechSynthesisUtterance(text);
-  const cfg = LANGUAGE_CONFIG[currentLanguage] || LANGUAGE_CONFIG.hi;
-  utter.lang = cfg.sttCode;
-  utter.rate = 0.90;
-  window.speechSynthesis.speak(utter);
 }
