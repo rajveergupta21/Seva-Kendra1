@@ -1,6 +1,7 @@
 /**
- * JanKalyan Voice Gateway - Frontend Application
- * Zero-Literacy Voice Controller & Judge Simulation Console
+ * JanSeva Kendra (सेवा केंद्र) - Universal Client Application
+ * Modeled on UMANG (web.umang.gov.in) & Ministry of Agriculture (agriwelfare.gov.in)
+ * Zero-Literacy Voice Controller, Pension Stoppage Triage & Panchayat Grievance Desk
  */
 
 const API_BASE = window.location.origin;
@@ -10,7 +11,12 @@ let audioChunks = [];
 let isRecording = false;
 let currentPromptAudioBase64 = null;
 let currentSpokenAudioBase64 = null;
+let currentTriageAudioBase64 = null;
+let currentTriageScriptText = "";
 let currentStepIndex = 0;
+let currentCategoryFilter = 'all';
+let allLoadedSchemes = [];
+let currentFontSizeLevel = 0;
 
 // Preset profiles for instant judge evaluation
 const PRESETS = {
@@ -76,27 +82,147 @@ const PRESETS = {
   }
 };
 
-// Initialize Application
+// Initialize Application on Page Load
 window.addEventListener('DOMContentLoaded', async () => {
   await initSession();
-  loadSchemesCatalog();
+  await loadSchemesCatalog();
+  await loadPanchayatGrievances();
 });
 
-// Switch Channel Tabs
-function switchChannel(channel) {
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.channel-panel').forEach(p => p.classList.remove('active'));
+// --------------------------------------------------------------------------
+// Navigation & Tab Switching (UMANG Navbar Style)
+// --------------------------------------------------------------------------
+function switchMainTab(tabId) {
+  document.querySelectorAll('.module-panel').forEach(panel => panel.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
 
-  document.getElementById(`tab-${channel}`).classList.add('active');
-  document.getElementById(`panel-${channel}`).classList.add('active');
+  const targetPanel = document.getElementById(tabId);
+  if (targetPanel) {
+    targetPanel.classList.add('active');
+  }
+
+  // Highlight corresponding nav link
+  document.querySelectorAll('.nav-link').forEach(link => {
+    if (link.getAttribute('onclick')?.includes(tabId)) {
+      link.classList.add('active');
+    }
+  });
+
+  // Smooth scroll to panel
+  window.scrollTo({ top: document.querySelector('.main-wrapper').offsetTop - 60, behavior: 'smooth' });
 }
 
-// Reset and Initialize Session
+// --------------------------------------------------------------------------
+// Accessibility Helpers (AgriWelfare Portal Style)
+// --------------------------------------------------------------------------
+function adjustFontSize(delta) {
+  if (delta === 0) currentFontSizeLevel = 0;
+  else currentFontSizeLevel += delta;
+
+  if (currentFontSizeLevel > 2) currentFontSizeLevel = 2;
+  if (currentFontSizeLevel < -1) currentFontSizeLevel = -1;
+
+  const baseSize = 15;
+  document.body.style.fontSize = `${baseSize + currentFontSizeLevel * 1.5}px`;
+}
+
+function toggleHighContrast() {
+  document.body.classList.toggle('high-contrast-mode');
+  if (document.body.classList.contains('high-contrast-mode')) {
+    document.body.style.filter = "contrast(1.25) saturate(1.1)";
+  } else {
+    document.body.style.filter = "none";
+  }
+}
+
+function changeLanguage(lang) {
+  if (lang === 'bhojpuri') {
+    document.getElementById('mic-status-text').textContent = "माइक दबाके आपन भोजपुरी में बोलीं";
+    document.getElementById('assistant-prompt-hint').textContent = '💡 बोलीं: "हम 48 साल के बानी, हमार पति नइखन"';
+  } else if (lang === 'bn') {
+    document.getElementById('mic-status-text').textContent = "মাইক চেপে আপনার বাংলায় কথা বলুন";
+    document.getElementById('assistant-prompt-hint').textContent = '💡 বলুন: "আমার বয়স ৪৮ বছর, স্বামী নেই"';
+  } else {
+    document.getElementById('mic-status-text').textContent = "बटन दबाकर अपनी मातृभाषा में बोलें (हिन्दी / भोजपुरी)";
+    document.getElementById('assistant-prompt-hint').textContent = '💡 बोलें: "हम 48 साल के हैं, हमारे पति नहीं रहे"';
+  }
+}
+
+// --------------------------------------------------------------------------
+// Hero Central Voice Search & Tag Clicks
+// --------------------------------------------------------------------------
+function triggerHeroVoiceSearch() {
+  const btn = document.getElementById('heroVoiceSearchBtn');
+  const text = document.getElementById('heroMicBtnText');
+
+  if (!btn.classList.contains('listening')) {
+    btn.classList.add('listening');
+    text.textContent = "सुन रहे हैं...";
+
+    // If Web Speech API is supported, listen directly
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'hi-IN';
+      recognition.start();
+
+      recognition.onresult = (event) => {
+        const query = event.results[0][0].transcript;
+        document.getElementById('heroSearchInput').value = query;
+        processHeroSearch(query);
+      };
+
+      recognition.onend = () => {
+        btn.classList.remove('listening');
+        text.textContent = "माइक से बोलें";
+      };
+
+      recognition.onerror = () => {
+        btn.classList.remove('listening');
+        text.textContent = "माइक से बोलें";
+        // Fallback demo
+        processHeroSearch("हमार पेंशन 3 महीना से ना आवता");
+      };
+    } else {
+      setTimeout(() => {
+        btn.classList.remove('listening');
+        text.textContent = "माइक से बोलें";
+        processHeroSearch("हमार पेंशन 3 महीना से ना आवता");
+      }, 1500);
+    }
+  } else {
+    btn.classList.remove('listening');
+    text.textContent = "माइक से बोलें";
+  }
+}
+
+function quickSearchTag(tagText) {
+  document.getElementById('heroSearchInput').value = tagText;
+  processHeroSearch(tagText);
+}
+
+function processHeroSearch(query) {
+  const lower = query.toLowerCase();
+  if (lower.includes('रुकी') || lower.includes('पेंशन नहीं') || lower.includes('ना आवता') || lower.includes('stoppage')) {
+    switchMainTab('tab-stoppage-triage');
+    document.getElementById('triageIdentifierInput').value = "7193";
+    runPensionTriage();
+  } else {
+    switchMainTab('tab-schemes-directory');
+    document.getElementById('catalogSearchField').value = query;
+    filterSchemesCards(query);
+  }
+}
+
+// --------------------------------------------------------------------------
+// Module 1: Voice Scheme Eligibility (5-Turn State Machine)
+// --------------------------------------------------------------------------
 async function initSession() {
   currentSessionId = `session_${Date.now()}`;
   currentStepIndex = 0;
   updateStepper(0);
-  document.getElementById('results-card').style.display = 'none';
+  const resultsCard = document.getElementById('results-card');
+  if (resultsCard) resultsCard.style.display = 'none';
 
   try {
     const res = await fetch(`${API_BASE}/api/chat/init`, {
@@ -123,8 +249,11 @@ function updateStepper(step) {
 }
 
 function setPrompt(text, hint, audioBase64) {
-  document.getElementById('assistant-prompt-text').textContent = text;
-  document.getElementById('assistant-prompt-hint').textContent = hint ? `💡 बोलें: "${hint}"` : '';
+  const textEl = document.getElementById('assistant-prompt-text');
+  const hintEl = document.getElementById('assistant-prompt-hint');
+  if (textEl) textEl.textContent = text;
+  if (hintEl) hintEl.textContent = hint ? `💡 बोलें: "${hint}"` : '';
+
   currentPromptAudioBase64 = audioBase64;
   if (audioBase64) {
     playBase64Audio(audioBase64);
@@ -133,7 +262,16 @@ function setPrompt(text, hint, audioBase64) {
   }
 }
 
-// Voice Recording Handlers
+function replayCurrentPromptAudio() {
+  if (currentPromptAudioBase64) {
+    playBase64Audio(currentPromptAudioBase64);
+  } else {
+    const text = document.getElementById('assistant-prompt-text').textContent;
+    speakBrowserTTS(text);
+  }
+}
+
+// Mic Recording Handlers
 async function toggleRecording() {
   if (isRecording) {
     stopRecording();
@@ -160,52 +298,51 @@ async function startRecording() {
     mediaRecorder.start();
     isRecording = true;
 
-    // UI Updates
     document.getElementById('mic-btn').classList.add('recording');
-    document.getElementById('mic-label').textContent = "सुन रहा हूँ...";
-    document.getElementById('mic-status-text').textContent = "आप बोल रहे हैं... रोकने के लिए दोबारा दबाएं";
-    document.getElementById('waveform').classList.add('active');
-
+    document.getElementById('mic-label').textContent = "रोकने के लिए दबाएं";
+    document.getElementById('mic-status-text').textContent = "सुन रहे हैं... बोलते रहें";
+    setWaveformActive(true);
   } catch (err) {
-    console.error("Microphone access failed", err);
-    alert("माइक्रोफोन शुरू नहीं हो सका। कृपया टेक्स्ट बॉक्स का उपयोग करें।");
+    console.warn("Mic fallback:", err);
+    sendSpokenText();
   }
 }
 
 function stopRecording() {
-  if (mediaRecorder && isRecording) {
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
     mediaRecorder.stop();
-    mediaRecorder.stream.getTracks().forEach(t => t.stop());
-    isRecording = false;
-
-    // UI Updates
-    document.getElementById('mic-btn').classList.remove('recording');
-    document.getElementById('mic-label').textContent = "बोलने के लिए दबाएं";
-    document.getElementById('mic-status-text').textContent = "आवाज़ जांची जा रही है (Sarvam Saarika)...";
-    document.getElementById('waveform').classList.remove('active');
   }
+  isRecording = false;
+  document.getElementById('mic-btn').classList.remove('recording');
+  document.getElementById('mic-label').textContent = "बोलने के लिए दबाएं";
+  document.getElementById('mic-status-text').textContent = "जांच की जा रही है...";
+  setWaveformActive(false);
 }
 
-// Send Audio Blob to Server
+function setWaveformActive(active) {
+  document.querySelectorAll('.wave-bar').forEach(b => {
+    if (active) b.classList.add('active');
+    else b.classList.remove('active');
+  });
+}
+
 async function sendAudioToServer(audioBlob) {
   try {
     const res = await fetch(`${API_BASE}/api/chat/audio`, {
       method: 'POST',
       headers: {
-        'x-session-id': currentSessionId,
-        'content-type': 'audio/webm'
+        'Content-Type': 'audio/webm',
+        'x-session-id': currentSessionId
       },
       body: audioBlob
     });
-
-    const data = await res.json();
-    handleTurnResponse(data);
+    const result = await res.json();
+    handleTurnResponse(result);
   } catch (err) {
-    console.error("Audio upload error", err);
+    console.error("Audio error", err);
   }
 }
 
-// Send Manual Text Input
 async function sendSpokenText() {
   const input = document.getElementById('manual-speech-input');
   const text = input.value.trim();
@@ -215,29 +352,24 @@ async function sendSpokenText() {
     const res = await fetch(`${API_BASE}/api/chat/turn`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sessionId: currentSessionId, text })
+      body: JSON.stringify({
+        sessionId: currentSessionId,
+        text: text
+      })
     });
-    const data = await res.json();
-    handleTurnResponse(data);
-    input.value = "";
+    const result = await res.json();
+    handleTurnResponse(result);
   } catch (err) {
-    console.error("Text send error", err);
+    console.error("Turn error", err);
   }
 }
 
-// Process Dialog Turn Output
-function handleTurnResponse(data) {
-  const session = data.session || {};
-  const profile = session.profile || {};
-
-  // Update Slots Display
+function handleTurnResponse(result) {
+  const profile = result.session ? result.session.profile : {};
   if (profile.age) document.getElementById('slot-age').textContent = `${profile.age} वर्ष`;
-  if (profile.marital_status) {
-    const statusMap = { widow: 'विधवा', married: 'विवाहित', single: 'अविवाहित' };
-    document.getElementById('slot-marital').textContent = statusMap[profile.marital_status] || profile.marital_status;
-  }
-  if (typeof profile.landholding_acres === 'number') {
-    document.getElementById('slot-land').textContent = profile.landholding_acres === 0 ? "भूमिहीन (0 एकड़)" : `${profile.landholding_acres} एकड़`;
+  if (profile.marital_status) document.getElementById('slot-marital').textContent = profile.marital_status;
+  if (profile.landholding_acres !== undefined && profile.landholding_acres !== null) {
+    document.getElementById('slot-land').textContent = profile.landholding_acres === 0 ? "भूमिहीन" : `${profile.landholding_acres} एकड़`;
   }
   if (profile.annual_income_inr) {
     document.getElementById('slot-income').textContent = `₹${profile.annual_income_inr.toLocaleString('en-IN')}`;
@@ -246,85 +378,52 @@ function handleTurnResponse(data) {
     document.getElementById('slot-location').textContent = `${profile.state} ${profile.district || ''}`;
   }
 
-  // Update Stepper
-  updateStepper(session.currentStep || currentStepIndex + 1);
-
-  if (data.isCompleted) {
-    renderEvaluationResults(data.evaluationResult, data.ttsAudioBase64);
+  if (result.isCompleted) {
+    updateStepper(5);
+    renderEvaluationResults(result.evaluationResult, result.audioBase64);
   } else {
-    setPrompt(data.nextPromptText, data.nextPromptHint, data.ttsAudioBase64);
+    updateStepper(result.currentStep);
+    setPrompt(result.nextPromptText, result.promptHint, result.audioBase64);
   }
 }
 
-// Render Results: The Actionable Triad
-function renderEvaluationResults(result, audioBase64) {
-  if (!result) return;
-
+function renderEvaluationResults(evaluation, audioBase64) {
   const card = document.getElementById('results-card');
   card.style.display = 'block';
 
-  document.getElementById('badge-count').textContent = `${result.topSchemes.length} योजनाएं स्वीकृत`;
-  document.getElementById('spoken-audio-transcript').textContent = result.spokenScript;
-  currentSpokenAudioBase64 = audioBase64 || result.ttsAudioBase64;
+  document.getElementById('badge-count').textContent = `${evaluation.matchedCount} योजनाएं स्वीकृत`;
+  document.getElementById('badge-count').style.background = '#e8f5e9';
+  document.getElementById('spoken-audio-transcript').textContent = evaluation.spokenScript;
 
-  // 1. Schemes List
+  // Render Schemes
   const schemesList = document.getElementById('schemes-list');
-  schemesList.innerHTML = "";
-  result.topSchemes.forEach(s => {
-    const div = document.createElement('div');
-    div.className = 'scheme-item';
-    const benefitStr = s.monthly_benefit_inr > 0 ? `₹${s.monthly_benefit_inr} / महीना` : `₹${s.annual_benefit_inr} सहायता`;
-    div.innerHTML = `
-      <div class="scheme-name">${s.title_hi}</div>
-      <div class="scheme-benefit">लाभ: ${benefitStr}</div>
-      <small style="color:#64748b;">${s.spoken_summary_hi}</small>
-    `;
-    schemesList.appendChild(div);
-  });
+  schemesList.innerHTML = evaluation.matchedSchemes.map(s => `
+    <div class="scheme-item">
+      <div class="scheme-name">✓ ${s.title_hi}</div>
+      <div class="scheme-benefit">लाभ: ${s.monthly_benefit_inr > 0 ? `₹${s.monthly_benefit_inr.toLocaleString('en-IN')}/माह` : `₹${s.annual_benefit_inr.toLocaleString('en-IN')} अनुदान`}</div>
+    </div>
+  `).join('');
 
-  // 2. Documents
+  // Render 3 Documents
   const docsList = document.getElementById('docs-list');
-  docsList.innerHTML = "";
-  result.primaryDocuments.forEach(doc => {
-    const li = document.createElement('li');
-    li.textContent = doc;
-    docsList.appendChild(li);
-  });
+  docsList.innerHTML = evaluation.primaryDocuments.map((doc, idx) => `
+    <li><strong>[ ] ${idx + 1}.</strong> ${doc}</li>
+  `).join('');
 
-  // 3. Office
-  document.getElementById('office-destination').textContent = result.primaryOffice;
+  // Render Destination Office
+  document.getElementById('office-destination').textContent = evaluation.primaryOffice;
 
-  // 4. SMS Slip
-  document.getElementById('sms-text-content').textContent = result.smsChecklist;
+  // Render SMS
+  document.getElementById('sms-text-content').textContent = evaluation.smsChecklist;
 
-  // Play audio
-  if (currentSpokenAudioBase64) {
-    playBase64Audio(currentSpokenAudioBase64);
+  currentSpokenAudioBase64 = audioBase64;
+  if (audioBase64) {
+    playBase64Audio(audioBase64);
   } else {
-    speakBrowserTTS(result.spokenScript);
+    speakBrowserTTS(evaluation.spokenScript);
   }
 
-  // Scroll down smoothly
   card.scrollIntoView({ behavior: 'smooth' });
-}
-
-// Audio Playback Helpers
-function playBase64Audio(base64) {
-  try {
-    const audio = new Audio("data:audio/wav;base64," + base64);
-    audio.play();
-  } catch (e) {
-    console.error("Audio playback error", e);
-  }
-}
-
-function replayCurrentPromptAudio() {
-  if (currentPromptAudioBase64) {
-    playBase64Audio(currentPromptAudioBase64);
-  } else {
-    const text = document.getElementById('assistant-prompt-text').textContent;
-    speakBrowserTTS(text);
-  }
 }
 
 function replaySpokenAudio() {
@@ -336,19 +435,10 @@ function replaySpokenAudio() {
   }
 }
 
-function speakBrowserTTS(text) {
-  if (!('speechSynthesis' in window)) return;
-  window.speechSynthesis.cancel();
-  const utter = new SpeechSynthesisUtterance(text);
-  utter.lang = 'hi-IN';
-  utter.rate = 0.95;
-  window.speechSynthesis.speak(utter);
-}
-
 // 1-Click Judge Presets
 async function loadPreset(presetKey) {
-  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-  event.target.classList.add('active');
+  document.querySelectorAll('.preset-pill-btn').forEach(b => b.classList.remove('active'));
+  if (event && event.target) event.target.classList.add('active');
 
   const profile = PRESETS[presetKey];
   if (!profile) return;
@@ -361,7 +451,6 @@ async function loadPreset(presetKey) {
     });
     const result = await res.json();
 
-    // Populate UI
     document.getElementById('slot-age').textContent = `${profile.age} वर्ष`;
     document.getElementById('slot-marital').textContent = profile.marital_status || 'लागू';
     document.getElementById('slot-land').textContent = profile.landholding_acres === 0 ? "भूमिहीन" : `${profile.landholding_acres} एकड़`;
@@ -375,142 +464,6 @@ async function loadPreset(presetKey) {
   }
 }
 
-// 1-Click Entitlement Stoppage & Pension Triage Preset
-async function loadTriagePreset(key) {
-  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-  event.target.classList.add('active');
-
-  try {
-    const res = await fetch(`${API_BASE}/api/triage/pension`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query: "हमार पेंशन तीन महीना से ना आवता, का बात बा?",
-        identifier: "7193",
-        language: "bhojpuri"
-      })
-    });
-    const data = await res.json();
-    const ben = data.beneficiary;
-    const diag = data.diagnosis;
-
-    // Update slots display
-    document.getElementById('slot-age').textContent = `${ben.age} वर्ष`;
-    document.getElementById('slot-marital').textContent = "विधवा (Widow)";
-    document.getElementById('slot-land').textContent = "भूमिहीन (Landless)";
-    document.getElementById('slot-income').textContent = "रुकी पेंशन: ₹3,000";
-    document.getElementById('slot-location').textContent = ben.village;
-
-    // Show custom results for pension stoppage
-    const resultsCard = document.getElementById('results-card');
-    resultsCard.style.display = 'block';
-
-    document.getElementById('badge-count').textContent = `⚠️ समाधान मिला (टोकन: ${data.ticket_token})`;
-    document.getElementById('badge-count').style.background = '#e65100';
-
-    document.getElementById('spoken-audio-transcript').textContent = diag.citizen_friendly_script;
-
-    const schemesList = document.getElementById('schemes-list');
-    schemesList.innerHTML = `
-      <div class="scheme-item" style="border-left: 4px solid #10b981; padding-left: 10px;">
-        <div style="font-weight: 700; color: #10b981; font-size: 15px;">✓ पेंशन रद्द नहीं हुई है (पैसा सुरक्षित है)</div>
-        <div style="font-size: 13px; color: #cbd5e1; margin-top: 4px;"><strong>योजना:</strong> ${ben.scheme} (${ben.monthly_entitlement}/माह)</div>
-        <div style="font-size: 13px; color: #f59e0b; margin-top: 2px;"><strong>कारण:</strong> खाता निष्क्रिय (Error: ${diag.error_code})</div>
-      </div>
-    `;
-
-    const docsList = document.getElementById('docs-list');
-    docsList.innerHTML = `
-      <li>✓ <strong>1. आधार कार्ड (Aadhaar Card)</strong></li>
-      <li>✓ <strong>2. बैंक पासबुक (SBI A/C **6021)</strong></li>
-      <li>✓ <strong>3. ₹10 नकद (खाता दोबारा सक्रिय करने हेतु)</strong></li>
-    `;
-
-    document.getElementById('office-destination').innerHTML = `
-      गाँव का डाकघर (IPPB) या बैंक शाखा<br>
-      <small style="color: #38bdf8;">📌 ${diag.panchayat_escalation}</small>
-    `;
-
-    document.getElementById('sms-text-content').textContent = `[सेवा भंडार - पेंशन समाधान पर्ची]
-पार्वती दादी, आपकी पेंशन बंद नहीं हुई है।
-बैंक खाता 1 साल से बंद होने से ₹3000 रुका है।
-कल डाकघर/बैंक में ₹10 जमा करें। खाता चालू हो जाएगा।
-टोकन: ${data.ticket_token}
-मुखिया/पंचायत सचिव को अलर्ट भेजा गया है।`;
-
-    currentSpokenAudioBase64 = data.audio ? data.audio.audio_base64 : null;
-    if (currentSpokenAudioBase64) {
-      playBase64Audio(currentSpokenAudioBase64);
-    } else {
-      speakBrowserTTS(diag.citizen_friendly_script);
-    }
-
-    resultsCard.scrollIntoView({ behavior: 'smooth' });
-  } catch (err) {
-    console.error("Triage preset error", err);
-  }
-}
-
-// Telephony Call Simulation
-function simulateIvrCall() {
-  switchChannel('telephony');
-  const captions = document.getElementById('ivr-live-captions');
-  captions.innerHTML = "📞 <em>कॉल कनेक्ट हो रहा है (1800-180-SEVA)...</em>";
-
-  setTimeout(() => {
-    captions.innerHTML = "<strong>नमस्ते दीदी।</strong> मैं आपको सरकारी योजनाओं की सही जानकारी दूँगा। आपकी उम्र क्या है और क्या आप शादीशुदा हैं?";
-    speakBrowserTTS("नमस्ते दीदी। मैं आपको सरकारी योजनाओं की सही जानकारी दूँगा। आपकी उम्र क्या है और क्या आप शादीशुदा हैं?");
-  }, 1200);
-
-  setTimeout(() => {
-    captions.innerHTML = "<em>उपयोगकर्ता बोली: 'हम 48 साल के हैं, पति नहीं रहे।'</em>";
-  }, 3500);
-
-  setTimeout(() => {
-    captions.innerHTML = "<strong>सत्यापन पूर्ण:</strong> दीदी, आप <strong>विधवा पेंशन योजना</strong> के लिए पात्र हैं। हर महीने <strong>₹1,000</strong> मिलेंगे। कागजों का SMS आपके फोन पर भेजा गया है।";
-    speakBrowserTTS("दीदी, आप विधवा पेंशन योजना के लिए पात्र हैं। हर महीने ₹1,000 मिलेंगे। कागजों का SMS आपके फोन पर भेजा गया है।");
-  }, 5500);
-}
-
-// WhatsApp Audio Simulation
-function simulateWhatsAppVoice() {
-  switchChannel('whatsapp');
-  const chatWindow = document.getElementById('wa-chat-window');
-
-  // Add user message
-  const userMsg = document.createElement('div');
-  userMsg.className = 'wa-msg user';
-  userMsg.innerHTML = `
-    <div class="wa-audio-pill">
-      <span>▶️ 0:06</span>
-      <div class="wa-wave"> ▂▃▅▆▇</div>
-    </div>
-    <small class="wa-time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>
-  `;
-  chatWindow.appendChild(userMsg);
-
-  // Response after 1.5s
-  setTimeout(() => {
-    const botMsg = document.createElement('div');
-    botMsg.className = 'wa-msg bot';
-    botMsg.innerHTML = `
-      <div class="wa-audio-pill">
-        <span>▶️ 0:28</span>
-        <div class="wa-wave"> ▂▃▅▆▇</div>
-      </div>
-      <p><strong>सेवा भंडार योजना पर्ची:</strong></p>
-      <p>✓ उ.प्र. विधवा पेंशन: ₹1,000/माह<br>✓ पीएम आवास: ₹1,20,000</p>
-      <small style="color:#0284c7;">3 कागज़ ले जाएं: आधार, मृत्यु प्रमाण पत्र, पासबुक।</small>
-      <small class="wa-time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>
-    `;
-    chatWindow.appendChild(botMsg);
-    chatWindow.scrollTop = chatWindow.scrollHeight;
-
-    speakBrowserTTS("दीदी, आपका वॉइस नोट सुन लिया गया है। आप विधवा पेंशन और आवास योजना के लिए पात्र हैं।");
-  }, 1500);
-}
-
-// Reset Interview
 function resetInterview() {
   initSession();
   document.getElementById('slot-age').textContent = "--";
@@ -521,52 +474,253 @@ function resetInterview() {
   document.getElementById('results-card').style.display = 'none';
 }
 
-// Toggle Scheme Catalog
-function toggleCatalog() {
-  const body = document.getElementById('catalog-body');
-  const icon = document.getElementById('catalog-toggle-icon');
-  if (body.style.display === 'none') {
-    body.style.display = 'block';
-    icon.textContent = "▲ छिपाएं";
-  } else {
-    body.style.display = 'none';
-    icon.textContent = "▼ देखें";
+// --------------------------------------------------------------------------
+// Module 2: Stalled Pension & DBT Recovery Triage
+// --------------------------------------------------------------------------
+async function runPensionTriage() {
+  const idInput = document.getElementById('triageIdentifierInput');
+  const identifier = idInput ? idInput.value.trim() : "7193";
+
+  try {
+    const res = await fetch(`${API_BASE}/api/triage/pension`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: "हमार पेंशन तीन महीना से ना आवता",
+        identifier: identifier,
+        language: "bhojpuri"
+      })
+    });
+    const data = await res.json();
+    renderTriageView(data);
+  } catch (err) {
+    console.error("Triage error", err);
   }
 }
 
-// Load Schemes Catalog
+function loadParvatiTriageTest() {
+  document.getElementById('triageIdentifierInput').value = "7193";
+  runPensionTriage();
+}
+
+function loadRamuTriageTest() {
+  document.getElementById('triageIdentifierInput').value = "3841";
+  runPensionTriage();
+}
+
+function loadSakinaTriageTest() {
+  document.getElementById('triageIdentifierInput').value = "6205";
+  runPensionTriage();
+}
+
+function renderTriageView(data) {
+  const view = document.getElementById('triageResultsView');
+  view.style.display = 'grid';
+
+  const ben = data.beneficiary;
+  const diag = data.diagnosis;
+
+  document.getElementById('triageErrorCode').textContent = `त्रुटि कोड: ${diag.error_code} (${diag.disbursal_status})`;
+  document.getElementById('triageBenDetails').textContent = `${ben.name} (${ben.age} वर्ष) • ${ben.village}`;
+  document.getElementById('triageSchemeDetails').textContent = `योजना: ${ben.scheme} | रुकी राशि: ${ben.pending_recovery_amount}`;
+  document.getElementById('triageActionText').textContent = diag.action_required;
+  document.getElementById('triageTokenCode').textContent = data.ticket_token;
+  document.getElementById('triageEscalationText').textContent = diag.panchayat_escalation;
+
+  currentTriageScriptText = diag.citizen_friendly_script;
+  document.getElementById('triageDialectScript').textContent = `"${currentTriageScriptText}"`;
+
+  currentTriageAudioBase64 = (data.audio && data.audio.audio_base64) ? data.audio.audio_base64 : null;
+  playTriageVoice();
+
+  view.scrollIntoView({ behavior: 'smooth' });
+}
+
+function playTriageVoice() {
+  if (currentTriageAudioBase64) {
+    playBase64Audio(currentTriageAudioBase64);
+  } else if (currentTriageScriptText) {
+    speakBrowserTTS(currentTriageScriptText);
+  }
+}
+
+// --------------------------------------------------------------------------
+// Module 3: Offline Telephony & WhatsApp Simulators
+// --------------------------------------------------------------------------
+function simulateIvrCall() {
+  const screen = document.getElementById('ivrCaptionScreen');
+  screen.innerHTML = "📞 <em>कॉल कनेक्ट हो रहा है (1800-180-SEVA)...</em>";
+
+  setTimeout(() => {
+    screen.innerHTML = "<strong>नमस्ते दीदी।</strong> मैं आपको सरकारी योजनाओं की सही जानकारी दूँगा। आपकी उम्र क्या है और क्या आप शादीशुदा हैं?";
+    speakBrowserTTS("नमस्ते दीदी। मैं आपको सरकारी योजनाओं की सही जानकारी दूँगा। आपकी उम्र क्या है और क्या आप शादीशुदा हैं?");
+  }, 1200);
+
+  setTimeout(() => {
+    screen.innerHTML = "<em>उपयोगकर्ता बोली: 'हम 48 साल के हैं, पति नहीं रहे।'</em>";
+  }, 3500);
+
+  setTimeout(() => {
+    screen.innerHTML = "<strong>सत्यापन पूर्ण:</strong> दीदी, आप <strong>विधवा पेंशन योजना</strong> के लिए पात्र हैं। हर महीने <strong>₹1,000</strong> मिलेंगे। कागजों का SMS आपके फोन पर भेजा गया है।";
+    speakBrowserTTS("दीदी, आप विधवा पेंशन योजना के लिए पात्र हैं। हर महीने ₹1,000 मिलेंगे। कागजों का SMS आपके फोन पर भेजा गया है।");
+  }, 5500);
+}
+
+function simulateWhatsAppVoice() {
+  const chatBody = document.getElementById('waChatBody');
+
+  const userMsg = document.createElement('div');
+  userMsg.className = 'wa-bubble user';
+  userMsg.innerHTML = `
+    <div style="display: flex; align-items: center; gap: 6px;">
+      <span>▶️ 0:06</span>
+      <span style="font-size: 9px; opacity: 0.8;"> ▂▃▅▆▇</span>
+    </div>
+    <div style="font-size: 9px; text-align: right; margin-top: 2px;">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ✓✓</div>
+  `;
+  chatBody.appendChild(userMsg);
+
+  setTimeout(() => {
+    const botMsg = document.createElement('div');
+    botMsg.className = 'wa-bubble bot';
+    botMsg.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <span>▶️ 0:28</span>
+        <span style="font-size: 9px; opacity: 0.8;"> ▂▃▅▆▇</span>
+      </div>
+      <div style="margin-top: 4px; font-size: 11px; line-height: 1.4;">
+        <strong>सेवा केंद्र योजना पर्ची:</strong><br>
+        ✓ उ.प्र. विधवा पेंशन: ₹1,000/माह<br>
+        ✓ पीएम आवास: ₹1,20,000<br>
+        <small style="color: #7dd3fc;">3 कागज़ ले जाएं: आधार, मृत्यु प्रमाण पत्र, पासबुक।</small>
+      </div>
+      <div style="font-size: 9px; text-align: right; margin-top: 2px;">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+    `;
+    chatBody.appendChild(botMsg);
+    chatBody.scrollTop = chatBody.scrollHeight;
+
+    speakBrowserTTS("दीदी, आपका वॉइस नोट सुन लिया गया है। आप विधवा पेंशन और आवास योजना के लिए पात्र हैं।");
+  }, 1400);
+}
+
+// --------------------------------------------------------------------------
+// Module 4: Government Schemes Directory (UMANG Service Grid)
+// --------------------------------------------------------------------------
 async function loadSchemesCatalog() {
   try {
     const res = await fetch(`${API_BASE}/api/schemes`);
-    const schemes = await res.json();
-    const container = document.getElementById('schemes-table-container');
-
-    let html = `<table class="catalog-table">
-      <thead>
-        <tr>
-          <th>योजना का नाम</th>
-          <th>वर्ग</th>
-          <th>सरकारी लाभ</th>
-          <th>आवश्यक कागज़</th>
-          <th>कहाँ जमा करें</th>
-        </tr>
-      </thead>
-      <tbody>`;
-
-    schemes.forEach(s => {
-      const benefit = s.monthly_benefit_inr > 0 ? `₹${s.monthly_benefit_inr} / माह` : `₹${s.annual_benefit_inr}`;
-      html += `<tr>
-        <td><strong>${s.title_hi}</strong><br><small style="color:#64748b;">${s.id}</small></td>
-        <td>${s.category || 'कल्याण'}</td>
-        <td style="color:#15803d; font-weight:700;">${benefit}</td>
-        <td>${(s.documents_hi || []).join('<br>')}</td>
-        <td>${s.where_to_submit_hi || 'पंचायत भवन'}</td>
-      </tr>`;
-    });
-
-    html += `</tbody></table>`;
-    container.innerHTML = html;
+    allLoadedSchemes = await res.json();
+    renderSchemesCards(allLoadedSchemes);
   } catch (err) {
-    console.error("Failed to load catalog", err);
+    console.error("Schemes catalog load error", err);
   }
+}
+
+function renderSchemesCards(schemes) {
+  const container = document.getElementById('schemesCardsContainer');
+  if (!container) return;
+
+  container.innerHTML = schemes.map(s => `
+    <div class="scheme-card-item">
+      <div>
+        <div class="scheme-ministry-tag">🏛️ ${s.category || 'भारत सरकार कल्याण'}</div>
+        <div class="scheme-card-title">${s.title_hi}</div>
+        <div class="scheme-card-benefit">
+          💰 ${s.monthly_benefit_inr > 0 ? `₹${s.monthly_benefit_inr.toLocaleString('en-IN')}/माह` : `₹${s.annual_benefit_inr.toLocaleString('en-IN')} वार्षिक अनुदान`}
+        </div>
+        <div class="scheme-card-docs">
+          <strong>ज़रूरी कागज़:</strong><br>
+          ${s.documents_hi ? s.documents_hi.slice(0, 3).map(d => `• ${d}`).join('<br>') : 'आधार कार्ड, बैंक पासबुक'}
+        </div>
+      </div>
+      <button class="scheme-apply-btn" onclick="startVoiceApply('${s.id}')">
+        🎙️ बोलकर आवेदन करें
+      </button>
+    </div>
+  `).join('');
+}
+
+function filterCategory(cat, btn) {
+  currentCategoryFilter = cat;
+  document.querySelectorAll('.catalog-filter-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  if (cat === 'all') {
+    renderSchemesCards(allLoadedSchemes);
+  } else {
+    const filtered = allLoadedSchemes.filter(s => s.category === cat);
+    renderSchemesCards(filtered);
+  }
+}
+
+function filterSchemesCards(query) {
+  if (!query) {
+    filterCategory(currentCategoryFilter);
+    return;
+  }
+  const lower = query.toLowerCase();
+  const matched = allLoadedSchemes.filter(s => 
+    s.title_hi.toLowerCase().includes(lower) || 
+    (s.title_en && s.title_en.toLowerCase().includes(lower)) ||
+    (s.category && s.category.toLowerCase().includes(lower))
+  );
+  renderSchemesCards(matched);
+}
+
+function startVoiceApply(schemeId) {
+  switchMainTab('tab-voice-eligibility');
+  const target = allLoadedSchemes.find(s => s.id === schemeId);
+  if (target) {
+    document.getElementById('manual-speech-input').value = `हम ${target.title_hi} के लिए आवेदन करना चाहते हैं।`;
+  }
+}
+
+// --------------------------------------------------------------------------
+// Module 5: Gram Panchayat Secretary Desk
+// --------------------------------------------------------------------------
+async function loadPanchayatGrievances() {
+  const tbody = document.getElementById('grievanceTableBody');
+  if (!tbody) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/panchayat/grievances`);
+    const data = await res.json();
+    const list = data.grievances || [];
+
+    tbody.innerHTML = list.map(g => `
+      <tr>
+        <td><strong>${g.id}</strong></td>
+        <td><strong>${g.citizen}</strong><br><small style="color:#64748b;">${g.phone}</small></td>
+        <td>${g.village}</td>
+        <td><span style="color:var(--gov-navy); font-weight:700;">${g.scheme}</span></td>
+        <td><strong style="color:#dc2626;">${g.amount_blocked}</strong></td>
+        <td>${g.issue}</td>
+        <td>${g.remediation}</td>
+        <td><span class="status-tag alert-sent">${g.status}</span></td>
+      </tr>
+    `).join('');
+  } catch (err) {
+    console.error("Grievance load error", err);
+  }
+}
+
+// --------------------------------------------------------------------------
+// Audio & Voice Synthesis Helpers
+// --------------------------------------------------------------------------
+function playBase64Audio(base64) {
+  try {
+    const audio = new Audio("data:audio/wav;base64," + base64);
+    audio.play();
+  } catch (err) {
+    console.warn("Audio play error", err);
+  }
+}
+
+function speakBrowserTTS(text) {
+  if (!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'hi-IN';
+  utter.rate = 0.90; // Paced cadence for rural comprehension
+  window.speechSynthesis.speak(utter);
 }

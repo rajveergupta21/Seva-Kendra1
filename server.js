@@ -10,7 +10,7 @@ import { fileURLToPath } from 'url';
 import { getOrCreateSession, processDialogTurn, resetSession, QUESTIONS } from './services/dialog.js';
 import { speechToText, textToSpeech } from './services/sarvam.js';
 import { matchSchemes } from './engine/eligibility.js';
-import { diagnoseStoppage, BENEFICIARIES } from './engine/triage.js';
+import { diagnoseStoppage, BENEFICIARIES, listGrievances } from './engine/triage.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -121,6 +121,16 @@ const server = http.createServer(async (req, res) => {
           village: v.village,
           error_code: v.error_code
         }))
+      });
+    }
+
+    // 0d. API: Gram Panchayat Secretary Grievances Feed
+    if (pathname === '/api/panchayat/grievances' && req.method === 'GET') {
+      return sendJson(res, 200, {
+        panchayat: "मनेर ग्राम पंचायत सचिवालय (वार्ड 1-12)",
+        officer: "राजेश कुमार (पंचायत सचिव / VLE)",
+        updated_at: new Date().toISOString(),
+        grievances: listGrievances()
       });
     }
 

@@ -1,688 +1,862 @@
+/* ==========================================================================
+   JanSeva Kendra (सेवा केंद्र) / JanKalyan Voice Portal
+   UI/UX Inspired by UMANG (web.umang.gov.in) & Ministry of Agriculture (agriwelfare.gov.in)
+   Built for Bharat • Zero-Literacy Voice Protocol • Digital India DPI
+   ========================================================================== */
+
 :root {
-  --primary: #1e3a8a;
-  --primary-dark: #172554;
-  --accent: #f97316;
-  --accent-hover: #ea580c;
-  --success: #15803d;
-  --success-bg: #dcfce7;
-  --bg-main: #f8fafc;
+  /* Official Government of India Colors */
+  --gov-navy: #092c5c;
+  --gov-navy-dark: #061d3e;
+  --gov-blue: #003366;
+  --gov-blue-light: #1a4d80;
+  --gov-saffron: #ff9933;
+  --gov-saffron-dark: #e65100;
+  --gov-saffron-light: #fff3e0;
+  --gov-green: #138808;
+  --gov-green-light: #e8f5e9;
+  --gov-ashoka: #000080;
+  
+  /* Modern UI Palette */
+  --bg-page: #f4f6fa;
   --bg-card: #ffffff;
-  --text-main: #0f172a;
-  --text-muted: #475569;
-  --border: #cbd5e1;
-  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --border-light: #e2e8f0;
+  --border-gov: #cbd5e1;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  --shadow-card: 0 4px 12px rgba(9, 44, 92, 0.06);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
 }
 
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  font-family: 'Inter', -apple-system, sans-serif;
-  background-color: var(--bg-main);
-  color: var(--text-main);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Devanagari", sans-serif;
+  background-color: var(--bg-page);
+  color: var(--text-primary);
   line-height: 1.5;
-  padding-bottom: 50px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-h1, h2, h3, .prompt-text, .phone-screen, .sms-content {
-  font-family: 'Tiro Devanagari Hindi', 'Inter', serif;
+/* Typography Overrides */
+h1, h2, h3, h4, .devanagari-font {
+  font-family: 'Tiro Devanagari Hindi', 'Noto Sans Devanagari', 'Inter', serif;
 }
 
-/* Header */
-.app-header {
-  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
-  color: #ffffff;
-  padding: 1.25rem 1rem;
-  box-shadow: var(--shadow);
+/* --------------------------------------------------------------------------
+   1. TOPMOST TRICOLOR & ACCESSIBILITY BAR (AgriWelfare & UMANG Style)
+   -------------------------------------------------------------------------- */
+.tricolor-stripe {
+  height: 4px;
+  width: 100%;
+  background: linear-gradient(90deg, #ff9933 0%, #ff9933 33.3%, #ffffff 33.3%, #ffffff 66.6%, #138808 66.6%, #138808 100%);
 }
 
-.header-inner {
-  max-width: 1100px;
+.top-utility-bar {
+  background: #f8fafc;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 4px 1rem;
+}
+
+.top-utility-inner {
+  max-width: 1240px;
   margin: 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 8px;
 }
 
-.logo-group {
+.gov-flag-text {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-}
-
-.emblem-badge {
-  font-size: 2.2rem;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 50%;
-  width: 52px;
-  height: 52px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.app-header h1 {
-  font-size: 1.45rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
-.subhead {
-  font-size: 0.85rem;
-  opacity: 0.88;
-}
-
-.header-pills {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.pill {
-  font-size: 0.75rem;
+  gap: 8px;
   font-weight: 600;
-  padding: 0.3rem 0.65rem;
-  border-radius: 9999px;
+  color: var(--text-secondary);
 }
 
-.pill-green { background: #dcfce7; color: #166534; }
-.pill-orange { background: #ffedd5; color: #9a3412; }
-.pill-blue { background: #dbeafe; color: #1e40af; }
-
-/* Judge Quick Presets Bar */
-.demo-bar {
-  background: #f1f5f9;
-  border-bottom: 1px solid var(--border);
-  padding: 0.6rem 1rem;
+.accessibility-tools {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+  gap: 12px;
 }
 
-.demo-label {
-  font-size: 0.8rem;
+.access-btn {
+  background: none;
+  border: 1px solid var(--border-gov);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 11px;
   font-weight: 700;
-  color: var(--text-muted);
-}
-
-.preset-btn {
-  background: #ffffff;
-  border: 1px solid var(--border);
-  padding: 0.35rem 0.75rem;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.2s;
 }
 
-.preset-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+.access-btn:hover {
+  background: #e2e8f0;
 }
 
-.preset-btn.active {
-  background: #ffedd5;
-  border-color: var(--accent);
-  color: #c2410c;
+.lang-select-dropdown {
+  background: #ffffff;
+  border: 1px solid var(--border-gov);
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  color: var(--gov-navy);
+  cursor: pointer;
 }
 
-/* Main Layout */
-.main-container {
-  max-width: 1050px;
-  margin: 1.5rem auto;
+/* --------------------------------------------------------------------------
+   2. MINISTRY BRANDING MASTHEAD (AgriWelfare Style)
+   -------------------------------------------------------------------------- */
+.gov-masthead {
+  background: #ffffff;
+  border-bottom: 1px solid var(--border-light);
+  padding: 10px 1rem;
+}
+
+.masthead-inner {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.emblem-title-group {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ashoka-emblem-img {
+  height: 54px;
+  width: auto;
+}
+
+.gov-titles {
+  display: flex;
+  flex-direction: column;
+}
+
+.gov-titles .title-hi {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gov-navy);
+  line-height: 1.2;
+}
+
+.gov-titles .title-en {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.gov-titles .dept-hi {
+  font-size: 12px;
+  color: var(--gov-saffron-dark);
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.masthead-badges {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.brand-badge-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gov-navy);
+  background: #f1f5f9;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid #e2e8f0;
+}
+
+.brand-badge-item img {
+  height: 24px;
+}
+
+/* --------------------------------------------------------------------------
+   3. PRIMARY NAVIGATION BAR (UMANG Style)
+   -------------------------------------------------------------------------- */
+.gov-navbar {
+  background: var(--gov-navy);
+  color: #ffffff;
+  box-shadow: var(--shadow-md);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.nav-inner {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding: 0 1rem;
 }
 
-/* Tabs */
-.channel-tabs {
+.nav-links {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-  border-bottom: 2px solid var(--border);
-  padding-bottom: 0.5rem;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
-.tab-btn {
-  background: none;
-  border: none;
-  padding: 0.6rem 1rem;
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--text-muted);
+.nav-item {
+  white-space: nowrap;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 14px;
+  color: #e2e8f0;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
-  border-radius: 6px;
-  transition: all 0.2s;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s ease;
 }
 
-.tab-btn:hover {
-  background: #e2e8f0;
-}
-
-.tab-btn.active {
-  background: var(--primary);
+.nav-link:hover, .nav-link.active {
   color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  border-bottom-color: var(--gov-saffron);
 }
 
-/* Channel Panels */
-.channel-panel {
+.nav-tollfree {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 153, 51, 0.15);
+  border: 1px solid var(--gov-saffron);
+  color: #ffb74d;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   4. TICKER / NEWS FLASH (AgriWelfare Style)
+   -------------------------------------------------------------------------- */
+.news-ticker-bar {
+  background: #fff8e1;
+  border-bottom: 1px solid #ffe082;
+  color: #78350f;
+  padding: 6px 1rem;
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+}
+
+.ticker-inner {
+  max-width: 1240px;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ticker-badge {
+  background: #d97706;
+  color: #ffffff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.ticker-marquee {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 600;
+}
+
+/* --------------------------------------------------------------------------
+   5. HERO BANNER & VOICE SEARCH (UMANG Central Portal Style)
+   -------------------------------------------------------------------------- */
+.umang-hero {
+  background: linear-gradient(135deg, #092c5c 0%, #003366 50%, #0c3866 100%);
+  color: #ffffff;
+  padding: 32px 1rem 38px;
+  position: relative;
+  overflow: hidden;
+}
+
+.umang-hero::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 35%;
+  background: radial-gradient(circle, rgba(255, 153, 51, 0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-inner {
+  max-width: 1000px;
+  margin: 0 auto;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+}
+
+.hero-tagline-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 153, 51, 0.2);
+  border: 1px solid rgba(255, 153, 51, 0.5);
+  color: #ffb74d;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.umang-hero h1 {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.3;
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
+}
+
+.umang-hero p {
+  font-size: 14px;
+  color: #cbd5e1;
+  max-width: 680px;
+  margin: 0 auto 24px;
+}
+
+/* Central Voice Search Box */
+.umang-search-wrapper {
+  background: #ffffff;
+  border-radius: var(--radius-xl);
+  padding: 6px 8px 6px 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  max-width: 720px;
+  margin: 0 auto 16px;
+}
+
+.search-input-field {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  color: var(--text-primary);
+  font-family: inherit;
+  background: transparent;
+}
+
+.search-input-field::placeholder {
+  color: #94a3b8;
+}
+
+.hero-mic-btn {
+  background: linear-gradient(135deg, #ff9933 0%, #e65100 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 20px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(230, 81, 0, 0.35);
+  transition: transform 0.15s ease;
+  white-space: nowrap;
+}
+
+.hero-mic-btn:hover {
+  transform: scale(1.02);
+}
+
+.hero-mic-btn.listening {
+  background: #dc2626;
+  box-shadow: 0 0 15px rgba(220, 38, 38, 0.6);
+  animation: pulseListen 1.2s infinite;
+}
+
+@keyframes pulseListen {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.96); }
+  100% { transform: scale(1); }
+}
+
+/* Hero Quick Pills */
+.hero-quick-tags {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.quick-tag-pill {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quick-tag-pill:hover {
+  background: rgba(255, 153, 51, 0.3);
+  border-color: var(--gov-saffron);
+}
+
+/* --------------------------------------------------------------------------
+   6. IMPACT METRICS BAR (UMANG Style DPI Counters)
+   -------------------------------------------------------------------------- */
+.dpi-metrics-bar {
+  background: #ffffff;
+  border-bottom: 1px solid var(--border-light);
+  padding: 16px 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.metrics-inner {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.metric-card-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-left: 3px solid var(--gov-blue);
+}
+
+.metric-icon-box {
+  font-size: 24px;
+}
+
+.metric-num {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--gov-navy);
+  line-height: 1.1;
+}
+
+.metric-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* --------------------------------------------------------------------------
+   7. MAIN CONTENT & INTERACTIVE MODULE TABS
+   -------------------------------------------------------------------------- */
+.main-wrapper {
+  max-width: 1240px;
+  margin: 24px auto;
+  padding: 0 1rem;
+  width: 100%;
+  flex: 1;
+}
+
+/* Mode Switcher Tabs */
+.module-tabs-header {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--border-light);
+  padding-bottom: 6px;
+}
+
+.module-tab-btn {
+  background: #ffffff;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.module-tab-btn.active {
+  background: var(--gov-navy);
+  color: #ffffff;
+  border-color: var(--gov-navy);
+  box-shadow: var(--shadow-sm);
+}
+
+.module-panel {
   display: none;
 }
 
-.channel-panel.active {
+.module-panel.active {
   display: block;
 }
 
-/* Stepper */
-.stepper-wrapper {
-  margin-bottom: 1.5rem;
+/* --------------------------------------------------------------------------
+   MODULE 1: VOICE SCHEME ELIGIBILITY
+   -------------------------------------------------------------------------- */
+.eligibility-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+@media (min-width: 900px) {
+  .eligibility-grid {
+    grid-template-columns: 1.1fr 0.9fr;
+  }
+}
+
+.stepper-container {
+  background: #ffffff;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  margin-bottom: 16px;
 }
 
 .stepper-track {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
 }
 
 .step-node {
-  background: #e2e8f0;
-  padding: 0.5rem;
+  flex: 1;
+  font-size: 11px;
+  font-weight: 700;
   text-align: center;
-  font-size: 0.75rem;
-  font-weight: 600;
-  border-radius: 6px;
+  padding: 6px 4px;
+  background: #f1f5f9;
   color: var(--text-muted);
+  border-radius: 4px;
+  border: 1px solid var(--border-light);
 }
 
 .step-node.active {
-  background: var(--primary);
-  color: #ffffff;
+  background: var(--gov-saffron-light);
+  color: var(--gov-saffron-dark);
+  border-color: var(--gov-saffron);
 }
 
 .step-node.completed {
-  background: var(--success);
-  color: #ffffff;
+  background: var(--gov-green-light);
+  color: var(--gov-green);
+  border-color: var(--gov-green);
 }
 
-/* Prompt Box */
 .prompt-box {
   background: #ffffff;
-  border: 2px solid #bfdbfe;
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  box-shadow: var(--shadow);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-card);
+  margin-bottom: 16px;
 }
 
 .assistant-tag {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  font-size: 0.9rem;
+  gap: 6px;
+  font-size: 12px;
   font-weight: 700;
-  color: var(--primary);
-  margin-bottom: 0.5rem;
+  color: var(--gov-navy);
+  margin-bottom: 8px;
 }
 
 .prompt-text {
-  font-size: 1.35rem;
-  font-weight: 600;
-  color: #0f172a;
-  line-height: 1.45;
-  margin-bottom: 0.75rem;
+  font-size: 17px;
+  color: var(--gov-navy-dark);
+  font-weight: 700;
+  line-height: 1.5;
+  margin-bottom: 8px;
 }
 
 .prompt-hint {
-  font-size: 0.9rem;
-  color: #64748b;
-  font-style: italic;
-  margin-bottom: 1rem;
+  font-size: 13px;
+  color: #d97706;
+  font-weight: 600;
+  background: #fffbeb;
+  padding: 6px 12px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  display: inline-block;
 }
 
 .play-audio-btn {
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  color: var(--primary);
-  font-weight: 600;
-  padding: 0.45rem 0.9rem;
+  background: var(--gov-navy);
+  color: #ffffff;
+  border: none;
   border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 6px;
 }
 
 .play-audio-btn:hover {
-  background: #dbeafe;
+  background: var(--gov-blue);
 }
 
-/* Mic Interaction Area */
-.voice-interaction-area {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem 1rem;
-  background: #ffffff;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
-  margin-bottom: 1.5rem;
+/* Mic Interaction Panel */
+.mic-action-panel {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 24px 16px;
+  text-align: center;
+  box-shadow: var(--shadow-card);
+  margin-bottom: 16px;
 }
 
 .big-mic-button {
-  width: 140px;
-  height: 140px;
+  width: 90px;
+  height: 90px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-  color: #ffffff;
+  background: linear-gradient(135deg, #ff9933 0%, #e65100 100%);
   border: none;
-  cursor: pointer;
+  color: #ffffff;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 10px 20px rgba(249, 115, 22, 0.35);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  margin: 0 auto 12px;
+  box-shadow: 0 6px 20px rgba(230, 81, 0, 0.4);
+  transition: transform 0.15s ease;
 }
 
 .big-mic-button:hover {
   transform: scale(1.05);
-  box-shadow: 0 14px 25px rgba(249, 115, 22, 0.45);
 }
 
 .big-mic-button.recording {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-  animation: pulse-ring 1.5s infinite;
+  background: #dc2626;
+  animation: pulseListen 1s infinite;
 }
 
-@keyframes pulse-ring {
-  0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
-  70% { box-shadow: 0 0 0 25px rgba(220, 38, 38, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+.big-mic-button .mic-icon {
+  font-size: 32px;
 }
 
-.mic-icon {
-  font-size: 2.6rem;
-  line-height: 1;
+.big-mic-button .mic-label {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  margin-top: 2px;
 }
 
-.mic-label {
-  font-size: 0.85rem;
-  font-weight: 700;
-  margin-top: 0.4rem;
-}
-
-.mic-subtext {
-  font-size: 0.95rem;
-  color: var(--text-muted);
-  margin-top: 1rem;
-  font-weight: 600;
-}
-
-/* Audio Waveform */
 .waveform-container {
   display: flex;
+  justify-content: center;
   align-items: center;
-  gap: 5px;
-  height: 35px;
-  margin-bottom: 1rem;
-  opacity: 0.3;
-}
-
-.waveform-container.active {
-  opacity: 1;
+  gap: 4px;
+  height: 24px;
+  margin-bottom: 12px;
 }
 
 .wave-bar {
-  width: 6px;
-  height: 12px;
-  background: var(--accent);
+  width: 3px;
+  height: 6px;
+  background: #cbd5e1;
   border-radius: 3px;
-  animation: wave-bounce 1s infinite alternate ease-in-out;
+  transition: height 0.1s ease;
 }
 
-.wave-bar:nth-child(2) { animation-delay: 0.15s; }
-.wave-bar:nth-child(3) { animation-delay: 0.3s; }
-.wave-bar:nth-child(4) { animation-delay: 0.45s; }
-.wave-bar:nth-child(5) { animation-delay: 0.6s; }
-
-@keyframes wave-bounce {
-  0% { height: 8px; }
-  100% { height: 32px; }
+.wave-bar.active {
+  background: var(--gov-saffron);
+  animation: waveAnim 0.6s infinite alternate;
 }
 
-/* Manual Text Simulation Row */
+@keyframes waveAnim {
+  0% { height: 6px; }
+  100% { height: 24px; }
+}
+
 .text-sim-row {
-  margin-top: 1.5rem;
   display: flex;
-  gap: 0.5rem;
-  width: 100%;
-  max-width: 600px;
+  gap: 8px;
+  max-width: 540px;
+  margin: 12px auto 0;
 }
 
 .text-sim-row input {
   flex: 1;
-  padding: 0.6rem 0.8rem;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-gov);
   border-radius: 6px;
-  font-size: 0.95rem;
+  padding: 8px 12px;
+  font-size: 13px;
+  outline: none;
 }
 
-.sim-send-btn {
-  background: var(--primary);
+.text-sim-row button {
+  background: var(--gov-navy);
   color: #ffffff;
   border: none;
-  padding: 0.6rem 1rem;
   border-radius: 6px;
-  font-weight: 600;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
 }
 
-/* Extracted Slots Inspector */
+/* Slots Inspection Card */
 .extracted-slots-card {
   background: #ffffff;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 1rem;
-  box-shadow: var(--shadow);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  box-shadow: var(--shadow-sm);
 }
 
 .slots-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.75rem;
+  font-size: 12px;
   font-weight: 700;
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-.reset-link {
-  background: none;
-  border: none;
-  color: #dc2626;
-  font-weight: 600;
-  cursor: pointer;
-  font-size: 0.8rem;
+  color: var(--gov-navy);
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 6px;
 }
 
 .slots-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
 }
 
 .slot-item {
   background: #f8fafc;
-  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-light);
   border-radius: 6px;
-  border: 1px solid #e2e8f0;
-  font-size: 0.85rem;
+  padding: 6px 8px;
+  font-size: 11px;
 }
 
 .slot-k {
   color: var(--text-muted);
+  font-weight: 600;
 }
 
 .slot-v {
   font-weight: 700;
-  color: var(--primary);
+  color: var(--gov-navy-dark);
 }
 
-/* Telephony / Feature Phone Mockup */
-.telephony-showcase, .whatsapp-showcase {
-  display: grid;
-  grid-template-columns: 320px 1fr;
-  gap: 2rem;
-  align-items: start;
+/* Judge Preset Pills Bar */
+.judge-presets-card {
+  background: #ffffff;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  margin-bottom: 16px;
 }
 
-@media (max-width: 768px) {
-  .telephony-showcase, .whatsapp-showcase {
-    grid-template-columns: 1fr;
-  }
-}
-
-.feature-phone-mockup {
-  background: #1e293b;
-  border-radius: 28px;
-  padding: 1.5rem 1rem;
-  box-shadow: var(--shadow-lg);
-  border: 4px solid #0f172a;
-  width: 290px;
-  margin: 0 auto;
-}
-
-.phone-speaker {
-  width: 45px;
-  height: 5px;
-  background: #475569;
-  border-radius: 4px;
-  margin: 0 auto 0.75rem auto;
-}
-
-.phone-screen {
-  background: #0284c7;
-  color: #ffffff;
-  border-radius: 8px;
-  padding: 0.75rem;
-  min-height: 180px;
-  border: 2px solid #0369a1;
-  display: flex;
-  flex-direction: column;
-}
-
-.screen-header {
-  font-size: 0.65rem;
-  opacity: 0.9;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  padding-bottom: 0.25rem;
-}
-
-.screen-body {
-  margin-top: 0.5rem;
-  flex: 1;
-}
-
-.phone-call-title {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #fef08a;
-}
-
-.phone-number {
-  font-size: 0.85rem;
+.presets-title {
+  font-size: 11px;
   font-weight: 800;
-  margin-bottom: 0.5rem;
-}
-
-.phone-live-captions {
-  font-size: 0.85rem;
-  line-height: 1.35;
-  background: rgba(0, 0, 0, 0.25);
-  padding: 0.5rem;
-  border-radius: 4px;
-  min-height: 70px;
-}
-
-.keypad-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.4rem;
-  margin-top: 1rem;
-}
-
-.key {
-  background: #334155;
-  color: #ffffff;
-  border-radius: 6px;
-  padding: 0.5rem 0;
-  text-align: center;
-  font-weight: 700;
-  font-size: 0.85rem;
-  cursor: pointer;
-}
-
-.key.call-btn {
-  background: #16a34a;
-  grid-column: span 1;
-  font-size: 0.7rem;
-}
-
-.key.end-btn {
-  background: #dc2626;
-  font-size: 0.7rem;
-}
-
-/* WhatsApp Mockup */
-.wa-mockup {
-  background: #efeae2;
-  border-radius: 16px;
-  border: 1px solid #cbd5e1;
-  width: 320px;
-  margin: 0 auto;
-  overflow: hidden;
-  box-shadow: var(--shadow-lg);
-}
-
-.wa-header {
-  background: #075e54;
-  color: #ffffff;
-  padding: 0.75rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.wa-avatar {
-  background: #ffffff;
-  border-radius: 50%;
-  width: 34px;
-  height: 34px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.wa-title strong {
-  display: block;
-  font-size: 0.85rem;
-}
-
-.wa-title small {
-  font-size: 0.7rem;
-  opacity: 0.8;
-}
-
-.wa-messages {
-  padding: 1rem;
-  min-height: 230px;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.wa-msg {
-  max-width: 85%;
-  padding: 0.6rem;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  line-height: 1.35;
-  position: relative;
-}
-
-.wa-msg.user {
-  background: #dcf8c6;
-  align-self: flex-end;
-}
-
-.wa-msg.bot {
-  background: #ffffff;
-  align-self: flex-start;
-}
-
-.wa-audio-pill {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-weight: 600;
-  color: #128c7e;
-  margin-bottom: 0.25rem;
-}
-
-.wa-time {
-  font-size: 0.65rem;
-  color: #94a3b8;
-  display: block;
-  text-align: right;
-  margin-top: 0.25rem;
-}
-
-.wa-footer {
-  background: #f0f2f5;
-  padding: 0.5rem;
-  display: flex;
-  justify-content: center;
-}
-
-.wa-mic-btn {
-  background: #128c7e;
-  color: #ffffff;
-  border: none;
-  padding: 0.4rem 1rem;
-  border-radius: 20px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.telephony-explainer h3 {
-  font-size: 1.25rem;
-  margin-bottom: 0.5rem;
-  color: var(--primary);
-}
-
-.telephony-explainer p {
+  text-transform: uppercase;
   color: var(--text-muted);
-  margin-bottom: 1rem;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.telephony-explainer ul {
-  padding-left: 1.25rem;
-  margin-bottom: 1.25rem;
+.presets-btn-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
-.telephony-explainer li {
-  margin-bottom: 0.5rem;
-  font-size: 0.95rem;
-}
-
-.action-test-btn {
-  background: var(--primary);
-  color: #ffffff;
-  border: none;
-  padding: 0.75rem 1.25rem;
-  border-radius: 8px;
-  font-weight: 700;
+.preset-pill-btn {
+  background: #f8fafc;
+  border: 1px solid var(--border-gov);
+  color: var(--gov-navy);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-/* Results Section */
+.preset-pill-btn:hover, .preset-pill-btn.active {
+  background: var(--gov-navy);
+  color: #ffffff;
+  border-color: var(--gov-navy);
+}
+
+/* Results & Actionable Triad */
 .results-section {
-  margin-top: 2rem;
   background: #ffffff;
-  border-radius: 14px;
-  padding: 1.75rem;
-  box-shadow: var(--shadow-lg);
-  border: 2px solid #86efac;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-card);
+  margin-top: 16px;
 }
 
 .results-header {
@@ -690,217 +864,548 @@ h1, h2, h3, .prompt-text, .phone-screen, .sms-content {
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+  gap: 8px;
+  margin-bottom: 16px;
+  border-bottom: 2px solid var(--border-light);
+  padding-bottom: 10px;
 }
 
 .results-header h2 {
-  font-size: 1.6rem;
-  color: #166534;
+  font-size: 20px;
+  color: var(--gov-navy);
 }
 
 .badge-matched {
-  background: #dcfce7;
-  color: #15803d;
-  font-weight: 800;
-  padding: 0.35rem 0.8rem;
-  border-radius: 9999px;
-  font-size: 0.9rem;
+  background: var(--gov-green-light);
+  color: var(--gov-green);
+  border: 1px solid var(--gov-green);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .audio-banner {
-  background: #eff6ff;
-  border-left: 5px solid var(--primary);
-  padding: 1rem;
-  border-radius: 8px;
-  margin-bottom: 1.5rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 1rem;
+  margin-bottom: 20px;
 }
 
-.audio-banner-text strong {
-  display: block;
-  font-size: 0.95rem;
-  color: var(--primary);
-}
-
-.audio-banner-text p {
-  font-size: 0.9rem;
-  color: #334155;
-  margin-top: 0.25rem;
-}
-
-/* Triad Grid */
 .triad-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.25rem;
-  margin-bottom: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
 }
 
 .triad-card {
   background: #f8fafc;
-  border-radius: 10px;
-  padding: 1.25rem;
-  border: 1px solid var(--border);
-}
-
-.card-icon {
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 16px;
 }
 
 .triad-card h3 {
-  font-size: 1.15rem;
-  margin-bottom: 0.75rem;
-  color: var(--primary-dark);
+  font-size: 14px;
+  color: var(--gov-navy);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .scheme-item {
   background: #ffffff;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--border-light);
   border-radius: 6px;
-  padding: 0.75rem;
-  margin-bottom: 0.5rem;
+  padding: 10px;
+  margin-bottom: 8px;
 }
 
 .scheme-name {
   font-weight: 700;
-  font-size: 0.95rem;
-  color: #0f172a;
+  font-size: 13px;
+  color: var(--gov-navy);
 }
 
 .scheme-benefit {
-  color: var(--success);
-  font-weight: 800;
-  font-size: 0.9rem;
-  margin-top: 0.2rem;
-}
-
-.checklist {
-  list-style: none;
-}
-
-.checklist li {
-  padding: 0.4rem 0;
-  font-weight: 600;
-  font-size: 0.9rem;
-  border-bottom: 1px dashed #e2e8f0;
-}
-
-.checklist li:before {
-  content: "✓ ";
-  color: var(--success);
-  font-weight: 900;
-}
-
-.office-name {
+  color: var(--gov-green);
   font-weight: 700;
-  font-size: 1rem;
-  color: #b45309;
-  background: #fef3c7;
-  padding: 0.5rem;
-  border-radius: 6px;
-  margin-bottom: 0.5rem;
+  font-size: 12px;
+  margin-top: 2px;
 }
 
-.office-instruction {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-/* SMS Slip */
 .sms-slip-card {
   background: #0f172a;
   color: #f8fafc;
-  border-radius: 10px;
-  padding: 1.25rem;
+  border-radius: var(--radius-md);
+  padding: 16px;
 }
 
 .sms-slip-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.75rem;
-  font-size: 0.85rem;
-  font-weight: 700;
-}
-
-.tag-sms {
-  background: #22c55e;
-  color: #052e16;
-  font-size: 0.7rem;
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
+  font-size: 11px;
+  color: #94a3b8;
+  margin-bottom: 8px;
 }
 
 .sms-content {
   font-family: monospace;
-  font-size: 0.9rem;
-  background: rgba(255, 255, 255, 0.08);
-  padding: 0.75rem;
-  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.5;
   white-space: pre-wrap;
-  color: #38bdf8;
-  line-height: 1.4;
+  color: #fde047;
 }
 
-/* Catalog Section */
-.catalog-section {
-  margin-top: 2rem;
-  background: #ffffff;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  overflow: hidden;
+/* --------------------------------------------------------------------------
+   MODULE 2: PENSION STOPPAGE & DBT TRIAGE (Parvati Devi Special Engine)
+   -------------------------------------------------------------------------- */
+.triage-hero-card {
+  background: linear-gradient(135deg, #7c2d12 0%, #9a3412 100%);
+  color: #ffffff;
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-md);
 }
 
-.catalog-header {
-  padding: 1rem;
-  background: #f1f5f9;
+.triage-hero-card h2 {
+  font-size: 22px;
+  margin-bottom: 6px;
+}
+
+.triage-hero-card p {
+  font-size: 13px;
+  opacity: 0.9;
+  max-width: 600px;
+  margin-bottom: 16px;
+}
+
+.triage-search-bar {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  gap: 8px;
+  max-width: 580px;
+}
+
+.triage-search-bar input {
+  flex: 1;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.triage-search-bar button {
+  background: var(--gov-saffron);
+  color: #000;
+  font-weight: 700;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 16px;
   cursor: pointer;
 }
 
-.catalog-header h3 {
-  font-size: 1rem;
-  color: var(--text-main);
+.triage-result-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
 }
 
-.catalog-body {
-  padding: 1rem;
+@media (min-width: 800px) {
+  .triage-result-container {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
-.catalog-note {
-  font-size: 0.85rem;
+.triage-card {
+  background: #ffffff;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.triage-status-alert {
+  background: #fef2f2;
+  border-left: 4px solid #dc2626;
+  padding: 12px;
+  border-radius: 0 6px 6px 0;
+  margin-bottom: 14px;
+}
+
+.triage-status-alert.resolved {
+  background: #f0fdf4;
+  border-left-color: #16a34a;
+}
+
+/* --------------------------------------------------------------------------
+   MODULE 3: MULTI-CHANNEL OFFLINE SIMULATORS (2G IVR & WhatsApp)
+   -------------------------------------------------------------------------- */
+.channel-showcase-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+@media (min-width: 850px) {
+  .channel-showcase-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.phone-mockup-wrapper {
+  background: #ffffff;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.feature-phone-shell {
+  width: 240px;
+  background: #1e293b;
+  border-radius: 28px;
+  padding: 16px 12px;
+  margin: 0 auto;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+  color: #ffffff;
+}
+
+.feature-screen {
+  background: #0284c7;
+  border-radius: 10px;
+  padding: 12px;
+  height: 140px;
+  font-size: 11px;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.feature-keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.key-btn {
+  background: #334155;
+  border: 1px solid #475569;
+  border-radius: 6px;
+  padding: 8px 0;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.key-btn.call {
+  background: #16a34a;
+}
+
+.key-btn.end {
+  background: #dc2626;
+}
+
+/* WhatsApp Mockup */
+.wa-mockup-shell {
+  width: 100%;
+  max-width: 380px;
+  margin: 0 auto;
+  background: #0b141a;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  color: #e9edef;
+}
+
+.wa-header-bar {
+  background: #202c33;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wa-chat-body {
+  padding: 14px;
+  height: 280px;
+  overflow-y: auto;
+  background: #0b141a;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wa-bubble {
+  max-width: 80%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.wa-bubble.user {
+  background: #005c4b;
+  align-self: flex-end;
+}
+
+.wa-bubble.bot {
+  background: #202c33;
+  align-self: flex-start;
+}
+
+/* --------------------------------------------------------------------------
+   MODULE 4: GOVERNMENT SCHEMES DIRECTORY (UMANG Service Grid)
+   -------------------------------------------------------------------------- */
+.schemes-catalog-wrapper {
+  background: #ffffff;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-card);
+}
+
+.catalog-filter-bar {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: 20px;
+}
+
+.catalog-filter-btn {
+  background: #f1f5f9;
+  border: 1px solid var(--border-light);
+  color: var(--text-secondary);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.catalog-filter-btn.active {
+  background: var(--gov-navy);
+  color: #ffffff;
+}
+
+.schemes-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.scheme-card-item {
+  background: #ffffff;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.scheme-card-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--gov-saffron);
+}
+
+.scheme-ministry-tag {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--gov-saffron-dark);
+  margin-bottom: 4px;
+}
+
+.scheme-card-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gov-navy);
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.scheme-card-benefit {
+  background: var(--gov-green-light);
+  color: var(--gov-green);
+  font-weight: 700;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-bottom: 10px;
+}
+
+.scheme-card-docs {
+  font-size: 11px;
   color: var(--text-muted);
-  margin-bottom: 1rem;
+  line-height: 1.4;
+  margin-bottom: 14px;
 }
 
-.catalog-table {
+.scheme-apply-btn {
+  background: var(--gov-navy);
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+}
+
+.scheme-apply-btn:hover {
+  background: var(--gov-blue);
+}
+
+/* --------------------------------------------------------------------------
+   MODULE 5: GRAM PANCHAYAT SECRETARY DESK
+   -------------------------------------------------------------------------- */
+.panchayat-desk-card {
+  background: #ffffff;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-card);
+}
+
+.desk-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 10px;
+}
+
+.grievance-table-wrapper {
+  overflow-x: auto;
+}
+
+.grievance-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.8rem;
-}
-
-.catalog-table th, .catalog-table td {
-  padding: 0.5rem;
-  border: 1px solid #e2e8f0;
+  font-size: 12px;
   text-align: left;
 }
 
-.catalog-table th {
+.grievance-table th {
   background: #f8fafc;
+  color: var(--gov-navy);
+  font-weight: 700;
+  padding: 10px 12px;
+  border-bottom: 2px solid var(--border-light);
+}
+
+.grievance-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-secondary);
+}
+
+.status-tag {
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 10px;
   font-weight: 700;
 }
 
-/* Footer */
-.app-footer {
+.status-tag.alert-sent {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* --------------------------------------------------------------------------
+   8. OFFICIAL GOVERNMENT FOOTER (UMANG & AgriWelfare Standard)
+   -------------------------------------------------------------------------- */
+.gov-footer {
+  background: var(--gov-navy-dark);
+  color: #e2e8f0;
+  font-size: 12px;
+  margin-top: 40px;
+}
+
+.footer-top-strip {
+  background: #092c5c;
+  padding: 16px 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.footer-logos-inner {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.footer-portal-link {
+  color: #94a3b8;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.footer-portal-link:hover {
+  color: var(--gov-saffron);
+}
+
+.footer-main-body {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 24px 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.footer-col h4 {
+  color: var(--gov-saffron);
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+.footer-col ul {
+  list-style: none;
+}
+
+.footer-col ul li {
+  margin-bottom: 6px;
+}
+
+.footer-col ul li a {
+  color: #cbd5e1;
+  text-decoration: none;
+}
+
+.footer-col ul li a:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+.footer-bottom-copy {
+  background: #030d1c;
+  padding: 12px 1rem;
   text-align: center;
-  margin-top: 3rem;
-  font-size: 0.85rem;
-  color: var(--text-muted);
+  color: #64748b;
+  font-size: 11px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
