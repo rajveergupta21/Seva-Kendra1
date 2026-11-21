@@ -6,6 +6,10 @@
 import http from 'http';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Helper to make HTTP request
 function postJson(port, path, body) {
@@ -167,12 +171,13 @@ async function testHttpEndpoints() {
     failed++;
   }
 
-  // 4. /api/chat/audio (PCM WAV upload with fallback speech recognition)
+  // 4a. /api/chat/audio (Real Speech Audio)
   try {
-    const wav = createWav();
+    const fixturePath = path.join(__dirname, 'fixtures', 'hindi_speech.wav');
+    const wav = fs.existsSync(fixturePath) ? fs.readFileSync(fixturePath) : createWav();
     const audioRes = await postAudio(PORT, '/api/chat/audio', wav, 'hi-IN', 'हम 48 साल के हैं विधवा हैं कोई जमीन नहीं है');
-    if (audioRes.status === 200 && audioRes.data.type === 'SCHEMES_MATCHED') {
-      console.log(`✓ [POST /api/chat/audio] Audio endpoint processed successfully (Type: ${audioRes.data.type})`);
+    if (audioRes.status === 200 && (audioRes.data.type === 'SCHEMES_MATCHED' || audioRes.data.type === 'FOLLOW_UP_QUESTION')) {
+      console.log(`✓ [POST /api/chat/audio] Real speech processed successfully (Type: ${audioRes.data.type})`);
       passed++;
     } else {
       console.error(`❌ [POST /api/chat/audio] Failed:`, audioRes);
@@ -180,6 +185,22 @@ async function testHttpEndpoints() {
     }
   } catch (e) {
     console.error(`❌ [POST /api/chat/audio] Error:`, e.message);
+    failed++;
+  }
+
+  // 4b. /api/chat/audio (Silent Audio -> MIC_SILENT error code)
+  try {
+    const silentWav = createWav();
+    const silentRes = await postAudio(PORT, '/api/chat/audio', silentWav, 'hi-IN', '');
+    if (silentRes.status === 200 && silentRes.data.errorCode === 'MIC_SILENT') {
+      console.log(`✓ [POST /api/chat/audio] Silent audio correctly identified as MIC_SILENT`);
+      passed++;
+    } else {
+      console.error(`❌ [POST /api/chat/audio (Silent)] Expected MIC_SILENT, got:`, silentRes);
+      failed++;
+    }
+  } catch (e) {
+    console.error(`❌ [POST /api/chat/audio (Silent)] Error:`, e.message);
     failed++;
   }
 

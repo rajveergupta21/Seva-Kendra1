@@ -18,6 +18,10 @@
   "author": "Build for India 3 Team",
   "license": "MIT",
   "dependencies": {
-    "sarvamai": "^1.1.21"
+    "sarvamai": "^1.1.21",
+    "ws": "^8.23.0"
+  },
+  "devDependencies": {
+    "playwright": "^1.65.1"
   }
 }

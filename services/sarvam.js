@@ -1,90 +1,134 @@
 /**
  * Sarvam AI Official SDK Service Integration
- * Uses the official 'sarvamai' npm package.
+ * Uses the official 'sarvamai@1.1.21' npm package.
  * Text-to-Speech: bulbul:v4-flash (speaker: aarti_hi_customer, 24kHz)
- * Speech-to-Text: saaras:v3
+ * Speech-to-Text: saaras:v3 (REST & WebSocket Streaming)
  */
 
 import { SarvamAIClient } from 'sarvamai';
+import './env_loader.js';
 
-const DEFAULT_API_KEY = process.env.SARVAM_API_KEY || "sk_x00bjnt4_2SgyfD37o214xLKsJk539Taz";
+let cachedClient = null;
 
-let sarvamClient = null;
+/**
+ * Validates and retrieves the singleton SarvamAIClient instance.
+ * Fails fast if SARVAM_API_KEY is missing. Never prints key to logs.
+ */
+export function getSarvamClient(customKey) {
+  const apiKey = customKey || process.env.SARVAM_API_KEY;
+  if (!apiKey) {
+    throw new Error("FATAL: SARVAM_API_KEY environment variable is missing. Please set it in your .env or environment.");
+  }
 
-export function getSarvamClient(apiKey = process.env.SARVAM_API_KEY || DEFAULT_API_KEY) {
-  const effectiveKey = apiKey || DEFAULT_API_KEY;
-  if (!sarvamClient || (effectiveKey && sarvamClient._options?.apiSubscriptionKey !== effectiveKey)) {
-    sarvamClient = new SarvamAIClient({
-      apiSubscriptionKey: effectiveKey
+  if (!cachedClient || (customKey && cachedClient._options?.apiSubscriptionKey !== customKey)) {
+    cachedClient = new SarvamAIClient({
+      apiSubscriptionKey: apiKey
     });
   }
-  return sarvamClient;
+  return cachedClient;
 }
 
 /**
- * Maps incoming dialect/language strings to official Sarvam target_language_code
+ * Maps incoming dialect/language strings to official Sarvam BCP-47 language_code for STT
+ * Exact SDK options: 'hi-IN', 'bn-IN', 'en-IN', 'mai-IN', 'unknown'
  */
-export function getLanguageCode(lang = "hi") {
-  if (!lang) return "hi-IN";
-  const lower = lang.toLowerCase();
-  if (lower.startsWith("bn") || lower.includes("bengali")) return "bn-IN";
-  if (lower.startsWith("en") || lower.includes("english")) return "en-IN";
-  return "hi-IN"; // Hindi, Bhojpuri, Maithili use hi-IN
+export function getSttLanguageCode(lang = "hi") {
+  if (!lang) return "unknown";
+  const lower = String(lang).toLowerCase().trim();
+
+  if (lower === "bn" || lower === "bn-in" || lower.includes("bengali") || lower.includes("bangla")) {
+    return "bn-IN";
+  }
+  if (lower === "en" || lower === "en-in" || lower.includes("english")) {
+    return "en-IN";
+  }
+  if (lower === "mai" || lower === "mai-in" || lower.includes("maithili")) {
+    return "mai-IN";
+  }
+  if (lower === "hi" || lower === "hi-in" || lower.includes("hindi")) {
+    return "hi-IN";
+  }
+  if (lower.includes("bhojpuri")) {
+    // Sarvam STT supports Hindi dialect model for Bhojpuri, or 'unknown' for auto-detect
+    return "hi-IN";
+  }
+  if (lower === "unknown") {
+    return "unknown";
+  }
+
+  // Uncertain language -> auto-detect
+  return "unknown";
 }
 
 /**
- * Text-to-Speech using Sarvam AI Bulbul v4-flash
- * Supports multi-language synthesis with aarti_hi_customer at 24000Hz
- * Polymorphic parameters support:
- *   textToSpeech(text, language, speaker, apiKey)
- *   textToSpeech(text, speaker, apiKey)
- *   textToSpeech(text)
+ * Maps language to Sarvam TTS target_language_code
+ */
+export function getTtsLanguageCode(lang = "hi") {
+  if (!lang) return "hi-IN";
+  const lower = String(lang).toLowerCase().trim();
+  if (lower === "bn" || lower === "bn-in" || lower.includes("bengali")) return "bn-IN";
+  if (lower === "en" || lower === "en-in" || lower.includes("english")) return "en-IN";
+  // Hindi, Bhojpuri, Maithili are synthesized via hi-IN speaker
+  return "hi-IN";
+}
+
+/**
+ * Splits text into natural spoken sentences for streaming TTS
+ */
+export function splitIntoSentences(text) {
+  if (!text) return [];
+  // Match Indic Danda (।), period, question mark, exclamation, or newline
+  const rawParts = text.split(/(?<=[।\.\?!;:\n])\s+/);
+  const sentences = [];
+  for (const part of rawParts) {
+    const trimmed = part.trim();
+    if (trimmed.length > 0) {
+      // Keep individual sentences under 450 chars for Bulbul v4 limit
+      if (trimmed.length > 450) {
+        const sub = trimmed.match(/.{1,400}(?:\s+|$)/g) || [trimmed];
+        sentences.push(...sub.map(s => s.trim()).filter(Boolean));
+      } else {
+        sentences.push(trimmed);
+      }
+    }
+  }
+  return sentences.length > 0 ? sentences : [text.trim()];
+}
+
+/**
+ * REST Text-to-Speech using Sarvam AI Bulbul v4-flash
  */
 export async function textToSpeech(text, arg2 = "hi", arg3 = "aarti_hi_customer", arg4 = undefined) {
   let language = "hi";
   let speaker = "aarti_hi_customer";
-  let apiKey = process.env.SARVAM_API_KEY || DEFAULT_API_KEY;
+  let apiKey = process.env.SARVAM_API_KEY;
 
   if (typeof arg2 === 'string' && (arg2.startsWith('sk_') || arg2.length > 30)) {
     apiKey = arg2;
   } else if (typeof arg3 === 'string' && (arg3.startsWith('sk_') || arg3.length > 30)) {
     apiKey = arg3;
-    if (['hi', 'bn', 'en', 'bhojpuri', 'maithili', 'hi-IN', 'bn-IN', 'en-IN'].includes(arg2)) {
-      language = arg2;
-    } else {
-      speaker = arg2;
-    }
+    language = arg2 || "hi";
   } else {
     if (arg2) language = arg2;
     if (arg3 && !arg3.startsWith('sk_')) speaker = arg3;
     if (arg4) apiKey = arg4;
   }
 
-  // Fallback to valid bulbul:v4-flash speaker if older v2/v3 speaker name (like 'kavya') was passed
   if (speaker === "kavya" || !speaker) {
     speaker = "aarti_hi_customer";
-  }
-
-  if (!apiKey) {
-    return {
-      audio_base64: null,
-      is_fallback: true,
-      text
-    };
   }
 
   try {
     const client = getSarvamClient(apiKey);
     let cleanText = (text || "").trim();
 
-    // Enforce 480 char boundary for Sarvam Bulbul API
     if (cleanText.length > 480) {
       const cut = cleanText.slice(0, 480);
       const lastPunct = Math.max(cut.lastIndexOf('।'), cut.lastIndexOf('.'), cut.lastIndexOf('!'), cut.lastIndexOf('?'));
       cleanText = lastPunct > 150 ? cut.slice(0, lastPunct + 1) : cut.slice(0, 475) + "...";
     }
 
-    const targetLangCode = getLanguageCode(language);
+    const targetLangCode = getTtsLanguageCode(language);
 
     const res = await client.textToSpeech.convert({
       text: cleanText,
@@ -105,7 +149,7 @@ export async function textToSpeech(text, arg2 = "hi", arg3 = "aarti_hi_customer"
       model: "bulbul:v4-flash"
     };
   } catch (error) {
-    console.error("[Sarvam SDK TTS Exception]", error.message);
+    console.error("[Sarvam SDK TTS Error]", error.statusCode || error.message);
     return {
       audio_base64: null,
       error: error.message,
@@ -116,11 +160,11 @@ export async function textToSpeech(text, arg2 = "hi", arg3 = "aarti_hi_customer"
 }
 
 /**
- * Convert Text to Speech Stream (as requested in user snippet)
+ * Streaming TTS: Returns a BinaryResponse stream using client.textToSpeech.convertStream
  */
-export async function convertSpeechStream(text, language = "hi", speaker = "aarti_hi_customer", apiKey = process.env.SARVAM_API_KEY || DEFAULT_API_KEY) {
+export async function convertSpeechStream(text, language = "hi", speaker = "aarti_hi_customer", apiKey = process.env.SARVAM_API_KEY) {
   const client = getSarvamClient(apiKey);
-  const targetLangCode = getLanguageCode(language);
+  const targetLangCode = getTtsLanguageCode(language);
 
   return await client.textToSpeech.convertStream({
     text: text,
@@ -133,47 +177,115 @@ export async function convertSpeechStream(text, language = "hi", speaker = "aart
 }
 
 /**
- * Speech-to-Text using Sarvam AI Saaras v3 / v4
+ * REST Speech-to-Text using Sarvam AI Saaras v3
+ * NOTE: The SDK field is `language_code` (NOT `languageCode`).
  */
-export async function speechToText(audioBuffer, mimeType = "audio/wav", apiKey = process.env.SARVAM_API_KEY || DEFAULT_API_KEY, languageCode = "hi-IN") {
-  const effectiveKey = apiKey || DEFAULT_API_KEY;
-  if (!effectiveKey) {
-    return {
-      transcript: "",
-      language_code: languageCode,
-      is_fallback: true
-    };
-  }
-
+export async function speechToText(audioBuffer, mimeType = "audio/wav", apiKey = process.env.SARVAM_API_KEY, languageCode = "hi-IN") {
   try {
-    const client = getSarvamClient(effectiveKey);
-    const targetLangCode = getLanguageCode(languageCode);
+    const client = getSarvamClient(apiKey);
+    const targetLangCode = getSttLanguageCode(languageCode);
     const blob = new Blob([audioBuffer], { type: mimeType });
 
+    // EXACT SDK FIELD: language_code
     const res = await client.speechToText.transcribe({
       file: blob,
       model: "saaras:v3",
-      languageCode: targetLangCode
+      language_code: targetLangCode
     });
 
     return {
       transcript: res.transcript ? res.transcript.trim() : "",
       language_code: res.language_code || targetLangCode,
-      is_fallback: false
+      is_fallback: false,
+      raw: res
     };
   } catch (error) {
-    console.error("[Sarvam SDK STT Exception]", error.message);
+    const httpStatus = error.statusCode || error.status || 500;
+    console.error(`[Sarvam SDK STT Error] HTTP ${httpStatus}: ${error.message}`);
     return {
       transcript: "",
       error: error.message,
+      statusCode: httpStatus,
       is_fallback: true
     };
   }
 }
 
 /**
+ * Realtime Streaming Speech-to-Text Session over Sarvam WebSocket
+ */
+export async function createSttStreamingSession({
+  languageCode = "hi-IN",
+  apiKey = process.env.SARVAM_API_KEY,
+  onPartial = () => {},
+  onFinal = () => {},
+  onError = () => {}
+}) {
+  const client = getSarvamClient(apiKey);
+  const targetLangCode = getSttLanguageCode(languageCode);
+
+  try {
+    const socket = await client.speechToTextStreaming.connect({
+      "language-code": targetLangCode,
+      model: "saaras:v3",
+      input_audio_codec: "wav",
+      sample_rate: "16000"
+    });
+
+    await socket.waitForOpen();
+
+    let fullTranscript = "";
+
+    socket.on("message", (msg) => {
+      if (msg.type === "data" && msg.data) {
+        const text = (msg.data.transcript || "").trim();
+        if (text) {
+          fullTranscript = text;
+          onPartial(text);
+        }
+      } else if (msg.type === "error") {
+        console.error("[Sarvam Streaming STT Socket Error Message]", msg.data);
+        onError(new Error(msg.data?.message || "Streaming STT error"));
+      }
+    });
+
+    socket.on("error", (err) => {
+      console.error("[Sarvam Streaming STT Socket Error]", err.message);
+      onError(err);
+    });
+
+    return {
+      sendAudioPcmChunk(pcmBase64) {
+        if (socket.readyState === 1) { // OPEN
+          socket.transcribe({
+            audio: pcmBase64,
+            sample_rate: 16000,
+            encoding: "audio/wav"
+          });
+        }
+      },
+      flush() {
+        if (socket.readyState === 1) {
+          socket.flush();
+        }
+      },
+      close() {
+        try {
+          socket.close();
+        } catch (e) {}
+      },
+      getTranscript() {
+        return fullTranscript;
+      }
+    };
+  } catch (err) {
+    console.error("[Sarvam Streaming STT Connection Error]", err.message);
+    throw err;
+  }
+}
+
+/**
  * Indic Dialect & Number Slot Extraction Parser
- * Robust extraction taking into account colloquial vernacular words and dialog step
  */
 export function extractSlotsFromSpokenHindi(text, currentQuestionIndex = 0) {
   if (!text || typeof text !== 'string') return {};
@@ -242,7 +354,6 @@ export function extractSlotsFromSpokenHindi(text, currentQuestionIndex = 0) {
     slots.landholding_acres = 0.0;
     slots.is_landless = true;
   } else {
-    // Check colloquial Hindi fractions: ढाई (2.5), डेढ़ (1.5), आधा (0.5), सवा (1.25)
     if (normalized.includes("ढाई एकड़") || normalized.includes("ढाई एकड") || normalized.includes("ढाई बीघा")) {
       slots.landholding_acres = normalized.includes("बीघा") ? 1.55 : 2.5;
     } else if (normalized.includes("डेढ़ एकड़") || normalized.includes("डेढ़ बीघा")) {
@@ -274,7 +385,6 @@ export function extractSlotsFromSpokenHindi(text, currentQuestionIndex = 0) {
     slots.annual_income_inr = slots.annual_income_inr || 40000;
   }
 
-  // Income numeric patterns: "75 हजार", "4 हजार", "1 लाख"
   const incomeMatch = normalized.match(/(\d+)\s*(हज़ार|हजार|लाख|thousand)?\s*(?:महीना|महीने|साल|कमाई|रुप|रू)?/i);
   if (incomeMatch && (incomeMatch[2] || normalized.includes("कमाई") || normalized.includes("महीने") || normalized.includes("साल") || currentQuestionIndex === 2)) {
     let amt = parseInt(incomeMatch[1], 10);

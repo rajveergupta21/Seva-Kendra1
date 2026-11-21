@@ -8,6 +8,7 @@
 import { matchSchemes } from '../engine/eligibility.js';
 import { diagnoseStoppage, BENEFICIARIES } from '../engine/triage.js';
 import { textToSpeech } from './sarvam.js';
+import { getOrSynthesizeCachedAudio } from './tts_cache.js';
 
 // User Conversation Memory (session cache)
 const CONVERSATIONS = new Map();
@@ -150,7 +151,7 @@ export function analyzeUserUtterance(text, currentProfile = {}) {
  * Dynamically resolves queries, triggers triage, or asks only the necessary missing question.
  * Zero hardcoded user profile information.
  */
-export async function processDynamicTurn(sessionId, userSpeechText, language = "hi") {
+export async function processDynamicTurn(sessionId, userSpeechText, language = "hi", generateTts = true) {
   const conv = getOrCreateConversation(sessionId, language);
   conv.turns.push({ userText: userSpeechText, timestamp: Date.now() });
 
@@ -158,29 +159,37 @@ export async function processDynamicTurn(sessionId, userSpeechText, language = "
   conv.profile = profile;
   conv.intent = intent;
 
+  // Helper for fast cached or fallback TTS
+  async function resolveTts(text, lang) {
+    if (!generateTts) return { audioBase64: null, audioUrl: null };
+    const cached = await getOrSynthesizeCachedAudio(text, lang);
+    if (cached) return { audioBase64: null, audioUrl: cached.url };
+    const tts = await textToSpeech(text, lang, "aarti_hi_customer");
+    return { audioBase64: tts.audio_base64, audioUrl: null };
+  }
+
   // CASE 1: The user reported an Entitlement Stoppage / Delayed Money!
-  // Resolve IMMEDIATELY with the Triage Engine. Zero interrogation!
   if (intent === "PENSION_STOPPAGE" || intent === "MGNREGA_WAGE") {
     const triageResult = diagnoseStoppage(userSpeechText, "", language === "bn" ? "bengali" : "bhojpuri");
     conv.resolved = true;
     conv.result = triageResult;
 
     const spokenScript = triageResult.diagnosis.citizen_friendly_script;
-    const tts = await textToSpeech(spokenScript, language, "aarti_hi_customer");
+    const { audioBase64, audioUrl } = await resolveTts(spokenScript, language);
 
     return {
       type: "TRIAGE_RESOLVED",
       isCompleted: true,
       userTranscript: userSpeechText,
       replyText: spokenScript,
-      audioBase64: tts.audio_base64,
+      audioBase64: audioBase64,
+      audioUrl: audioUrl,
       triageData: triageResult,
       profile: conv.profile
     };
   }
 
   // CASE 2: The user provided their real details through voice!
-  // Evaluate schemes strictly based on real information spoken by the user.
   const hasAge = conv.profile.age !== null;
   const hasSituation = conv.profile.marital_status !== null || 
                        conv.profile.landholding_acres !== null || 
@@ -192,14 +201,15 @@ export async function processDynamicTurn(sessionId, userSpeechText, language = "
     conv.resolved = true;
     conv.result = evaluation;
 
-    const tts = await textToSpeech(evaluation.spokenScript, language, "aarti_hi_customer");
+    const { audioBase64, audioUrl } = await resolveTts(evaluation.spokenScript, language);
 
     return {
       type: "SCHEMES_MATCHED",
       isCompleted: true,
       userTranscript: userSpeechText,
       replyText: evaluation.spokenScript,
-      audioBase64: tts.audio_base64,
+      audioBase64: audioBase64,
+      audioUrl: audioUrl,
       evaluationResult: evaluation,
       profile: conv.profile
     };
@@ -248,7 +258,7 @@ export async function processDynamicTurn(sessionId, userSpeechText, language = "
     }
   }
 
-  const tts = await textToSpeech(naturalQuestion, language, "aarti_hi_customer");
+  const { audioBase64, audioUrl } = await resolveTts(naturalQuestion, language);
 
   return {
     type: "FOLLOW_UP_QUESTION",
@@ -256,7 +266,8 @@ export async function processDynamicTurn(sessionId, userSpeechText, language = "
     userTranscript: userSpeechText,
     replyText: naturalQuestion,
     promptHint: promptHint,
-    audioBase64: tts.audio_base64,
+    audioBase64: audioBase64,
+    audioUrl: audioUrl,
     profile: conv.profile
   };
 }

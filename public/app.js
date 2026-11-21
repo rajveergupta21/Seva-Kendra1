@@ -1,33 +1,57 @@
 /**
  * Seva Kendra (सेवा केंद्र) - Master Client Application
- * Hardware-Friendly, Multilingual (Hi, Bhojpuri, Bn, Maithili, En), Single-Audio Controlled,
- * 16kHz PCM WAV Audio Capture + Sarvam AI Engine
+ * Low-Latency Voice Gateway, AudioWorklet 16kHz Streaming, VAD Conversation Mode,
+ * Single Unlocked Audio, Barge-in Support, and Edge Telemetry
  */
 
 const API_BASE = window.location.origin;
 let currentSessionId = `session_${Date.now()}`;
 let currentLanguage = 'hi';
 
-// Audio Management: Single instance to prevent multiple voices playing simultaneously
-let currentAudioInstance = null;
+// Audio Playback Management: Single persistent unlocked <audio> element
+let masterAudio = null;
+let isAudioUnlocked = false;
+let isAssistantSpeaking = false;
+let currentPromptAudioUrl = null;
 let currentPromptAudioBase64 = null;
+let currentSpokenAudioUrl = null;
 let currentSpokenAudioBase64 = null;
-let currentTriageAudioBase64 = null;
+let currentTriageAudioUrl = null;
 let currentTriageScriptText = "";
 
-// Web Audio PCM Capture State
+// AudioWorklet & Web Audio Capture State
 let audioCtx = null;
 let rawMicStream = null;
 let mediaStreamSource = null;
-let scriptProcessorNode = null;
-let pcmBuffers = [];
+let workletNode = null;
 let isAudioCapturing = false;
 let isRecording = false;
+window.isRecording = false;
+window.isAudioCapturing = false;
 
-// Speech Recognition (Visual Feedback) State
-let speechRecognitionInstance = null;
-let isSpeechRecognizing = false;
-let latestInterimTranscript = "";
+// Audio Buffer Accumulator (for REST fallback & RMS analysis)
+let accumulatedPcmBuffers = [];
+let totalRecordedBytes = 0;
+let userHasSpokenInTurn = false;
+let consecutiveSilenceMs = 0;
+
+// VAD & Turn Configuration
+const VAD_SPEECH_RMS_THRESHOLD = 0.012;
+const VAD_SILENCE_RMS_THRESHOLD = 0.007;
+const VAD_SILENCE_LIMIT_MS = 800; // 800ms silence = End of Speech
+const BARGE_IN_RMS_THRESHOLD = 0.030; // Voice loudness to interrupt assistant
+
+// WebSocket Streaming State
+let ws = null;
+let isWsConnected = false;
+let clientSpeechEndTimestamp = null;
+let pendingTurnId = null;
+
+// Conversation Mode (Hands-Free Listening after assistant finishes)
+let isConversationModeActive = false;
+
+// Latency Instrumentation
+let lastTurnMetrics = null;
 
 // Verified Schemes Cache
 let allLoadedSchemes = [];
@@ -48,9 +72,9 @@ const I18N_TRANSLATIONS = {
     welcomePrompt: "नमस्ते, सेवा केंद्र में आपका स्वागत है। बताइए, आप किस योजना के बारे में जानना चाहते हैं, या अपनी उम्र और स्थिति बताइए?",
     welcomeHint: '💡 माइक बटन दबाएं और अपनी उम्र, स्थिति या किसी भी योजना के बारे में बोलें',
     micLabelIdle: "बोलने के लिए दबाएं",
-    micLabelRecording: "रोकने के लिए दबाएं",
+    micLabelRecording: "सुन रहे हैं (बोलें...)",
     micStatusIdle: "बटन दबाकर अपनी मातृभाषा में बोलें",
-    micStatusListening: "🎙️ सुन रहे हैं... कृपया बोलिए",
+    micStatusListening: "🎙️ सुन रहे हैं... कृपया बोलिए (रुकने पर अपने-आप उत्तर मिलेगा)",
     micStatusProcessing: "जांच की जा रही है...",
     manualPlaceholder: "या यहाँ बोलकर/लिखकर बताएं...",
     sendBtn: "जवाब भेजें ➔",
@@ -83,9 +107,9 @@ const I18N_TRANSLATIONS = {
     welcomePrompt: "प्रणाम, सेवा केंद्र में राउर स्वागत बा। बताईं, राउर कवनो योजना के बारे में जाने के बा, या उमिर केतना बा?",
     welcomeHint: '💡 माइक दबाईं आ आपन उमिर, स्थिति या कवनो योजना के बारे में बोलीं',
     micLabelIdle: "बोले खातिर दबाईं",
-    micLabelRecording: "रोके खातिर दबाईं",
+    micLabelRecording: "सुनत बानी (बोलीं...)",
     micStatusIdle: "बटन दबाके अपना बोली में बोलीं",
-    micStatusListening: "🎙️ सुनत बानी... बोलीं",
+    micStatusListening: "🎙️ सुनत बानी... बोलीं (रुकला पर अपने-आप जवाब मिली)",
     micStatusProcessing: "जांच हो रहल बा...",
     manualPlaceholder: "या इहाँ बोल के/लिख के बताईं...",
     sendBtn: "भेजीं ➔",
@@ -118,9 +142,9 @@ const I18N_TRANSLATIONS = {
     welcomePrompt: "নমস্কার, সেবা কেন্দ্রে আপনাকে স্বাগত। বলুন, আপনার বয়স কত বা কোন প্রকল্প সম্পর্কে জানতে চান?",
     welcomeHint: '💡 মাইক টিপুন এবং আপনার বয়স বা যেকোনো প্রকল্পের বিষয়ে বলুন',
     micLabelIdle: "বলার জন্য চাপুন",
-    micLabelRecording: "থামানোর জন্য চাপুন",
+    micLabelRecording: "শুনছি (বলুন...)",
     micStatusIdle: "বোতাম চেপে নিজের ভাষায় বলুন",
-    micStatusListening: "🎙️ শুনছি... বলুন",
+    micStatusListening: "🎙️ শুনছি... বলুন (থামলে স্বয়ংক্রিয় উত্তর আসবে)",
     micStatusProcessing: "যাচাই করা হচ্ছে...",
     manualPlaceholder: "অথবা এখানে লিখে/বলে জানান...",
     sendBtn: "পাঠান ➔",
@@ -143,7 +167,7 @@ const I18N_TRANSLATIONS = {
   },
   maithili: {
     langName: "मैथिली",
-    sttCode: "hi-IN",
+    sttCode: "mai-IN",
     brandName: "सेवा केंद्र (Seva Kendra)",
     brandTagline: "ग्रामीण नागरिक कल्याण आ योजना सहायता केंद्र",
     menuBtnText: "अन्य सेवा",
@@ -153,9 +177,9 @@ const I18N_TRANSLATIONS = {
     welcomePrompt: "प्रणाम, सेवा केंद्र में अहाँक स्वागत अछि। कहू, अहाँक उमर कते अछि, आ कोनो योजनाक जानकारी चाही?",
     welcomeHint: '💡 माइक दबाउ आ अपन उमर या कोनो योजनाक विषय में कहू',
     micLabelIdle: "बाजए लेल दबाउ",
-    micLabelRecording: "रोकए लेल दबाउ",
+    micLabelRecording: "सुनैत छी (कहू...)",
     micStatusIdle: "बटन दबा क अपन मातृभाषा में कहू",
-    micStatusListening: "🎙️ सुनैत छी... कहू",
+    micStatusListening: "🎙️ सुनैत छी... कहू (रुकला पर अपने-आप उत्तर भेटत)",
     micStatusProcessing: "जांच भ रहल अछि...",
     manualPlaceholder: "या एतय बाज के/लिख क पठाउ...",
     sendBtn: "पठाउ ➔",
@@ -188,9 +212,9 @@ const I18N_TRANSLATIONS = {
     welcomePrompt: "Welcome to Seva Kendra. To begin, please tell me your age, and what scheme or assistance you need.",
     welcomeHint: '💡 Press the mic button and speak about your age, family situation, or any scheme',
     micLabelIdle: "Tap to Speak",
-    micLabelRecording: "Tap to Stop",
+    micLabelRecording: "Listening (Speak...)",
     micStatusIdle: "Press button and speak in your language",
-    micStatusListening: "🎙️ Listening... please speak",
+    micStatusListening: "🎙️ Listening... please speak (stops automatically when done)",
     micStatusProcessing: "Processing your details...",
     manualPlaceholder: "Or type/speak your query here...",
     sendBtn: "Submit ➔",
@@ -198,9 +222,6 @@ const I18N_TRANSLATIONS = {
     slotsTitle: "📋 Verified Profile Information:",
     slotAgeLabel: "Age:",
     slotMaritalLabel: "Marital Status:",
-    slotLandLabel: "Agricultural Land:",
-    slotIncomeLabel: "Annual Income:",
-    slotStateLabel: "State/District:",
     slotLandLabel: "Agricultural Land:",
     slotIncomeLabel: "Annual Income:",
     slotStateLabel: "State/District:",
@@ -217,461 +238,435 @@ const I18N_TRANSLATIONS = {
 };
 
 // --------------------------------------------------------------------------
-// 2. Audio Management (Zero Overlapping Voices)
+// 2. Error Definitions (Empathetic, distinct messages in all languages)
 // --------------------------------------------------------------------------
-function stopAllAudio() {
-  if (currentAudioInstance) {
-    try {
-      currentAudioInstance.pause();
-      currentAudioInstance.currentTime = 0;
-    } catch (e) {}
-    currentAudioInstance = null;
+const ERROR_MESSAGES = {
+  MIC_PERMISSION_DENIED: {
+    hi: "माइक की अनुमति नहीं मिली। कृपया ब्राउज़र सेटिंग्स में जाकर माइक की अनुमति दें।",
+    bhojpuri: "माइक के अनुमति नइखे मिलल। कृपा कके ब्राउज़र सेटिंग्स में जाके माइक चालू करीं।",
+    bn: "মাইক ব্যবহারের অনুমতি পাওয়া যায়নি। দয়া করে ব্রাউজার সেটিংসে গিয়ে মাইক চালু করুন।",
+    maithili: "माइकक अनुमति नहि भेटल। कृपया ब्राउज़र सेटिंग्समे जाकए माइक चालू करू।",
+    en: "Microphone permission denied. Please allow microphone access in your browser settings."
+  },
+  NO_INPUT_DEVICE: {
+    hi: "आपके डिवाइस में कोई माइक नहीं मिला। कृपया माइक या ईयरफोन कनेक्ट करें।",
+    bhojpuri: "राउर मोबाइल में कवनो माइक नइखे मिलल। ईयरफोन या माइक लगाईं।",
+    bn: "আপনার ডিভাইসে কোনো মাইক পাওয়া যায়নি। দয়া করে মাইক বা ইয়ারফোন সংযুক্ত করুন।",
+    maithili: "अहाँक फोनमे कोनो माइक नहि भेटल। कृपया इयरफोन या माइक जोड़ू।",
+    en: "No microphone detected on your device. Please connect a microphone or headset."
+  },
+  MIC_SILENT: {
+    hi: "माइक से कोई आवाज़ नहीं आई। कृपया माइक के पास आकर थोड़ा तेज़ बोलें।",
+    bhojpuri: "कवनो आवाज़ नइखे आइल। तनी माइक के लगे आके जोर से बोलीं।",
+    bn: "মাইকে কোনো শব্দ ধরা পড়েনি। দয়া করে মাইকের কাছে এসে আরেকটু স্পষ্ট ও জোরে বলুন।",
+    maithili: "कोनो आवाज नहि आएल। कृपया माइकक लग आबि कए जोर सं बाहू।",
+    en: "No sound detected from your microphone. Please speak closer to the mic."
+  },
+  STT_API_ERROR: {
+    hi: "सर्वर से संपर्क करने में तकनीकी समस्या आई है। कृपया एक क्षण बाद पुनः प्रयास करें।",
+    bhojpuri: "सर्वर से जुड़े में तकनीकी अड़चन आइल बा। तनी देर बाद फिर से बोलीं।",
+    bn: "সার্ভারের সাথে সংযোগে সাময়িক প্রযুক্তিগত সমস্যা হয়েছে। কিছুক্ষণ পর আবার চেষ্টা করুন।",
+    maithili: "सर्वर सं जुड़े मे तकनीकी समस्या भेल। कृपया किछु काल बाद पुनः प्रयास करू।",
+    en: "Technical issue communicating with the voice server. Please try again in a moment."
+  },
+  NETWORK_OFFLINE: {
+    hi: "इंटरनेट कनेक्शन बंद है। कृपया अपना मोबाइल डेटा या वाई-फाई चेक करें।",
+    bhojpuri: "इंटरनेट बंद बा। आपन मोबाइल डेटा या वाई-फाई जांच करीं।",
+    bn: "ইন্টারনেট সংযোগ বিচ্ছিন্ন। দয়া করে মোবাইল ডেটা বা ওয়াই-ফাই পরীক্ষা করুন।",
+    maithili: "इंटरनेट बंद अछि। कृपया अपन मोबाइल डेटा वा वाई-फाई जांचू।",
+    en: "You appear to be offline. Please check your internet connection."
+  },
+  TRULY_EMPTY_SPEECH: {
+    hi: "आपकी आवाज़ साफ सुनाई नहीं दी। कृपया थोड़ा साफ और दोबारा बोलें।",
+    bhojpuri: "राउर आवाज़ साफ नइखे बुझाइल। कृपा कके फिर से साफ-साफ बोलीं।",
+    bn: "আপনার কথা স্পষ্ট শোনা যায়নি। দয়া করে আরেকবার পরিষ্কার করে বলুন।",
+    maithili: "अहाँक आवाज स्पष्ट नहि बुझायल। कृपया फेर सं साफ बाहू।",
+    en: "Could not clearly understand your speech. Please try speaking again clearly."
   }
-  if ('speechSynthesis' in window) {
-    try {
-      window.speechSynthesis.cancel();
-    } catch (e) {}
-  }
+};
+
+function displayErrorMessage(errorCode) {
+  const code = ERROR_MESSAGES[errorCode] ? errorCode : 'TRULY_EMPTY_SPEECH';
+  const langKey = currentLanguage === 'bn' ? 'bn' : (currentLanguage === 'bhojpuri' ? 'bhojpuri' : (currentLanguage === 'maithili' ? 'maithili' : (currentLanguage === 'en' ? 'en' : 'hi')));
+  const msg = ERROR_MESSAGES[code][langKey] || ERROR_MESSAGES[code].hi;
+
+  showLiveSpeechBox(true);
+  const liveText = document.getElementById('liveSpeechTranscript');
+  if (liveText) liveText.textContent = `⚠️ ${msg}`;
+
+  const micStatus = document.getElementById('mic-status-text');
+  if (micStatus) micStatus.textContent = msg;
+
+  playBrowserFallbackSpeech(msg);
 }
 
-function playSpokenAudio(base64Audio, fallbackText = "") {
-  stopAllAudio();
+// --------------------------------------------------------------------------
+// 3. AudioContext & Unlocked Playback Management (iOS/Android Safe)
+// --------------------------------------------------------------------------
+function ensureAudioContext() {
+  if (!audioCtx) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new AudioContextClass();
+  }
+  return audioCtx;
+}
 
-  if (base64Audio && base64Audio.length > 100) {
-    try {
-      currentAudioInstance = new Audio("data:audio/wav;base64," + base64Audio);
-      currentAudioInstance.play().catch(err => {
-        console.warn("Audio autoplay blocked by browser policy, fallback to TTS:", err);
-        if (fallbackText) speakBrowserTTS(fallbackText);
-      });
-    } catch (e) {
-      console.warn("Audio instance error:", e);
-      if (fallbackText) speakBrowserTTS(fallbackText);
+async function unlockAudioPlayback() {
+  if (isAudioUnlocked) return;
+  try {
+    const ctx = ensureAudioContext();
+    if (ctx.state === 'suspended') {
+      await ctx.resume();
     }
-  } else if (fallbackText) {
-    speakBrowserTTS(fallbackText);
+
+    masterAudio = document.getElementById('masterAudio') || new Audio();
+    // Play microscopic silent WAV to satisfy iOS Safari & Chrome user-gesture policy
+    masterAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+    await masterAudio.play();
+    masterAudio.pause();
+    isAudioUnlocked = true;
+    console.log("✓ Audio playback channel unlocked for mobile browsers.");
+  } catch (err) {
+    console.warn("Audio unlock notice:", err.message);
   }
 }
 
-function speakBrowserTTS(text) {
-  if (!('speechSynthesis' in window)) return;
+function stopAllAudio() {
+  if (masterAudio) {
+    try {
+      masterAudio.pause();
+      masterAudio.currentTime = 0;
+    } catch (e) {}
+  }
+  isAssistantSpeaking = false;
+  if ('speechSynthesis' in window) {
+    try { window.speechSynthesis.cancel(); } catch (e) {}
+  }
+}
+
+/**
+ * Plays audio through the single persistent unlocked <audio> element
+ */
+async function playAudio(url, base64Audio, fallbackText, onEndedCallback) {
+  stopAllAudio();
+  isAssistantSpeaking = true;
+
+  if (!masterAudio) {
+    masterAudio = document.getElementById('masterAudio') || new Audio();
+  }
+
+  const t_playback_start = Date.now();
+
+  const handleEnded = () => {
+    isAssistantSpeaking = false;
+    masterAudio.removeEventListener('ended', handleEnded);
+    if (onEndedCallback) onEndedCallback();
+    // Hands-free conversation mode: auto-listen after reply
+    if (isConversationModeActive && !isRecording) {
+      setTimeout(() => {
+        if (!isAssistantSpeaking && !isRecording) {
+          startRecording(true);
+        }
+      }, 350);
+    }
+  };
+
+  masterAudio.addEventListener('ended', handleEnded);
+
+  // Send playback start timestamp to metrics endpoint
+  if (pendingTurnId) {
+    fetch(`${API_BASE}/api/metrics/playback`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ turnId: pendingTurnId, t_playback_start })
+    }).catch(() => {});
+  }
+
+  // 1. Play from URL (cached TTS)
+  if (url) {
+    try {
+      masterAudio.src = url.startsWith('http') ? url : `${API_BASE}${url}`;
+      await masterAudio.play();
+      return;
+    } catch (e) {
+      console.warn("Failed playing from URL, trying base64/fallback:", e.message);
+    }
+  }
+
+  // 2. Play from base64
+  if (base64Audio && base64Audio.length > 50) {
+    try {
+      masterAudio.src = `data:audio/wav;base64,${base64Audio}`;
+      await masterAudio.play();
+      return;
+    } catch (e) {
+      console.warn("Failed playing base64 audio, trying browser speech:", e.message);
+    }
+  }
+
+  // 3. Fallback: Web Speech Synthesis
+  if (fallbackText) {
+    playBrowserFallbackSpeech(fallbackText, handleEnded);
+  } else {
+    isAssistantSpeaking = false;
+  }
+}
+
+function playBrowserFallbackSpeech(text, onEnded) {
+  if (!('speechSynthesis' in window)) {
+    if (onEnded) onEnded();
+    return;
+  }
   stopAllAudio();
   const utter = new SpeechSynthesisUtterance(text);
   const cfg = I18N_TRANSLATIONS[currentLanguage] || I18N_TRANSLATIONS.hi;
   utter.lang = cfg.sttCode;
-  utter.rate = 0.92;
+  utter.rate = 0.95;
+  utter.onend = () => {
+    isAssistantSpeaking = false;
+    if (onEnded) onEnded();
+    if (isConversationModeActive && !isRecording) {
+      setTimeout(() => startRecording(true), 350);
+    }
+  };
   window.speechSynthesis.speak(utter);
 }
 
-// --------------------------------------------------------------------------
-// 3. Application Initialization & Language Handling
-// --------------------------------------------------------------------------
-window.addEventListener('DOMContentLoaded', async () => {
-  initSpeechRecognition();
-  await loadSchemesCatalog();
-  await loadPanchayatGrievances();
-
-  const storedLang = localStorage.getItem('sevakendra_lang');
-  const sessionConfirmed = sessionStorage.getItem('sevakendra_lang_confirmed');
-
-  if (!sessionConfirmed) {
-    openLanguageModal();
-  } else {
-    currentLanguage = storedLang || 'hi';
-    applyLanguage(currentLanguage);
-    await initSession();
-  }
-});
-
-function openLanguageModal() {
-  stopAllAudio();
-  const overlay = document.getElementById('langModalOverlay');
-  if (overlay) overlay.style.display = 'flex';
-}
-
-function closeLanguageModal() {
-  const overlay = document.getElementById('langModalOverlay');
-  if (overlay) overlay.style.display = 'none';
-}
-
-async function selectInitialLanguage(langCode) {
-  currentLanguage = langCode || 'hi';
-  localStorage.setItem('sevakendra_lang', currentLanguage);
-  sessionStorage.setItem('sevakendra_lang_confirmed', 'true');
-
-  applyLanguage(currentLanguage);
-  closeLanguageModal();
-
-  // Reset conversation session with the new language and speak greeting
-  await initSession();
-}
-
-function applyLanguage(langCode) {
-  const t = I18N_TRANSLATIONS[langCode] || I18N_TRANSLATIONS.hi;
-  document.documentElement.lang = langCode === 'bn' ? 'bn' : (langCode === 'en' ? 'en' : 'hi');
-
-  // Update Language Badge in Header
-  const langLabel = document.getElementById('ui-currentLangLabel');
-  if (langLabel) langLabel.textContent = t.langName;
-
-  // Update Brand and Header Texts
-  const brandName = document.getElementById('ui-brandName');
-  if (brandName) brandName.textContent = t.brandName;
-  const brandTagline = document.getElementById('ui-brandTagline');
-  if (brandTagline) brandTagline.textContent = t.brandTagline;
-  const menuBtnText = document.getElementById('ui-menuBtnText');
-  if (menuBtnText) menuBtnText.textContent = t.menuBtnText;
-
-  // Update Hero Section
-  const heroTitle = document.getElementById('ui-heroTitle');
-  if (heroTitle) heroTitle.textContent = t.heroTitle;
-  const heroSubtitle = document.getElementById('ui-heroSubtitle');
-  if (heroSubtitle) heroSubtitle.textContent = t.heroSubtitle;
-
-  // Update Assistant Prompt Area
-  const assistantTag = document.getElementById('ui-assistantTag');
-  if (assistantTag) assistantTag.textContent = t.assistantTag;
-  const promptText = document.getElementById('assistant-prompt-text');
-  if (promptText) promptText.textContent = t.welcomePrompt;
-  const promptHint = document.getElementById('assistant-prompt-hint');
-  if (promptHint) promptHint.textContent = t.welcomeHint;
-
-  // Update Mic and Inputs
-  const micLabel = document.getElementById('mic-label');
-  if (micLabel) micLabel.textContent = isRecording ? t.micLabelRecording : t.micLabelIdle;
-  const micStatus = document.getElementById('mic-status-text');
-  if (micStatus) micStatus.textContent = isRecording ? t.micStatusListening : t.micStatusIdle;
-  const manualInput = document.getElementById('manual-speech-input');
-  if (manualInput) manualInput.placeholder = t.manualPlaceholder;
-  const sendBtn = document.getElementById('ui-sendBtn');
-  if (sendBtn) sendBtn.textContent = t.sendBtn;
-  const chipsLabel = document.getElementById('ui-chipsLabel');
-  if (chipsLabel) chipsLabel.textContent = t.chipsLabel;
-
-  // Update Verified Slots
-  const slotsTitle = document.getElementById('ui-slotsTitle');
-  if (slotsTitle) slotsTitle.textContent = t.slotsTitle;
-  const slotAge = document.getElementById('ui-slotAgeLabel');
-  if (slotAge) slotAge.textContent = t.slotAgeLabel;
-  const slotMar = document.getElementById('ui-slotMaritalLabel');
-  if (slotMar) slotMar.textContent = t.slotMaritalLabel;
-  const slotLand = document.getElementById('ui-slotLandLabel');
-  if (slotLand) slotLand.textContent = t.slotLandLabel;
-  const slotInc = document.getElementById('ui-slotIncomeLabel');
-  if (slotInc) slotInc.textContent = t.slotIncomeLabel;
-  const slotState = document.getElementById('ui-slotStateLabel');
-  if (slotState) slotState.textContent = t.slotStateLabel;
-
-  // Update Results Card
-  const resTitle = document.getElementById('ui-resultsTitle');
-  if (resTitle) resTitle.textContent = t.resultsTitle;
-  const voiceExp = document.getElementById('ui-voiceExpTitle');
-  if (voiceExp) voiceExp.textContent = t.voiceExpTitle;
-  const triadSch = document.getElementById('ui-triadSchemesTitle');
-  if (triadSch) triadSch.textContent = t.triadSchemesTitle;
-  const triadDoc = document.getElementById('ui-triadDocsTitle');
-  if (triadDoc) triadDoc.textContent = t.triadDocsTitle;
-  const triadOff = document.getElementById('ui-triadOfficeTitle');
-  if (triadOff) triadOff.textContent = t.triadOfficeTitle;
-  const smsTitle = document.getElementById('ui-smsSlipTitle');
-  if (smsTitle) smsTitle.textContent = t.smsSlipTitle;
-
-  // Update Drawer
-  const drawerHead = document.getElementById('ui-drawerHeading');
-  if (drawerHead) drawerHead.textContent = t.drawerHeading;
-
-  // Update Active Card in Language Modal
-  document.querySelectorAll('.lang-option-card').forEach(btn => {
-    btn.classList.remove('active');
-    if (btn.getAttribute('onclick')?.includes(langCode)) {
-      btn.classList.add('active');
-    }
-  });
+// Play instant subtle acknowledgement earcon (<50ms feedback on speech stop)
+function playInstantEarcon() {
+  const earconAudio = new Audio(`${API_BASE}/api/tts/earcon`);
+  earconAudio.volume = 0.45;
+  earconAudio.play().catch(() => {});
 }
 
 // --------------------------------------------------------------------------
-// 4. Sliding Menu Drawer Controls
+// 4. WebSocket Streaming Gateway Management
 // --------------------------------------------------------------------------
-function toggleSlidingDrawer() {
-  const drawer = document.getElementById('slidingDrawer');
-  const backdrop = document.getElementById('drawerBackdrop');
-  if (drawer.classList.contains('active')) {
-    closeSlidingDrawer();
-  } else {
-    openSlidingDrawer();
-  }
-}
-
-function openSlidingDrawer() {
-  const drawer = document.getElementById('slidingDrawer');
-  const backdrop = document.getElementById('drawerBackdrop');
-  if (drawer) drawer.classList.add('active');
-  if (backdrop) backdrop.classList.add('active');
-}
-
-function closeSlidingDrawer() {
-  const drawer = document.getElementById('slidingDrawer');
-  const backdrop = document.getElementById('drawerBackdrop');
-  if (drawer) drawer.classList.remove('active');
-  if (backdrop) backdrop.classList.remove('active');
-}
-
-function switchDrawerModule(moduleId) {
-  document.querySelectorAll('.drawer-module').forEach(m => m.classList.remove('active'));
-  document.querySelectorAll('.drawer-item-btn').forEach(b => b.classList.remove('active'));
-
-  const targetModule = document.getElementById(moduleId);
-  if (targetModule) targetModule.classList.add('active');
-
-  document.querySelectorAll('.drawer-item-btn').forEach(btn => {
-    if (btn.getAttribute('onclick')?.includes(moduleId)) {
-      btn.classList.add('active');
-    }
-  });
-}
-
-// --------------------------------------------------------------------------
-// 5. Web Audio PCM Capture & 16kHz WAV Encoding (Zero-Hallucination Audio)
-// --------------------------------------------------------------------------
-function writeWavString(view, offset, string) {
-  for (let i = 0; i < string.length; i++) {
-    view.setUint8(offset + i, string.charCodeAt(i));
-  }
-}
-
-function encodeWav(samples, sampleRate = 16000) {
-  const buffer = new ArrayBuffer(44 + samples.length * 2);
-  const view = new DataView(buffer);
-
-  // RIFF Chunk
-  writeWavString(view, 0, 'RIFF');
-  view.setUint32(4, 36 + samples.length * 2, true);
-  writeWavString(view, 8, 'WAVE');
-
-  // fmt Subchunk
-  writeWavString(view, 12, 'fmt ');
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true);             // PCM
-  view.setUint16(22, 1, true);             // Mono
-  view.setUint32(24, sampleRate, true);    // 16000
-  view.setUint32(28, sampleRate * 2, true);// ByteRate
-  view.setUint16(32, 2, true);             // BlockAlign
-  view.setUint16(34, 16, true);            // 16-bit
-
-  // data Subchunk
-  writeWavString(view, 36, 'data');
-  view.setUint32(40, samples.length * 2, true);
-
-  // PCM Float to 16-bit Int conversion
-  let offset = 44;
-  for (let i = 0; i < samples.length; i++, offset += 2) {
-    const s = Math.max(-1, Math.min(1, samples[i]));
-    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
-  }
-
-  return new Blob([view], { type: 'audio/wav' });
-}
-
-function downsampleBuffer(buffers, inputSampleRate, targetSampleRate = 16000) {
-  let totalLength = buffers.reduce((acc, b) => acc + b.length, 0);
-  let merged = new Float32Array(totalLength);
-  let offset = 0;
-  for (const b of buffers) {
-    merged.set(b, offset);
-    offset += b.length;
-  }
-
-  if (inputSampleRate === targetSampleRate) return merged;
-
-  const ratio = inputSampleRate / targetSampleRate;
-  const newLength = Math.round(totalLength / ratio);
-  const result = new Float32Array(newLength);
-  let offsetResult = 0;
-  let offsetMerged = 0;
-
-  while (offsetResult < newLength) {
-    const nextOffsetMerged = Math.round((offsetResult + 1) * ratio);
-    let sum = 0;
-    let count = 0;
-    for (let i = offsetMerged; i < nextOffsetMerged && i < totalLength; i++) {
-      sum += merged[i];
-      count++;
-    }
-    result[offsetResult] = count > 0 ? sum / count : 0;
-    offsetResult++;
-    offsetMerged = nextOffsetMerged;
-  }
-  return result;
-}
-
-// --------------------------------------------------------------------------
-// 6. Real-Time Speech Recognition (Live Visual Captioning)
-// --------------------------------------------------------------------------
-function initSpeechRecognition() {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    console.warn("Web Speech API not supported; AudioContext PCM used exclusively.");
+function ensureWebSocketConnection() {
+  if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
     return;
   }
 
-  speechRecognitionInstance = new SpeechRecognition();
-  speechRecognitionInstance.continuous = true;
-  speechRecognitionInstance.interimResults = true;
-  speechRecognitionInstance.maxAlternatives = 1;
+  const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const wsUrl = `${wsProtocol}//${window.location.host}/ws/speech`;
 
-  speechRecognitionInstance.onstart = () => {
-    isSpeechRecognizing = true;
-    showLiveSpeechBox(true);
-    setMicButtonState(true);
-  };
+  try {
+    ws = new WebSocket(wsUrl);
 
-  speechRecognitionInstance.onresult = (event) => {
-    let interim = "";
-    let final = "";
+    ws.onopen = () => {
+      isWsConnected = true;
+      ws.send(JSON.stringify({
+        type: 'init',
+        sessionId: currentSessionId,
+        language: currentLanguage
+      }));
+    };
 
-    for (let i = event.resultIndex; i < event.results.length; ++i) {
-      if (event.results[i].isFinal) {
-        final += event.results[i][0].transcript;
-      } else {
-        interim += event.results[i][0].transcript;
+    ws.onmessage = (event) => {
+      try {
+        const msg = JSON.parse(event.data);
+        handleWebSocketMessage(msg);
+      } catch (e) {
+        console.error("WS Parse error", e);
       }
-    }
+    };
 
-    const currentText = (final || interim).trim();
-    if (currentText) {
-      latestInterimTranscript = currentText;
-      const transcriptEl = document.getElementById('liveSpeechTranscript');
-      if (transcriptEl) transcriptEl.textContent = `"${currentText}"`;
-      const manualInput = document.getElementById('manual-speech-input');
-      if (manualInput) manualInput.value = currentText;
-    }
-  };
+    ws.onerror = (err) => {
+      console.warn("WS error, will fallback to REST if needed", err);
+      isWsConnected = false;
+    };
 
-  speechRecognitionInstance.onerror = (event) => {
-    console.warn("Web Speech note:", event.error);
-  };
-
-  speechRecognitionInstance.onend = () => {
-    isSpeechRecognizing = false;
-  };
-}
-
-function showLiveSpeechBox(show) {
-  const box = document.getElementById('liveSpeechBox');
-  if (box) {
-    if (show) box.classList.add('active');
-    else box.classList.remove('active');
+    ws.onclose = () => {
+      isWsConnected = false;
+    };
+  } catch (err) {
+    console.warn("WS init error", err);
+    isWsConnected = false;
   }
 }
 
-function setMicButtonState(recording) {
-  const micBtn = document.getElementById('mic-btn');
-  const micLabel = document.getElementById('mic-label');
-  const micStatus = document.getElementById('mic-status-text');
-  const t = I18N_TRANSLATIONS[currentLanguage] || I18N_TRANSLATIONS.hi;
-
-  if (recording) {
-    if (micBtn) micBtn.classList.add('recording');
-    if (micLabel) micLabel.textContent = t.micLabelRecording;
-    if (micStatus) micStatus.textContent = t.micStatusListening;
-    setWaveformActive(true);
-  } else {
-    if (micBtn) micBtn.classList.remove('recording');
-    if (micLabel) micLabel.textContent = t.micLabelIdle;
-    if (micStatus) micStatus.textContent = t.micStatusIdle;
-    setWaveformActive(false);
+function handleWebSocketMessage(msg) {
+  // Real-time partial transcript for live captioning
+  if (msg.type === 'partial_transcript') {
+    const transcriptEl = document.getElementById('liveSpeechTranscript');
+    if (transcriptEl && msg.transcript) {
+      transcriptEl.textContent = `"${msg.transcript}"`;
+    }
+    const manualInput = document.getElementById('manual-speech-input');
+    if (manualInput && msg.transcript) {
+      manualInput.value = msg.transcript;
+    }
   }
-}
 
-function setWaveformActive(active) {
-  document.querySelectorAll('.wave-pillar').forEach(p => {
-    if (active) p.classList.add('active');
-    else p.classList.remove('active');
-  });
+  // Final transcript locked in
+  else if (msg.type === 'final_transcript') {
+    const transcriptEl = document.getElementById('liveSpeechTranscript');
+    if (transcriptEl) transcriptEl.textContent = `"${msg.transcript}"`;
+    const manualInput = document.getElementById('manual-speech-input');
+    if (manualInput) manualInput.value = msg.transcript;
+  }
+
+  // Turn Result from Dynamic Assistant
+  else if (msg.type === 'turn_result') {
+    handleTurnResponse(msg.result);
+  }
+
+  // Distinct Error from Server
+  else if (msg.type === 'error') {
+    displayErrorMessage(msg.errorCode || 'STT_API_ERROR');
+    setMicButtonState(false);
+  }
 }
 
 // --------------------------------------------------------------------------
-// 7. Microphone Recording Toggle & Turn Execution
+// 5. AudioWorklet 16kHz PCM Capture, VAD & Hands-Free Conversation
 // --------------------------------------------------------------------------
 async function toggleRecording() {
+  await unlockAudioPlayback();
+  isConversationModeActive = true;
+
   if (isRecording || isAudioCapturing) {
-    await stopRecording();
+    await stopRecording(false);
   } else {
-    await startRecording();
+    await startRecording(false);
   }
 }
 
-async function startRecording() {
-  stopAllAudio(); // Stop any audio playing before starting recording
-  latestInterimTranscript = "";
-  pcmBuffers = [];
-  const t = I18N_TRANSLATIONS[currentLanguage] || I18N_TRANSLATIONS.hi;
+async function startRecording(autoListen = false) {
+  // Stop assistant playback before recording
+  stopAllAudio();
+
+  // Network check
+  if (!navigator.onLine) {
+    displayErrorMessage('NETWORK_OFFLINE');
+    return;
+  }
+
+  // 1. SET CAPTURE STATE BEFORE AWAITING getUserMedia (Fix for Root Cause 3)
+  isRecording = true;
+  isAudioCapturing = true;
+  window.isRecording = true;
+  window.isAudioCapturing = true;
+  userHasSpokenInTurn = false;
+  consecutiveSilenceMs = 0;
+  accumulatedPcmBuffers = [];
+  totalRecordedBytes = 0;
+  clientSpeechEndTimestamp = null;
 
   showLiveSpeechBox(true);
   setMicButtonState(true);
 
-  // 1. Start parallel Web Speech API for visual text feedback
-  if (speechRecognitionInstance) {
-    try {
-      speechRecognitionInstance.lang = t.sttCode;
-      speechRecognitionInstance.start();
-    } catch (e) {
-      console.warn("SpeechRecognition start exception:", e.message);
-    }
+  const t = I18N_TRANSLATIONS[currentLanguage] || I18N_TRANSLATIONS.hi;
+  const micStatus = document.getElementById('mic-status-text');
+  if (micStatus) micStatus.textContent = t.micStatusListening;
+
+  const liveText = document.getElementById('liveSpeechTranscript');
+  if (liveText) liveText.textContent = `"${t.micStatusListening}"`;
+
+  // Ensure WebSocket is open and initialized
+  ensureWebSocketConnection();
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'init', sessionId: currentSessionId, language: currentLanguage }));
   }
 
-  // 2. Start Web Audio API PCM capture (genuine 16kHz WAV for Sarvam STT)
+  // 2. AudioContext & AudioWorklet Setup
   try {
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    audioCtx = new AudioContextClass();
+    const ctx = ensureAudioContext();
+    if (ctx.state === 'suspended') {
+      await ctx.resume();
+    }
+
+    // Load AudioWorklet module if not yet loaded
+    if (!ctx.audioWorkletRegistered) {
+      await ctx.audioWorklet.addModule('/audio-processor.js');
+      ctx.audioWorkletRegistered = true;
+    }
 
     rawMicStream = await navigator.mediaDevices.getUserMedia({
       audio: {
         channelCount: 1,
         echoCancellation: true,
-        noiseSuppression: true
+        noiseSuppression: true,
+        autoGainControl: true
       }
     });
 
-    mediaStreamSource = audioCtx.createMediaStreamSource(rawMicStream);
-    scriptProcessorNode = audioCtx.createScriptProcessor(4096, 1, 1);
+    mediaStreamSource = ctx.createMediaStreamSource(rawMicStream);
+    workletNode = new AudioWorkletNode(ctx, 'pcm-resampler-processor');
 
-    scriptProcessorNode.onaudioprocess = (e) => {
+    workletNode.port.onmessage = (event) => {
+      const data = event.data;
+      if (!data || !data.pcm) return;
+
+      const pcmBuffer = data.pcm;
+      const rms = data.rms || 0;
+      const isSpeech = data.isSpeech;
+
+      // BARGE-IN: If assistant is talking and citizen speaks loudly, interrupt assistant
+      if (isAssistantSpeaking && rms > BARGE_IN_RMS_THRESHOLD) {
+        stopAllAudio();
+      }
+
       if (!isRecording) return;
-      const input = e.inputBuffer.getChannelData(0);
-      pcmBuffers.push(new Float32Array(input));
+
+      // Accumulate buffer
+      accumulatedPcmBuffers.push(new Uint8Array(pcmBuffer));
+      totalRecordedBytes += pcmBuffer.byteLength;
+
+      // Stream to WebSocket in real-time
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(pcmBuffer);
+      }
+
+      // VOICE ACTIVITY DETECTION (VAD)
+      if (isSpeech || rms > VAD_SPEECH_RMS_THRESHOLD) {
+        userHasSpokenInTurn = true;
+        consecutiveSilenceMs = 0;
+      } else if (userHasSpokenInTurn && rms < VAD_SILENCE_RMS_THRESHOLD) {
+        consecutiveSilenceMs += 100; // Each frame is 100ms
+        // If silence threshold reached, automatically trigger end of speech!
+        if (consecutiveSilenceMs >= VAD_SILENCE_LIMIT_MS) {
+          clientSpeechEndTimestamp = Date.now();
+          stopRecording(true);
+        }
+      }
     };
 
-    mediaStreamSource.connect(scriptProcessorNode);
-    scriptProcessorNode.connect(audioCtx.destination);
-
-    isRecording = true;
-    isAudioCapturing = true;
+    mediaStreamSource.connect(workletNode);
+    workletNode.connect(ctx.destination);
   } catch (err) {
-    console.warn("getUserMedia failed:", err);
-    isRecording = Boolean(speechRecognitionInstance && isSpeechRecognizing);
-    if (!isRecording) {
-      setMicButtonState(false);
-      const statusText = document.getElementById('mic-status-text');
-      if (statusText) statusText.textContent = "⚠️ माइक की अनुमति नहीं मिली। नीचे दिए गए उदाहरण चुनें या लिखकर भेजें।";
+    console.error("Microphone capture error:", err);
+    isRecording = false;
+    isAudioCapturing = false;
+    setMicButtonState(false);
+
+    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+      displayErrorMessage('MIC_PERMISSION_DENIED');
+    } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+      displayErrorMessage('NO_INPUT_DEVICE');
+    } else {
+      displayErrorMessage('STT_API_ERROR');
     }
   }
 }
 
-async function stopRecording() {
-  const wasCapturing = isRecording || isAudioCapturing;
+async function stopRecording(isVAD = false) {
+  if (!isRecording && !isAudioCapturing) return;
+
+  clientSpeechEndTimestamp = clientSpeechEndTimestamp || Date.now();
   setMicButtonState(false);
   isRecording = false;
   isAudioCapturing = false;
+  window.isRecording = false;
+  window.isAudioCapturing = false;
 
-  // Stop Web Speech
-  if (speechRecognitionInstance) {
-    try { speechRecognitionInstance.stop(); } catch (e) {}
-  }
+  const micStatus = document.getElementById('mic-status-text');
+  const t = I18N_TRANSLATIONS[currentLanguage] || I18N_TRANSLATIONS.hi;
+  if (micStatus) micStatus.textContent = t.micStatusProcessing;
 
-  // Disconnect AudioContext and stop tracks
-  if (scriptProcessorNode) {
-    try { scriptProcessorNode.disconnect(); } catch (e) {}
+  // Cleanup hardware mic tracks
+  if (workletNode) {
+    try { workletNode.disconnect(); } catch (e) {}
   }
   if (mediaStreamSource) {
     try { mediaStreamSource.disconnect(); } catch (e) {}
@@ -680,28 +675,65 @@ async function stopRecording() {
     rawMicStream.getTracks().forEach(t => t.stop());
   }
 
-  const sampleRate = audioCtx ? audioCtx.sampleRate : 44100;
-  if (audioCtx && audioCtx.state !== 'closed') {
-    try { audioCtx.close(); } catch (e) {}
+  // Play instant earcon acoustic acknowledgment tone
+  playInstantEarcon();
+
+  // If WebSocket is connected, signal End of Speech (EOS)
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({
+      type: 'eos',
+      clientSpeechEndTimestamp: clientSpeechEndTimestamp,
+      language: currentLanguage
+    }));
+    return;
   }
 
-  // If PCM samples were captured, encode genuine 16kHz mono WAV Blob
-  if (pcmBuffers.length > 0) {
-    const micStatus = document.getElementById('mic-status-text');
-    if (micStatus) micStatus.textContent = "पहचान की जा रही है (Sarvam STT)...";
-
-    const downsampledSamples = downsampleBuffer(pcmBuffers, sampleRate, 16000);
-    const wavBlob = encodeWav(downsampledSamples, 16000);
-    await sendAudioToServer(wavBlob);
-  } else if (latestInterimTranscript && latestInterimTranscript.trim().length > 1) {
-    await sendSpokenText(latestInterimTranscript.trim());
-  } else if (wasCapturing) {
-    const micStatus = document.getElementById('mic-status-text');
-    if (micStatus) micStatus.textContent = "आवाज़ नहीं सुनाई दी। कृपया दोबारा बोलें।";
+  // REST Fallback if WebSocket is not available
+  if (accumulatedPcmBuffers.length > 0) {
+    const wavBlob = buildWavFromPcmChunks(accumulatedPcmBuffers, 16000);
+    await sendAudioViaRest(wavBlob, clientSpeechEndTimestamp);
+  } else {
+    displayErrorMessage('MIC_SILENT');
   }
 }
 
-async function sendAudioToServer(audioBlob) {
+function buildWavFromPcmChunks(chunks, sampleRate = 16000) {
+  let totalLength = chunks.reduce((acc, c) => acc + c.length, 0);
+  const buffer = new ArrayBuffer(44 + totalLength);
+  const view = new DataView(buffer);
+
+  // WAV Header
+  writeWavString(view, 0, 'RIFF');
+  view.setUint32(4, 36 + totalLength, true);
+  writeWavString(view, 8, 'WAVE');
+  writeWavString(view, 12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true); // PCM
+  view.setUint16(22, 1, true); // Mono
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeWavString(view, 36, 'data');
+  view.setUint32(40, totalLength, true);
+
+  const uint8View = new Uint8Array(buffer, 44);
+  let offset = 0;
+  for (const c of chunks) {
+    uint8View.set(c, offset);
+    offset += c.length;
+  }
+
+  return new Blob([buffer], { type: 'audio/wav' });
+}
+
+function writeWavString(view, offset, string) {
+  for (let i = 0; i < string.length; i++) {
+    view.setUint8(offset + i, string.charCodeAt(i));
+  }
+}
+
+async function sendAudioViaRest(audioBlob, speechEndTs) {
   const t = I18N_TRANSLATIONS[currentLanguage] || I18N_TRANSLATIONS.hi;
 
   try {
@@ -710,22 +742,35 @@ async function sendAudioToServer(audioBlob) {
       headers: {
         'Content-Type': 'audio/wav',
         'x-session-id': currentSessionId,
-        'x-language': t.sttCode,
-        'x-fallback-transcript': encodeURIComponent(latestInterimTranscript || '')
+        'x-language': currentLanguage,
+        'x-speech-end': String(speechEndTs || Date.now())
       },
       body: audioBlob
     });
+
+    if (res.status === 413) {
+      displayErrorMessage('STT_API_ERROR');
+      return;
+    }
+
     const result = await res.json();
+    if (result.type === 'ERROR') {
+      displayErrorMessage(result.errorCode);
+      return;
+    }
+
     handleTurnResponse(result);
   } catch (err) {
-    console.error("Audio upload error", err);
-    if (latestInterimTranscript) {
-      sendSpokenText(latestInterimTranscript);
-    }
+    console.error("Audio REST upload error", err);
+    displayErrorMessage('STT_API_ERROR');
   }
 }
 
+// --------------------------------------------------------------------------
+// 6. Manual Text Fallback & Turn Dispatch
+// --------------------------------------------------------------------------
 async function sendSpokenText(forcedText = null) {
+  await unlockAudioPlayback();
   const input = document.getElementById('manual-speech-input');
   const text = (forcedText || (input ? input.value : "")).trim();
   if (!text) return;
@@ -752,6 +797,7 @@ async function sendSpokenText(forcedText = null) {
     handleTurnResponse(result);
   } catch (err) {
     console.error("Turn error", err);
+    displayErrorMessage('STT_API_ERROR');
   }
 }
 
@@ -762,18 +808,17 @@ function setQuickInput(text) {
 }
 
 // --------------------------------------------------------------------------
-// 8. Turn Response Handler (Unified Dynamic Router)
+// 7. Turn Response Handler (Unified Dynamic Router & Telemetry)
 // --------------------------------------------------------------------------
 function handleTurnResponse(result) {
   const micStatus = document.getElementById('mic-status-text');
   const t = I18N_TRANSLATIONS[currentLanguage] || I18N_TRANSLATIONS.hi;
   if (micStatus) micStatus.textContent = t.micStatusIdle;
 
-  if (result.type === 'NO_SPEECH_DETECTED') {
-    const liveText = document.getElementById('liveSpeechTranscript');
-    if (liveText) liveText.textContent = `"${result.replyText}"`;
-    playSpokenAudio(null, result.replyText);
-    return;
+  if (result.metrics) {
+    lastTurnMetrics = result.metrics;
+    pendingTurnId = result.metrics.turnId;
+    updateDebugOverlay(result.metrics);
   }
 
   // 1. Update Verified Profile Slots
@@ -807,25 +852,23 @@ function handleTurnResponse(result) {
     if (manualInput) manualInput.value = result.userTranscript;
   }
 
-  // 3. Dynamic Result Branching
+  // 3. Dynamic Result Branching & Audio Playback
   if (result.type === 'TRIAGE_RESOLVED') {
-    // Open Stalled Pension Drawer module immediately!
     openSlidingDrawer();
     switchDrawerModule('drawer-triage');
     renderTriageView(result.triageData);
+    playAudio(result.audioUrl, result.audioBase64, result.diagnosis?.citizen_friendly_script);
   } else if (result.type === 'SCHEMES_MATCHED' || result.isCompleted) {
-    // Render Actionable Triad Results underneath
-    renderEvaluationResults(result.evaluationResult, result.audioBase64);
+    renderEvaluationResults(result.evaluationResult, result.audioUrl, result.audioBase64 || result.firstSentenceAudioBase64);
   } else {
-    // Natural Follow-Up Question
-    setPrompt(result.replyText || result.nextPromptText, result.promptHint, result.audioBase64);
+    setPrompt(result.replyText || result.nextPromptText, result.promptHint, result.audioUrl, result.audioBase64 || result.firstSentenceAudioBase64);
   }
 }
 
 // --------------------------------------------------------------------------
-// 9. Results Rendering (Actionable Triad)
+// 8. Results Rendering (Actionable Triad)
 // --------------------------------------------------------------------------
-function renderEvaluationResults(evaluation, audioBase64) {
+function renderEvaluationResults(evaluation, audioUrl, audioBase64) {
   const card = document.getElementById('results-card');
   card.style.display = 'block';
 
@@ -853,23 +896,24 @@ function renderEvaluationResults(evaluation, audioBase64) {
   // Render SMS Action Slip
   document.getElementById('sms-text-content').textContent = evaluation.smsChecklist;
 
+  currentSpokenAudioUrl = audioUrl;
   currentSpokenAudioBase64 = audioBase64;
-  playSpokenAudio(audioBase64, evaluation.spokenScript);
+  playAudio(audioUrl, audioBase64, evaluation.spokenScript);
 
   card.scrollIntoView({ behavior: 'smooth' });
 }
 
 function replaySpokenAudio() {
-  if (currentSpokenAudioBase64) {
-    playSpokenAudio(currentSpokenAudioBase64);
+  if (currentSpokenAudioUrl || currentSpokenAudioBase64) {
+    playAudio(currentSpokenAudioUrl, currentSpokenAudioBase64, document.getElementById('spoken-audio-transcript').textContent);
   } else {
     const text = document.getElementById('spoken-audio-transcript').textContent;
-    speakBrowserTTS(text);
+    playBrowserFallbackSpeech(text);
   }
 }
 
 // --------------------------------------------------------------------------
-// 10. Session Reset & Prompt Setting
+// 9. Session Reset & Prompt Setting
 // --------------------------------------------------------------------------
 async function initSession() {
   currentSessionId = `session_${Date.now()}`;
@@ -885,29 +929,30 @@ async function initSession() {
       body: JSON.stringify({ sessionId: currentSessionId, language: currentLanguage })
     });
     const data = await res.json();
-    setPrompt(data.promptText || t.welcomePrompt, data.promptHint || t.welcomeHint, data.audioBase64);
+    setPrompt(data.promptText || t.welcomePrompt, data.promptHint || t.welcomeHint, data.audioUrl, data.audioBase64);
   } catch (err) {
     console.warn("Init fallback:", err);
-    setPrompt(t.welcomePrompt, t.welcomeHint, null);
+    setPrompt(t.welcomePrompt, t.welcomeHint, null, null);
   }
 }
 
-function setPrompt(text, hint, audioBase64) {
+function setPrompt(text, hint, audioUrl, audioBase64) {
   const textEl = document.getElementById('assistant-prompt-text');
   const hintEl = document.getElementById('assistant-prompt-hint');
   if (textEl) textEl.textContent = text;
   if (hintEl) hintEl.textContent = hint;
 
+  currentPromptAudioUrl = audioUrl;
   currentPromptAudioBase64 = audioBase64;
-  playSpokenAudio(audioBase64, text);
+  playAudio(audioUrl, audioBase64, text);
 }
 
 function replayCurrentPromptAudio() {
-  if (currentPromptAudioBase64) {
-    playSpokenAudio(currentPromptAudioBase64);
+  if (currentPromptAudioUrl || currentPromptAudioBase64) {
+    playAudio(currentPromptAudioUrl, currentPromptAudioBase64, document.getElementById('assistant-prompt-text').textContent);
   } else {
     const text = document.getElementById('assistant-prompt-text').textContent;
-    speakBrowserTTS(text);
+    playBrowserFallbackSpeech(text);
   }
 }
 
@@ -928,8 +973,42 @@ function resetToHome() {
 }
 
 // --------------------------------------------------------------------------
-// 11. Stalled Pension & DBT Recovery Triage (Inside Drawer)
+// 10. Sliding Menu Drawer & Triage Modules
 // --------------------------------------------------------------------------
+function toggleSlidingDrawer() {
+  const drawer = document.getElementById('slidingDrawer');
+  if (drawer.classList.contains('active')) closeSlidingDrawer();
+  else openSlidingDrawer();
+}
+
+function openSlidingDrawer() {
+  const drawer = document.getElementById('slidingDrawer');
+  const backdrop = document.getElementById('drawerBackdrop');
+  if (drawer) drawer.classList.add('active');
+  if (backdrop) backdrop.classList.add('active');
+}
+
+function closeSlidingDrawer() {
+  const drawer = document.getElementById('slidingDrawer');
+  const backdrop = document.getElementById('drawerBackdrop');
+  if (drawer) drawer.classList.remove('active');
+  if (backdrop) backdrop.classList.remove('active');
+}
+
+function switchDrawerModule(moduleId) {
+  document.querySelectorAll('.drawer-module').forEach(m => m.classList.remove('active'));
+  document.querySelectorAll('.drawer-item-btn').forEach(b => b.classList.remove('active'));
+
+  const targetModule = document.getElementById(moduleId);
+  if (targetModule) targetModule.classList.add('active');
+
+  document.querySelectorAll('.drawer-item-btn').forEach(btn => {
+    if (btn.getAttribute('onclick')?.includes(moduleId)) {
+      btn.classList.add('active');
+    }
+  });
+}
+
 async function runPensionTriage() {
   const idInput = document.getElementById('triageIdentifierInput');
   const identifier = idInput ? idInput.value.trim() : "7193";
@@ -951,82 +1030,50 @@ async function runPensionTriage() {
   }
 }
 
-function loadParvatiTriageTest() {
-  document.getElementById('triageIdentifierInput').value = "7193";
-  runPensionTriage();
-}
-
-function loadRamuTriageTest() {
-  document.getElementById('triageIdentifierInput').value = "3841";
-  runPensionTriage();
-}
-
-function loadSakinaTriageTest() {
-  document.getElementById('triageIdentifierInput').value = "6205";
-  runPensionTriage();
-}
-
 function renderTriageView(data) {
-  const view = document.getElementById('triageResultsView');
-  view.style.display = 'block';
+  const resCard = document.getElementById('triageResultCard');
+  if (!resCard) return;
 
-  const ben = data.beneficiary;
-  const diag = data.diagnosis;
+  const d = data.diagnosis;
+  document.getElementById('triageBeneficiaryName').textContent = data.beneficiary.name;
+  document.getElementById('triageSchemeName').textContent = data.beneficiary.scheme;
+  document.getElementById('triageVillageName').textContent = data.beneficiary.village;
+  document.getElementById('triageAccountNo').textContent = data.beneficiary.account_masked;
+  document.getElementById('triageBlockedAmount').textContent = data.beneficiary.amount_blocked;
+  document.getElementById('triageLastCreditDate').textContent = data.beneficiary.last_credit_date;
+  document.getElementById('triageErrorCode').textContent = d.code;
+  document.getElementById('triageRootCause').textContent = d.root_cause;
+  document.getElementById('triageActionSlip').textContent = d.immediate_action_step;
+  document.getElementById('triageDeskOfficer').textContent = d.where_to_go;
+  document.getElementById('triageCitizenScript').textContent = d.citizen_friendly_script;
 
-  document.getElementById('triageErrorCode').textContent = `त्रुटि कोड: ${diag.error_code} (${diag.disbursal_status})`;
-  document.getElementById('triageBenDetails').textContent = `${ben.name} (${ben.age} वर्ष) • ${ben.village}`;
-  document.getElementById('triageSchemeDetails').textContent = `योजना: ${ben.scheme} | रुकी राशि: ${ben.pending_recovery_amount}`;
-  document.getElementById('triageActionText').textContent = diag.action_required;
-  document.getElementById('triageTokenCode').textContent = data.ticket_token;
+  currentTriageAudioUrl = data.audioUrl;
+  currentTriageScriptText = d.citizen_friendly_script;
 
-  currentTriageScriptText = diag.citizen_friendly_script;
-  document.getElementById('triageDialectScript').textContent = `"${currentTriageScriptText}"`;
-
-  currentTriageAudioBase64 = (data.audio && data.audio.audio_base64) ? data.audio.audio_base64 : null;
-  playTriageVoice();
+  resCard.style.display = 'block';
+  playAudio(data.audioUrl, null, d.citizen_friendly_script);
 }
 
-function playTriageVoice() {
-  if (currentTriageAudioBase64) {
-    playSpokenAudio(currentTriageAudioBase64);
-  } else if (currentTriageScriptText) {
-    speakBrowserTTS(currentTriageScriptText);
+function replayTriageAudio() {
+  if (currentTriageAudioUrl || currentTriageScriptText) {
+    playAudio(currentTriageAudioUrl, null, currentTriageScriptText);
   }
 }
 
-// --------------------------------------------------------------------------
-// 12. Offline Simulators (2G IVR & WhatsApp)
-// --------------------------------------------------------------------------
-function simulateIvrCall() {
-  const screen = document.getElementById('ivrCaptionScreen');
-  screen.innerHTML = "📞 <em>कॉल कनेक्ट हो रहा है (1800-180-SEVA)...</em>";
-
-  setTimeout(() => {
-    screen.innerHTML = "<strong>नमस्ते दीदी।</strong> मैं सेवा केंद्र वाणी सहायक हूँ। आपकी उम्र क्या है और क्या आप शादीशुदा हैं?";
-    playSpokenAudio(null, "नमस्ते दीदी। मैं सेवा केंद्र वाणी सहायक हूँ। आपकी उम्र क्या है और क्या आप शादीशुदा हैं?");
-  }, 1200);
-
-  setTimeout(() => {
-    screen.innerHTML = "<em>उपयोगकर्ता बोली: 'हम 48 साल के हैं, पति नहीं रहे।'</em>";
-  }, 3500);
-
-  setTimeout(() => {
-    screen.innerHTML = "<strong>सत्यापन पूर्ण:</strong> दीदी, आप <strong>विधवा पेंशन योजना</strong> के लिए पात्र हैं। हर महीने <strong>₹1,000</strong> मिलेंगे। कागजों का SMS आपके फोन पर भेज दिया गया है।";
-    playSpokenAudio(null, "दीदी, आप विधवा पेंशन योजना के लिए पात्र हैं। हर महीने ₹1,000 मिलेंगे। कागजों का SMS आपके फोन पर भेज दिया गया है।");
-  }, 5500);
-}
-
-function simulateWhatsAppVoice() {
+function simulateWAIncoming(citizenName, scenarioText) {
   const chatBody = document.getElementById('waChatBody');
+  if (!chatBody) return;
 
   const userMsg = document.createElement('div');
   userMsg.className = 'wa-bubble user';
   userMsg.innerHTML = `
+    <div style="font-weight: 700; font-size: 11px; margin-bottom: 2px;">${citizenName} (व्हाट्सएप ऑडियो)</div>
     <div style="display: flex; align-items: center; gap: 6px;">
-      <span>▶️ 0:05</span>
-      <span style="font-size: 10px; opacity: 0.8;"> ▂▃▅▆▇</span>
+      <span>🎤 0:08</span>
+      <span style="font-size: 10px; opacity: 0.8;"> ▂▃▅▆</span>
     </div>
-    <div style="font-size: 9px; text-align: right; margin-top: 2px;">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ✓✓</div>
+    <div style="font-size: 11px; opacity: 0.85; margin-top: 3px;">"${scenarioText}"</div>
+    <div style="font-size: 9px; text-align: right; margin-top: 2px;">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
   `;
   chatBody.appendChild(userMsg);
 
@@ -1049,13 +1096,10 @@ function simulateWhatsAppVoice() {
     chatBody.appendChild(botMsg);
     chatBody.scrollTop = chatBody.scrollHeight;
 
-    playSpokenAudio(null, "दीदी, आपका वॉइस नोट सुन लिया गया है। आप विधवा पेंशन और आवास योजना के लिए पात्र हैं।");
+    playAudio(null, null, "दीदी, आपका वॉइस नोट सुन लिया गया है। आप विधवा पेंशन और आवास योजना के लिए पात्र हैं।");
   }, 1400);
 }
 
-// --------------------------------------------------------------------------
-// 13. Schemes Directory & Panchayat Desk Data Loaders
-// --------------------------------------------------------------------------
 async function loadSchemesCatalog() {
   try {
     const res = await fetch(`${API_BASE}/api/schemes`);
@@ -1112,3 +1156,208 @@ async function loadPanchayatGrievances() {
     console.error("Grievances load error", err);
   }
 }
+
+// --------------------------------------------------------------------------
+// 11. UI Helpers & Language Switching
+// --------------------------------------------------------------------------
+function showLiveSpeechBox(show) {
+  const box = document.getElementById('liveSpeechBox');
+  if (box) {
+    if (show) box.classList.add('active');
+    else box.classList.remove('active');
+  }
+}
+
+function setMicButtonState(recording) {
+  const micBtn = document.getElementById('mic-btn');
+  const micLabel = document.getElementById('mic-label');
+  const micStatus = document.getElementById('mic-status-text');
+  const t = I18N_TRANSLATIONS[currentLanguage] || I18N_TRANSLATIONS.hi;
+
+  if (recording) {
+    if (micBtn) micBtn.classList.add('recording');
+    if (micLabel) micLabel.textContent = t.micLabelRecording;
+    if (micStatus) micStatus.textContent = t.micStatusListening;
+    setWaveformActive(true);
+  } else {
+    if (micBtn) micBtn.classList.remove('recording');
+    if (micLabel) micLabel.textContent = t.micLabelIdle;
+    if (micStatus) micStatus.textContent = t.micStatusIdle;
+    setWaveformActive(false);
+  }
+}
+
+function setWaveformActive(active) {
+  document.querySelectorAll('.wave-pillar').forEach(p => {
+    if (active) p.classList.add('active');
+    else p.classList.remove('active');
+  });
+}
+
+function openLanguageModal() {
+  stopAllAudio();
+  const overlay = document.getElementById('langModalOverlay');
+  if (overlay) overlay.style.display = 'flex';
+}
+
+function closeLanguageModal() {
+  const overlay = document.getElementById('langModalOverlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+async function selectInitialLanguage(langCode) {
+  await unlockAudioPlayback();
+  currentLanguage = langCode || 'hi';
+  localStorage.setItem('sevakendra_lang', currentLanguage);
+  sessionStorage.setItem('sevakendra_lang_confirmed', 'true');
+
+  applyLanguage(currentLanguage);
+  closeLanguageModal();
+
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'init', sessionId: currentSessionId, language: currentLanguage }));
+  }
+
+  await initSession();
+}
+
+function applyLanguage(langCode) {
+  const t = I18N_TRANSLATIONS[langCode] || I18N_TRANSLATIONS.hi;
+  document.documentElement.lang = langCode === 'bn' ? 'bn' : (langCode === 'en' ? 'en' : 'hi');
+
+  const langLabel = document.getElementById('ui-currentLangLabel');
+  if (langLabel) langLabel.textContent = t.langName;
+  const brandName = document.getElementById('ui-brandName');
+  if (brandName) brandName.textContent = t.brandName;
+  const brandTagline = document.getElementById('ui-brandTagline');
+  if (brandTagline) brandTagline.textContent = t.brandTagline;
+  const menuBtnText = document.getElementById('ui-menuBtnText');
+  if (menuBtnText) menuBtnText.textContent = t.menuBtnText;
+  const heroTitle = document.getElementById('ui-heroTitle');
+  if (heroTitle) heroTitle.textContent = t.heroTitle;
+  const heroSubtitle = document.getElementById('ui-heroSubtitle');
+  if (heroSubtitle) heroSubtitle.textContent = t.heroSubtitle;
+  const assistantTag = document.getElementById('ui-assistantTag');
+  if (assistantTag) assistantTag.textContent = t.assistantTag;
+  const promptText = document.getElementById('assistant-prompt-text');
+  if (promptText) promptText.textContent = t.welcomePrompt;
+  const promptHint = document.getElementById('assistant-prompt-hint');
+  if (promptHint) promptHint.textContent = t.welcomeHint;
+  const micLabel = document.getElementById('mic-label');
+  if (micLabel) micLabel.textContent = isRecording ? t.micLabelRecording : t.micLabelIdle;
+  const micStatus = document.getElementById('mic-status-text');
+  if (micStatus) micStatus.textContent = isRecording ? t.micStatusListening : t.micStatusIdle;
+  const manualInput = document.getElementById('manual-speech-input');
+  if (manualInput) manualInput.placeholder = t.manualPlaceholder;
+  const sendBtn = document.getElementById('ui-sendBtn');
+  if (sendBtn) sendBtn.textContent = t.sendBtn;
+  const chipsLabel = document.getElementById('ui-chipsLabel');
+  if (chipsLabel) chipsLabel.textContent = t.chipsLabel;
+  const slotsTitle = document.getElementById('ui-slotsTitle');
+  if (slotsTitle) slotsTitle.textContent = t.slotsTitle;
+  const slotAge = document.getElementById('ui-slotAgeLabel');
+  if (slotAge) slotAge.textContent = t.slotAgeLabel;
+  const slotMar = document.getElementById('ui-slotMaritalLabel');
+  if (slotMar) slotMar.textContent = t.slotMaritalLabel;
+  const slotLand = document.getElementById('ui-slotLandLabel');
+  if (slotLand) slotLand.textContent = t.slotLandLabel;
+  const slotInc = document.getElementById('ui-slotIncomeLabel');
+  if (slotInc) slotInc.textContent = t.slotIncomeLabel;
+  const slotState = document.getElementById('ui-slotStateLabel');
+  if (slotState) slotState.textContent = t.slotStateLabel;
+  const resTitle = document.getElementById('ui-resultsTitle');
+  if (resTitle) resTitle.textContent = t.resultsTitle;
+  const voiceExp = document.getElementById('ui-voiceExpTitle');
+  if (voiceExp) voiceExp.textContent = t.voiceExpTitle;
+  const triadSch = document.getElementById('ui-triadSchemesTitle');
+  if (triadSch) triadSch.textContent = t.triadSchemesTitle;
+  const triadDoc = document.getElementById('ui-triadDocsTitle');
+  if (triadDoc) triadDoc.textContent = t.triadDocsTitle;
+  const triadOff = document.getElementById('ui-triadOfficeTitle');
+  if (triadOff) triadOff.textContent = t.triadOfficeTitle;
+  const smsTitle = document.getElementById('ui-smsSlipTitle');
+  if (smsTitle) smsTitle.textContent = t.smsSlipTitle;
+  const drawerHead = document.getElementById('ui-drawerHeading');
+  if (drawerHead) drawerHead.textContent = t.drawerHeading;
+
+  document.querySelectorAll('.lang-option-card').forEach(btn => {
+    btn.classList.remove('active');
+    if (btn.getAttribute('onclick')?.includes(langCode)) {
+      btn.classList.add('active');
+    }
+  });
+}
+
+// --------------------------------------------------------------------------
+// 12. Edge Telemetry & Real-Time Latency Debug Overlay (?debug=1)
+// --------------------------------------------------------------------------
+function setupDebugOverlay() {
+  const isDebug = new URLSearchParams(window.location.search).get('debug') === '1';
+  const overlay = document.getElementById('debugLatencyOverlay');
+  if (!overlay) return;
+
+  if (isDebug) {
+    overlay.style.display = 'block';
+    overlay.innerHTML = `
+      <div class="debug-title"><span>⚡ Edge Telemetry</span> <span>DEBUG</span></div>
+      <div class="debug-metric"><span>STT Duration:</span> <span class="debug-val" id="dbg-stt">--</span></div>
+      <div class="debug-metric"><span>NLU / Logic:</span> <span class="debug-val" id="dbg-nlu">--</span></div>
+      <div class="debug-metric"><span>TTS 1st Byte:</span> <span class="debug-val" id="dbg-tts">--</span></div>
+      <div class="debug-metric"><span>E2E First Audio:</span> <span class="debug-val" id="dbg-e2e">--</span></div>
+      <div class="debug-metric"><span>Target p50 ≤1.5s:</span> <span class="target-pass" id="dbg-p50">PASS</span></div>
+      <div class="debug-metric"><span>Target p95 ≤3.0s:</span> <span class="target-pass" id="dbg-p95">PASS</span></div>
+    `;
+  }
+}
+
+function updateDebugOverlay(m) {
+  const overlay = document.getElementById('debugLatencyOverlay');
+  if (!overlay || overlay.style.display === 'none') return;
+
+  const sttEl = document.getElementById('dbg-stt');
+  const nluEl = document.getElementById('dbg-nlu');
+  const ttsEl = document.getElementById('dbg-tts');
+  const e2eEl = document.getElementById('dbg-e2e');
+  const p50El = document.getElementById('dbg-p50');
+
+  if (sttEl) sttEl.textContent = `${m.stt_ms}ms`;
+  if (nluEl) nluEl.textContent = `${m.nlu_ms}ms`;
+  if (ttsEl) ttsEl.textContent = `${m.tts_first_byte_ms}ms`;
+  if (e2eEl) {
+    e2eEl.textContent = `${m.e2e_first_audio_ms}ms`;
+    e2eEl.style.color = m.e2e_first_audio_ms <= 1500 ? '#34d399' : (m.e2e_first_audio_ms <= 3000 ? '#fbbf24' : '#f87171');
+  }
+  if (p50El) {
+    p50El.textContent = m.e2e_first_audio_ms <= 1500 ? "PASS" : "WARN";
+    p50El.className = m.e2e_first_audio_ms <= 1500 ? "target-pass" : "target-warn";
+  }
+}
+
+// --------------------------------------------------------------------------
+// 13. DOM Initialization
+// --------------------------------------------------------------------------
+window.addEventListener('DOMContentLoaded', async () => {
+  setupDebugOverlay();
+  await loadSchemesCatalog();
+  await loadPanchayatGrievances();
+
+  // Unlock audio on first page click or touch
+  const unlockHandler = () => {
+    unlockAudioPlayback();
+    window.removeEventListener('click', unlockHandler);
+    window.removeEventListener('touchstart', unlockHandler);
+  };
+  window.addEventListener('click', unlockHandler, { once: true });
+  window.addEventListener('touchstart', unlockHandler, { once: true });
+
+  const storedLang = localStorage.getItem('sevakendra_lang');
+  const sessionConfirmed = sessionStorage.getItem('sevakendra_lang_confirmed');
+
+  if (!sessionConfirmed) {
+    openLanguageModal();
+  } else {
+    currentLanguage = storedLang || 'hi';
+    applyLanguage(currentLanguage);
+    await initSession();
+  }
+});
